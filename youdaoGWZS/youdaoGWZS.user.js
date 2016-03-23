@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        惠惠购物助手
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.0.3
+// @version     0.0.0.4
 // @author      lzghzr
 // @description 在您网购浏览商品的同时，自动对比其他优质电商同款商品价格，并提供商品价格历史，帮您轻松抄底，聪明网购不吃亏！
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -53,8 +53,8 @@ if ((new Date()).getTime() - GM_getValue('last', 0) > 86400000)
         }
     });
 }
-// 只是第一次有用
-if (GM_getValue('matched') && GM_getValue('src'))
+// 虽然淘宝不允许用iframe，但万一呢
+if (self == top && GM_getValue('matched') && GM_getValue('src'))
 {
     var regUrl = new RegExp(GM_getValue('matched'));
     if (regUrl.test(location.href))
