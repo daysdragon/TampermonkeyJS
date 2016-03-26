@@ -1,42 +1,18 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.1.0
+// @version     0.0.1.1
 // @author      lzghzr
 // @description 按照美元区出价，最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
 // @include     /^https?\:\/\/steamcommunity\.com\/.*\/inventory\/.*/
-// @license     Apache Licence 2.0
-// @grant       GM_getValue
-// @grant       GM_setValue
+// @license     Apache-2.0
 // @grant       GM_xmlhttpRequest
 // @grant       unsafeWindow
 // @run-at      document-end
 // ==/UserScript==
+'use strict';
 
-// 一小时一更新
-if ((new Date()).getTime() - GM_getValue('last', 0) > 3600000)
-{
-    // 更新汇率
-    GM_xmlhttpRequest(
-    {
-        method: 'GET',
-        url: 'https://finance.yahoo.com/webservice/v1/symbols/USDCNY=X/quote?format=json',
-        headers:
-        {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        responseType: 'json',
-        onload: function(response)
-        {
-            if (200 == response.status && response.response.list.meta.count)
-            {
-                GM_setValue('last', (new Date()).getTime()); // 更新时间
-                GM_setValue('price', response.response.list.resources[0].resource.fields.price);
-            }
-        }
-    });
-}
 // 不要显得太乱
 var D = document;
 var W = unsafeWindow;
@@ -46,19 +22,32 @@ var inputUSDCNY = D.createElement('input');
 inputUSDCNY.className = 'filter_search_box';
 inputUSDCNY.style.width = '5em';
 inputUSDCNY.style.float = 'right';
-inputUSDCNY.value = GM_getValue('price', 6.50);
+inputUSDCNY.value = 6.50;
 divInventoryPagecontrols.parentNode.insertBefore(inputUSDCNY, divInventoryPagecontrols);
+// 获取实时汇率
+GM_xmlhttpRequest({
+    method: 'GET',
+    url: 'https://finance.yahoo.com/webservice/v1/symbols/USDCNY=X/quote?format=json',
+    responseType: 'json',
+    onload: function (response)
+    {
+        if (200 == response.status && response.response.list.meta.count)
+        {
+            inputUSDCNY.value = response.response.list.resources[0].resource.fields.price;
+        }
+    }
+});
 // hook函数
 var NewPopulateMarketActions = W.PopulateMarketActions;
 function hookPopulateMarketActions(elActions, item)
 {
-    if (item.marketable) 
+    if (item.marketable)
     {
         // 直接获取美区的价格，省去一步换算
         var xhrPriceoverview = new XMLHttpRequest();
-        xhrPriceoverview.onload = function()
+        xhrPriceoverview.onload = function ()
         {
-            if (200 == this.status && this.response.success && this.response.lowest_price) 
+            if (200 == this.status && this.response.success && this.response.lowest_price)
             {
                 // 对返回字符串进行处理
                 var lowestPrice = this.response.lowest_price;
@@ -70,18 +59,18 @@ function hookPopulateMarketActions(elActions, item)
             {
                 // 抓取商店界面
                 var xhrListings = new XMLHttpRequest();
-                xhrListings.onload = function()
+                xhrListings.onload = function ()
                 {
-                    if (200 == this.status) 
+                    if (200 == this.status)
                     {
                         // 解析出item_nameid
                         var regNameid = /Market_LoadOrderSpread\( (\d+)/;
                         var nameid = regNameid.exec(this.responseText)[1];
                         // 获取商店价格排序
                         var xhrItemordershistogram = new XMLHttpRequest();
-                        xhrItemordershistogram.onload = function()
+                        xhrItemordershistogram.onload = function ()
                         {
-                            if (200 == this.status && this.response.success) 
+                            if (200 == this.status && this.response.success)
                             {
                                 // 这次返回的不是字符串了
                                 var lowestPrice = this.response.sell_order_graph[0][0];
@@ -119,7 +108,7 @@ function hookPopulateMarketActions(elActions, item)
         // 显示输出
         var div = D.createElement('div');
         div.style.margin = '0 1em 1em';
-        div.innerHTML = '建议最低售价: '+ lowestPrice + ' (' + plusPrice + ')';
+        div.innerHTML = '建议最低售价: ' + lowestPrice + ' (' + plusPrice + ')';
         elActions.insertBefore(div, elActions.lastChild);
     }
 }
