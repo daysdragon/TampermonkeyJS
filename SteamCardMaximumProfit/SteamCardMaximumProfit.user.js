@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.1.1
+// @version     0.0.1.2
 // @author      lzghzr
 // @description 按照美元区出价，最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?\:\/\/steamcommunity\.com\/.*\/inventory\/.*/
+// @include     /^https?:\/\/steamcommunity\.com\/.*\/inventory\/.*/
 // @license     Apache-2.0
 // @grant       GM_xmlhttpRequest
 // @grant       unsafeWindow
@@ -27,18 +27,29 @@ divInventoryPagecontrols.parentNode.insertBefore(inputUSDCNY, divInventoryPageco
 // 获取实时汇率
 GM_xmlhttpRequest({
     method: 'GET',
-    url: 'https://finance.yahoo.com/webservice/v1/symbols/USDCNY=X/quote?format=json',
-    responseType: 'json',
+    url: 'http://data.forex.hexun.com/data/breedExch_bing.ashx?currency1=%c3%c0%d4%aa&currency2=%c8%cb%c3%f1%b1%d2%d4%aa&format=json&callback=currencyExchange',
     onload: function (response)
     {
-        if (200 == response.status && response.response.list.meta.count)
+        if (200 == response.status)
         {
-            inputUSDCNY.value = response.response.list.resources[0].resource.fields.price;
+            
+            var refePrice = /refePrice:'([\d|\.]*)/;
+            inputUSDCNY.value = refePrice.exec(response.responseText)[1];
         }
     }
 });
 // hook函数
 var NewPopulateMarketActions = W.PopulateMarketActions;
+// 为了兼容火狐
+if ('function' == typeof (exportFunction))
+{
+    exportFunction(hookPopulateMarketActions, unsafeWindow, { defineAs: 'hookPopulateMarketActions' });
+    W.PopulateMarketActions = W.hookPopulateMarketActions;
+}
+else
+{
+    W.PopulateMarketActions = hookPopulateMarketActions;
+}
 function hookPopulateMarketActions(elActions, item)
 {
     if (item.marketable)
@@ -47,10 +58,10 @@ function hookPopulateMarketActions(elActions, item)
         var xhrPriceoverview = new XMLHttpRequest();
         xhrPriceoverview.onload = function ()
         {
-            if (200 == this.status && this.response.success && this.response.lowest_price)
+            if (200 == xhrPriceoverview.status && xhrPriceoverview.response.success && xhrPriceoverview.response.lowest_price)
             {
                 // 对返回字符串进行处理
-                var lowestPrice = this.response.lowest_price;
+                var lowestPrice = xhrPriceoverview.response.lowest_price;
                 lowestPrice = lowestPrice.replace('$', ''); // 日了狗了，他不认识$
                 lowestPrice = W.GetPriceValueAsInt(lowestPrice); // 格式化取整
                 GetPrice(lowestPrice);
@@ -61,19 +72,19 @@ function hookPopulateMarketActions(elActions, item)
                 var xhrListings = new XMLHttpRequest();
                 xhrListings.onload = function ()
                 {
-                    if (200 == this.status)
+                    if (200 == xhrListings.status)
                     {
                         // 解析出item_nameid
                         var regNameid = /Market_LoadOrderSpread\( (\d+)/;
-                        var nameid = regNameid.exec(this.responseText)[1];
+                        var nameid = regNameid.exec(xhrListings.responseText)[1];
                         // 获取商店价格排序
                         var xhrItemordershistogram = new XMLHttpRequest();
                         xhrItemordershistogram.onload = function ()
                         {
-                            if (200 == this.status && this.response.success)
+                            if (200 == xhrItemordershistogram.status && xhrItemordershistogram.response.success)
                             {
                                 // 这次返回的不是字符串了
-                                var lowestPrice = this.response.sell_order_graph[0][0];
+                                var lowestPrice = xhrItemordershistogram.response.sell_order_graph[0][0];
                                 lowestPrice = W.GetPriceValueAsInt(lowestPrice.toString()); // 格式化取整
                                 GetPrice(lowestPrice);
                             }
@@ -111,14 +122,4 @@ function hookPopulateMarketActions(elActions, item)
         div.innerHTML = '建议最低售价: ' + lowestPrice + ' (' + plusPrice + ')';
         elActions.insertBefore(div, elActions.lastChild);
     }
-}
-// 为了兼容火狐
-if ('function' == typeof (exportFunction))
-{
-    exportFunction(hookPopulateMarketActions, unsafeWindow, { defineAs: 'hookPopulateMarketActions' });
-    W.PopulateMarketActions = W.hookPopulateMarketActions;
-}
-else
-{
-    W.PopulateMarketActions = hookPopulateMarketActions;
 }
