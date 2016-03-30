@@ -27,18 +27,18 @@ var content = '233|666|999|fff|gg|hhh|哈哈哈',
 // 已被转义弄懵逼了, 能用就行
 var contentReg = RegExp(GM_getValue('content', content), 'i');
 // 移除礼物连击
-var sgcDiv = D.getElementsByClassName('super-gift-ctnr')[0];
-sgcDiv.parentNode.removeChild(sgcDiv);
+var divSGC = D.getElementsByClassName('super-gift-ctnr')[0];
+divSGC.parentNode.removeChild(divSGC);
 // 移除小型礼物
-var gm1Div = D.getElementById('gift-msg-1000');
-gm1Div.parentNode.removeChild(gm1Div);
+var divGM1 = D.getElementById('gift-msg-1000');
+divGM1.parentNode.removeChild(divGM1);
 // 获取聊天列表并暂时隐藏, 等待加载第一个弹幕
-var msgDiv = D.getElementById('chat-msg-list');
-msgDiv.style.visibility = 'hidden';
-msgDiv.addEventListener('DOMNodeInserted', function one()
+var divMsg = D.getElementById('chat-msg-list');
+divMsg.style.visibility = 'hidden';
+divMsg.addEventListener('DOMNodeInserted', function one()
 {
     setTimeout(WaitProtocol, 500);
-    msgDiv.removeEventListener('DOMNodeInserted', one);
+    divMsg.removeEventListener('DOMNodeInserted', one);
 });
 // 添加样式
 GM_addStyle('\
@@ -70,6 +70,14 @@ GM_addStyle('\
     text-align: center;\
     width: 18px;\
     vertical-align: text-top;\
+}\
+#gunLock {\
+    background-color: rgba(79,193,233,0.6);\
+    font-size: 12px;\
+    line-height: 30px;\
+    margin: -68px -224px;\
+    position: absolute;\
+    width: 281px;\
 }\
 #gunMeun {\
     animation:gunMeun 300ms;\
@@ -182,12 +190,12 @@ function AddMessage(json)
  */
 function AddHistory(div)
 {
-    msgDiv.appendChild(div);
+    divMsg.appendChild(div);
     // 理想状态是向上滚动自动锁定
-    if (msgDiv.scrollHeight - msgDiv.scrollTop < 550)
+    if (divMsg.scrollHeight - divMsg.scrollTop < 550)
     {
         RemoveOverflow();
-        msgDiv.scrollTop = msgDiv.scrollHeight;
+        divMsg.scrollTop = divMsg.scrollHeight;
     }
 }
 /**
@@ -196,9 +204,9 @@ function AddHistory(div)
  */
 function RemoveOverflow()
 {
-    if (msgDiv.childNodes.length >= 100)
+    if (divMsg.childNodes.length >= 100)
     {
-        msgDiv.removeChild(msgDiv.firstChild);
+        divMsg.removeChild(divMsg.firstChild);
         RemoveOverflow();
     }
 }
@@ -224,12 +232,16 @@ function ContentConfUI()
     <input type="checkbox" id="gunSeed" class="fRight">\
     <div class="fRight">领瓜子</div>\
     <input type="text" id="gunText">\
-</div>';
+</div>\
+<div id="gunLock" style="display: none;">点击返回底部\
+</div>\
+';
     // 插入菜单按钮
     divBtns.appendChild(divGun);
     // 获取刚刚插入的一些DOM
     var div = {
         'gunHis': null,
+        'gunLock': null,
         'gunMeun': null,
         'gunRec': null,
         'gunSeed': null,
@@ -237,68 +249,90 @@ function ContentConfUI()
     };
     for (var x in div) { div[x] = D.getElementById(x); }
     // 为了和b站更搭, 所以监听body的click
-    D.body.addEventListener('click', MeunClick);
-    /**
-     * MeunClick
-     * 监听body的点击事件
-     * 
-     * @param {event} event
-     */
-    function MeunClick(event)
-    {
-        // save与菜单显示与否相同
-        var save = ('block' == div.gunMeun.style.display) ? true : false;
-        // 菜单
-        if (divGun.contains(event.target))
+    D.body.addEventListener('click',
+        /**
+         * 监听body的点击事件
+         * 
+         * @param {event} event
+         */
+        function (event)
         {
-            if (event.target == gunHis)
+            // save与菜单显示与否相同
+            var save = ('block' == div.gunMeun.style.display) ? true : false;
+            // 菜单
+            if (divGun.contains(event.target))
             {
-                MsgHistory();
-            }
-            else if (event.target == gunRec)
-            {
-                div.gunText.value = content;
-            }
-            // 如果点击菜单按钮, 菜单没显示的话就显示出来
-            if (event.target == divGun)
-            {
-                if (!save)
+                // 加载历史
+                if (event.target == div.gunHis)
                 {
-                    div.gunText.value = GM_getValue('content', content);
-                    div.gunSeed.checked = GM_getValue('seed', seed);
-                    div.gunMeun.style.display = 'block';
+                    MsgHistory();
+                }
+                // 恢复默认
+                else if (event.target == div.gunRec)
+                {
+                    div.gunText.value = content;
+                }
+                // 滚动锁定
+                else if (event.target == div.gunLock)
+                {
+                    divMsg.scrollTop = divMsg.scrollHeight;
+                }
+                // 如果点击菜单按钮, 菜单没显示的话就显示出来
+                if (event.target == divGun)
+                {
+                    if (!save)
+                    {
+                        div.gunText.value = GM_getValue('content', content);
+                        div.gunSeed.checked = GM_getValue('seed', seed);
+                        div.gunMeun.style.display = 'block';
+                    }
+                }
+                else
+                {
+                    save = false;
                 }
             }
-            else
-            {
-                save = false;
-            }
-        }
             // 锁定
-        else if (event.target == divLock)
-        {
-            // 因为冒泡顺序, 触发时className已改变
-            locked = ('btn lock-chat active' == divLock.className) ? true : false;
-        }
-        // 存储
-        if (save)
-        {
-            // 遇到'\'会出错, 不管了...
-            var contentConf = div.gunText.value;
-            if ('' == contentConf)
+            else if (event.target == divLock)
             {
-                // b站屏蔽了'/'
-                GM_setValue('content', '/');
+                // 因为冒泡顺序, 触发时className已改变
+                locked = ('btn lock-chat active' == divLock.className) ? true : false;
+            }
+            // 存储
+            if (save)
+            {
+                // 遇到'\'会出错, 不管了...
+                var contentConf = div.gunText.value;
+                if ('' == contentConf)
+                {
+                    // b站屏蔽了'/'
+                    GM_setValue('content', '/');
+                }
+                else
+                {
+                    GM_setValue('content', contentConf);
+                }
+                contentReg = RegExp(GM_getValue('content', content), 'i');
+                GM_setValue('seed', div.gunSeed.checked);
+                div.gunMeun.style.display = 'none';
+            }
+        });
+    // 增加一个点击返回的提示条
+    divMsg.addEventListener('scroll',
+        /**
+         * 监听聊天历史的滚动事件
+         */
+        function ()
+        {
+            if (divMsg.scrollHeight - divMsg.scrollTop < 550)
+            {
+                div.gunLock.style.display = 'none';
             }
             else
             {
-                GM_setValue('content', contentConf);
+                div.gunLock.style.display = 'block';
             }
-            contentReg = RegExp(GM_getValue('content', content), 'i');
-            GM_setValue('seed', div.gunSeed.checked);
-            div.gunMeun.style.display = 'none';
-        }
-    }
+        });
 }
 /**
  * DoSign
@@ -582,8 +616,8 @@ function WaitProtocol()
         W.protocol.SYS_MSG = Gift;
         W.addMessage = Gift;
     }
-    msgDiv.innerHTML = '';
-    msgDiv.style.visibility = 'visible';
+    divMsg.innerHTML = '';
+    divMsg.style.visibility = 'visible';
     MsgHistory();
     ContentConfUI();
     DoSign();
