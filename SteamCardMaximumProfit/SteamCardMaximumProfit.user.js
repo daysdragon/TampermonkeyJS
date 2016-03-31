@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.1.2
+// @version     0.0.1.3
 // @author      lzghzr
 // @description 按照美元区出价，最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -33,7 +33,7 @@ GM_xmlhttpRequest({
         if (200 == response.status)
         {
             
-            var refePrice = /refePrice:'([\d|\.]*)/;
+            var refePrice = /refePrice:'([^']{5})/;
             inputUSDCNY.value = refePrice.exec(response.responseText)[1];
         }
     }
@@ -56,17 +56,23 @@ function hookPopulateMarketActions(elActions, item)
     {
         // 直接获取美区的价格，省去一步换算
         var xhrPriceoverview = new XMLHttpRequest();
+        xhrPriceoverview.open('get', '/market/priceoverview/?country=US&currency=1&appid=' + item.appid + '&market_hash_name=' + W.GetMarketHashName(item), true);
+        xhrPriceoverview.responseType = 'json';
+        xhrPriceoverview.send();
         xhrPriceoverview.onload = function ()
         {
             if (200 == xhrPriceoverview.status && xhrPriceoverview.response.success && xhrPriceoverview.response.lowest_price)
             {
                 // 对返回字符串进行处理
                 var lowestPrice = xhrPriceoverview.response.lowest_price;
-                lowestPrice = lowestPrice.replace('$', ''); // 日了狗了，他不认识$
-                lowestPrice = W.GetPriceValueAsInt(lowestPrice); // 格式化取整
+                // 日了狗了，他不认识$
+                lowestPrice = lowestPrice.replace('$', '');
+                // 格式化取整
+                lowestPrice = W.GetPriceValueAsInt(lowestPrice);
                 GetPrice(lowestPrice);
             }
-            else // steam逼我啊
+            // steam逼我啊
+            else
             {
                 // 抓取商店界面
                 var xhrListings = new XMLHttpRequest();
@@ -85,7 +91,8 @@ function hookPopulateMarketActions(elActions, item)
                             {
                                 // 这次返回的不是字符串了
                                 var lowestPrice = xhrItemordershistogram.response.sell_order_graph[0][0];
-                                lowestPrice = W.GetPriceValueAsInt(lowestPrice.toString()); // 格式化取整
+                                // 格式化取整
+                                lowestPrice = W.GetPriceValueAsInt(lowestPrice.toString());
                                 GetPrice(lowestPrice);
                             }
                         }
@@ -98,9 +105,6 @@ function hookPopulateMarketActions(elActions, item)
                 xhrListings.send();
             }
         }
-        xhrPriceoverview.open('get', '/market/priceoverview/?country=US&currency=1&appid=' + item.appid + '&market_hash_name=' + W.GetMarketHashName(item), true);
-        xhrPriceoverview.responseType = 'json';
-        xhrPriceoverview.send();
     }
     NewPopulateMarketActions(elActions, item);
     // 计算输出
@@ -112,7 +116,8 @@ function hookPopulateMarketActions(elActions, item)
         lowestPrice = lowestPrice - feeInfo.fees;
         // 美元区+1美分
         var plusPrice = Math.floor((1 + lowestPrice) * inputUSDCNY.value);
-        plusPrice = W.v_currencyformat(plusPrice, W.GetCurrencyCode(W.g_rgWalletInfo['wallet_currency'])); //格式化
+        //格式化
+        plusPrice = W.v_currencyformat(plusPrice, W.GetCurrencyCode(W.g_rgWalletInfo['wallet_currency']));
         // 换算成人民币
         lowestPrice = Math.floor(lowestPrice * inputUSDCNY.value);
         lowestPrice = W.v_currencyformat(lowestPrice, W.GetCurrencyCode(W.g_rgWalletInfo['wallet_currency']));
