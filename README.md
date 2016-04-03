@@ -1,9 +1,9 @@
 # GreasemonkeyJS
 
-Ò»Ğ©×ÔÓÃµÄ½Å±¾£¬ÎÒÓÃ×ÅÊæ·ş¾ÍĞĞ£¬²»±£Ö¤ÖÊÁ¿
+ä¸€äº›è‡ªç”¨çš„è„šæœ¬ï¼Œæˆ‘ç”¨ç€èˆ’æœå°±è¡Œï¼Œä¸ä¿è¯è´¨é‡
 
-## Ä¿Â¼
+## ç›®å½•
 
-1. [bilibiliÖ±²¥¾»»¯](https://github.com/lzghzr/GreasemonkeyJS/raw/master/BilibiliLiveNoVIP/BilibiliLiveNoVIP.user.js) ÆÁ±ÎÁÄÌìÊÒÀñÎïÒÔ¼°¹Ø¼ü×Ö£¬¾»»¯ÁÄÌìÊÒ»·¾³
-2. [steam¿¨ÅÆÀûÈó×î´ó»¯](https://github.com/lzghzr/GreasemonkeyJS/raw/master/SteamCardMaximumProfit/SteamCardMaximumProfit.user.js) °´ÕÕÃÀÔªÇø³ö¼Û£¬×î´ó»¯steam¿¨ÅÆÂô³öµÄÀûÈó
-3. [»İ»İ¹ºÎïÖúÊÖ](https://github.com/lzghzr/GreasemonkeyJS/raw/master/youdaoGWZS/youdaoGWZS.user.js) ¹Ù·½³Ù³Ù²»¿Ï¸üĞÂ£¬¿ÖÅÂ¡­¡­
+1. [bilibiliç›´æ’­å‡€åŒ–](https://github.com/lzghzr/GreasemonkeyJS/raw/master/BilibiliLiveNoVIP/BilibiliLiveNoVIP.user.js) å±è”½èŠå¤©å®¤ç¤¼ç‰©ä»¥åŠå…³é”®å­—ï¼Œå‡€åŒ–èŠå¤©å®¤ç¯å¢ƒ
+2. [steamå¡ç‰Œåˆ©æ¶¦æœ€å¤§åŒ–](https://github.com/lzghzr/GreasemonkeyJS/raw/master/SteamCardMaximumProfit/SteamCardMaximumProfit.user.js) æŒ‰ç…§ç¾å…ƒåŒºå‡ºä»·ï¼Œæœ€å¤§åŒ–steamå¡ç‰Œå–å‡ºçš„åˆ©æ¶¦
+3. [æƒ æƒ è´­ç‰©åŠ©æ‰‹](https://github.com/lzghzr/GreasemonkeyJS/raw/master/youdaoGWZS/youdaoGWZS.user.js) å®˜æ–¹è¿Ÿè¿Ÿä¸è‚¯æ›´æ–°ï¼Œææ€•â€¦â€¦
