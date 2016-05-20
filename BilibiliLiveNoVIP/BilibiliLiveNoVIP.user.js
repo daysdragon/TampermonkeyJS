@@ -16,7 +16,7 @@
 'use strict';
 
 // 为了兼容Tampermonkey
-var content = 'gg|(.)\1{3,}',
+var content = 'gg|(.)\\1{3,}',
     D = document,
     locked = false,
     masterID = null,
