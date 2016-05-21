@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     1.1.2.7
+// @version     1.1.2.8
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -501,27 +501,27 @@ function GetSurplus() {
             else {
                 GetAward();
             }
-        }
-        /**
-         * (二值化)
-         * 
-         * @param {ArrayBuffer} pixe (像素信息)
-         * @param {Number} xi (横坐标)
-         * @param {Number} yj (纵坐标)
-         * @param {Boolean} t (true 测试指定区域是否有像素|false 二值化)
-         * @returns {Number} (因为要求和, 不返回bool)
-         */
-        function Bin(pixe, xi, yj, t) {
-            if (t) {
-                var pixels = context.getImageData(xi, yj, 2, 2).data;
-                var sum = 0;
-                for (var i = 0, j = 0; j < 4; j++) {
-                    sum += Bin(pixels, i, j, false);
+            /**
+             * (二值化)
+             * 
+             * @param {ArrayBuffer} pixe (像素信息)
+             * @param {Number} xi (横坐标)
+             * @param {Number} yj (纵坐标)
+             * @param {Boolean} t (true 测试指定区域是否有像素|false 二值化)
+             * @returns {Number} (因为要求和, 不返回bool)
+             */
+            function Bin(pixe, xi, yj, t) {
+                if (t) {
+                    var pixels = context.getImageData(xi, yj, 2, 2).data;
+                    var sum = 0;
+                    for (var i = 0, j = 0; j < 4; j++) {
+                        sum += Bin(pixels, i, j, false);
+                    }
+                    return (sum > 2) ? 1 : 0;
                 }
-                return (sum > 2) ? 1 : 0;
-            }
-            else {
-                return (pixe[yj * 4] * 0.299 + pixe[yj * 4 + 1] * 0.587 + pixe[yj * 4 + 2] * 0.114 < 128) ? 1 : 0;
+                else {
+                    return (pixe[yj * 4] * 0.299 + pixe[yj * 4 + 1] * 0.587 + pixe[yj * 4 + 2] * 0.114 < 128) ? 1 : 0;
+                }
             }
         }
     }
