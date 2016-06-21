@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.0
+// @version     0.2.1
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
 // @include     /^https?:\/\/steamcommunity\.com\/.*\/inventory/
 // @license     MIT
-// @grant       none
+// @grant       GM_xmlhttpRequest
 // @run-at      document-end
 // ==/UserScript==
 'use strict'
@@ -18,7 +18,7 @@ class SteamCardMaximumProfit {
    */
   constructor() {
     this._D = document
-    this._W = window
+    this._W = unsafeWindow
   }
   /**
    * 加载程序
@@ -37,16 +37,16 @@ class SteamCardMaximumProfit {
     this._inputUSDCNY.style.cssText = 'width: 5em; float: right'
     this._inputUSDCNY.value = 6.50
     divInventoryPagecontrols.parentNode.insertBefore(this._inputUSDCNY, divInventoryPagecontrols)
-    // 因为火狐的权限问题, 暂时取消汇率的在线获取
-    // GM_xmlhttpRequest({
-    //   method: 'GET',
-    //   url: 'http://data.forex.hexun.com/data/breedExch_bing.ashx?currency1=%c3%c0%d4%aa&currency2=%c8%cb%c3%f1%b1%d2%d4%aa&format=json&callback=currencyExchange',
-    //   onload: (res) => {
-    //     if (res.status == 200) {
-    //       this._inputUSDCNY.value = res.responseText.match(/refePrice:'([^']{5})/)[1]
-    //     }
-    //   }
-    // })
+    // 在线获取实时汇率
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: 'http://data.forex.hexun.com/data/breedExch_bing.ashx?currency1=%c3%c0%d4%aa&currency2=%c8%cb%c3%f1%b1%d2%d4%aa&format=json&callback=currencyExchange',
+      onload: (res) => {
+        if (res.status == 200) {
+          this._inputUSDCNY.value = res.responseText.match(/refePrice:'([^']{5})/)[1]
+        }
+      }
+    })
   }
   /**
    * 添加监听
@@ -54,7 +54,8 @@ class SteamCardMaximumProfit {
   _Listener() {
     this._D.addEventListener('click', (e) => {
       if (e.target.className == 'inventory_item_link') {
-        this._item = e.target.parentNode.rgItem
+        // 为了兼容火狐
+        this._item = (typeof (wrappedJSObject) == 'undefined') ? e.target.parentNode['rgItem'] : e.target.parentNode.wrappedJSObject['rgItem']
         this._GetPriceOverview()
       }
       else if (e.target.id == 'quick_sell_item') {
@@ -83,6 +84,7 @@ class SteamCardMaximumProfit {
         this._GetPrice(lowestPrice)
       }
       else {
+        // steam对于价格获取频率有限制, 不得不通过抓取商店页面来获取价格
         this._GetListings()
       }
     }
@@ -171,7 +173,7 @@ class SteamCardMaximumProfit {
     // 交易采用HTTPS, 有时会产生跨域问题
     xhr.withCredentials = true
     xhr.responseType = 'json'
-    xhr.send(`sessionid=${g_sessionID}&appid=${this._item.appid}&contextid=${this._item.contextid}&assetid=${this._item.id}&amount=1&price=${price}`)
+    xhr.send(`sessionid=${this._W.g_sessionID}&appid=${this._item.appid}&contextid=${this._item.contextid}&assetid=${this._item.id}&amount=1&price=${price}`)
     xhr.onload = (res) => {
       if (res.target.status == 200 && res.target.response.success) {
         ele.innerHTML = 'OK'
