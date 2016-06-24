@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.3
+// @version     0.2.4
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -12,9 +12,15 @@
 // ==/UserScript==
 'use strict'
 
+/**
+ * 最大化steam卡牌卖出的利润
+ * 
+ * @class SteamCardMaximumProfit
+ */
 class SteamCardMaximumProfit {
   /**
-   * 最大化steam卡牌卖出的利润
+   * Creates an instance of SteamCardMaximumProfit.
+   * 
    */
   constructor() {
     this.D = document
@@ -26,7 +32,6 @@ class SteamCardMaximumProfit {
   private divItems: HTMLDivElement[] = []
   private lastChecked: HTMLDivElement
   private quickSells: { itemInfo: rgItem, price: number }[] = []
-  private quickSelled = false
   /**
    * 加载程序
    */
@@ -45,6 +50,8 @@ class SteamCardMaximumProfit {
   }
   /**
    * 添加样式, 复选框和汇率输入框
+   * 
+   * @private
    */
   private AddUI() {
     // 样式
@@ -76,7 +83,7 @@ class SteamCardMaximumProfit {
     // 有点丑
     let elmItems = this.D.querySelectorAll('.itemHolder') as NodeListOf<HTMLDivElement>
     for (let i = 0; i < elmItems.length; i++) {
-      let iteminfo = elmItems[i].wrappedJSObject.rgItem
+      let iteminfo = this.FxxkFirefox(elmItems[i])
       if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
         // 选择框
         iteminfo.element.classList.add('scmpItemReady')
@@ -109,13 +116,15 @@ class SteamCardMaximumProfit {
   }
   /**
    * 添加监听
+   * 
+   * @private
    */
   private Listener() {
     this.D.addEventListener('click', (e) => {
-      let evt = e.target as HTMLElement & HTMLInputElement
+      let evt = e.target as HTMLElement
       // 点击物品
       if (evt.className === 'inventory_item_link') {
-        let itemInfo = evt.parentNode.wrappedJSObject.rgItem
+        let itemInfo = this.FxxkFirefox(evt.parentNode as HTMLDivElement)
         let select = itemInfo.element.classList.contains('scmpItemSelect')
         this.GetPriceOverview(itemInfo)
         // 选择逻辑
@@ -140,7 +149,7 @@ class SteamCardMaximumProfit {
       }
       // 点击快速出售
       else if (evt.id === 'scmpQuickSellItem') {
-        let itemInfo = this.D.querySelector('.activeInfo').wrappedJSObject.rgItem
+        let itemInfo = this.FxxkFirefox(this.D.querySelector('.activeInfo') as HTMLDivElement)
         if (itemInfo.element.classList.contains('scmpItemSuccess')) return
         let price = this.W.GetPriceValueAsInt(evt.innerHTML)
         this.quickSells.push({ itemInfo, price })
@@ -149,7 +158,7 @@ class SteamCardMaximumProfit {
       else if (evt.id === 'scmpQuickAllItem') {
         let iteminfos = this.D.querySelectorAll('.scmpItemSelect')
         for (let i = 0; i < iteminfos.length; i++) {
-          let itemInfo = iteminfos[i].wrappedJSObject.rgItem
+          let itemInfo = this.FxxkFirefox(iteminfos[i] as HTMLDivElement)
           this.GetPriceOverview(itemInfo, true)
         }
       }
@@ -157,6 +166,10 @@ class SteamCardMaximumProfit {
   }
   /**
    * 获取美元区价格, 为了兼容还是采用回调的方式
+   * 
+   * @private
+   * @param {rgItem} itemInfo
+   * @param {boolean} [quick=false]
    */
   private GetPriceOverview(itemInfo: rgItem, quick = false) {
     if (itemInfo.marketable !== 1) return
@@ -217,7 +230,12 @@ class SteamCardMaximumProfit {
     }
   }
   /**
-   * 计算价格并显示
+   * 计算价格
+   * 
+   * @private
+   * @param {rgItem} itemInfo
+   * @param {string} lowestPrice
+   * @param {boolean} quick
    */
   private GetPrice(itemInfo: rgItem, lowestPrice: string, quick: boolean) {
     // 格式化取整
@@ -247,7 +265,9 @@ class SteamCardMaximumProfit {
     }
   }
   /**
-   * 快速出售
+   * 快速出售，目前采用轮询
+   * 
+   * @private
    */
   private QuickSellItem() {
     // 用了回调, 顺序触发就不好处理了, 所以轮询吧
@@ -286,6 +306,13 @@ class SteamCardMaximumProfit {
       }, 1000);
     }
   }
+  /**
+   * 就是改一下框框
+   * 
+   * @private
+   * @param {rgItem} itemInfo
+   * @param {boolean} status
+   */
   private QuickSellStatus(itemInfo: rgItem, status: boolean) {
     if (status) {
       itemInfo.element.classList.remove('scmpItemError');
@@ -297,6 +324,17 @@ class SteamCardMaximumProfit {
       itemInfo.element.classList.add('scmpItemError')
       itemInfo.element.classList.add('scmpItemSelect')
     }
+  }
+  /**
+   * 为了兼容火狐sandbox的wrappedJSObject
+   * 
+   * @private
+   * @param {HTMLDivElement} elmDiv
+   * @returns {rgItem}
+   */
+  private FxxkFirefox(elmDiv: HTMLDivElement): rgItem {
+    if (typeof elmDiv.wrappedJSObject === 'undefined') return elmDiv.rgItem
+    return elmDiv.wrappedJSObject.rgItem
   }
 }
 const app = new SteamCardMaximumProfit()

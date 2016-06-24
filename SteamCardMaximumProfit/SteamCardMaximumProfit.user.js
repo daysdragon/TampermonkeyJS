@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.3
+// @version     0.2.4
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -11,14 +11,19 @@
 // @run-at      document-end
 // ==/UserScript==
 'use strict';
+/**
+ * 最大化steam卡牌卖出的利润
+ *
+ * @class SteamCardMaximumProfit
+ */
 var SteamCardMaximumProfit = (function () {
     /**
-     * 最大化steam卡牌卖出的利润
+     * Creates an instance of SteamCardMaximumProfit.
+     *
      */
     function SteamCardMaximumProfit() {
         this.divItems = [];
         this.quickSells = [];
-        this.quickSelled = false;
         this.D = document;
         this.W = unsafeWindow;
     }
@@ -42,6 +47,8 @@ var SteamCardMaximumProfit = (function () {
     };
     /**
      * 添加样式, 复选框和汇率输入框
+     *
+     * @private
      */
     SteamCardMaximumProfit.prototype.AddUI = function () {
         var _this = this;
@@ -74,7 +81,7 @@ var SteamCardMaximumProfit = (function () {
         // 有点丑
         var elmItems = this.D.querySelectorAll('.itemHolder');
         for (var i = 0; i < elmItems.length; i++) {
-            var iteminfo = elmItems[i].wrappedJSObject.rgItem;
+            var iteminfo = this.FxxkFirefox(elmItems[i]);
             if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
                 // 选择框
                 iteminfo.element.classList.add('scmpItemReady');
@@ -107,6 +114,8 @@ var SteamCardMaximumProfit = (function () {
     };
     /**
      * 添加监听
+     *
+     * @private
      */
     SteamCardMaximumProfit.prototype.Listener = function () {
         var _this = this;
@@ -114,7 +123,7 @@ var SteamCardMaximumProfit = (function () {
             var evt = e.target;
             // 点击物品
             if (evt.className === 'inventory_item_link') {
-                var itemInfo = evt.parentNode.wrappedJSObject.rgItem;
+                var itemInfo = _this.FxxkFirefox(evt.parentNode);
                 var select_1 = itemInfo.element.classList.contains('scmpItemSelect');
                 _this.GetPriceOverview(itemInfo);
                 // 选择逻辑
@@ -140,7 +149,7 @@ var SteamCardMaximumProfit = (function () {
                 _this.lastChecked = itemInfo.element;
             }
             else if (evt.id === 'scmpQuickSellItem') {
-                var itemInfo = _this.D.querySelector('.activeInfo').wrappedJSObject.rgItem;
+                var itemInfo = _this.FxxkFirefox(_this.D.querySelector('.activeInfo'));
                 if (itemInfo.element.classList.contains('scmpItemSuccess'))
                     return;
                 var price = _this.W.GetPriceValueAsInt(evt.innerHTML);
@@ -149,7 +158,7 @@ var SteamCardMaximumProfit = (function () {
             else if (evt.id === 'scmpQuickAllItem') {
                 var iteminfos = _this.D.querySelectorAll('.scmpItemSelect');
                 for (var i = 0; i < iteminfos.length; i++) {
-                    var itemInfo = iteminfos[i].wrappedJSObject.rgItem;
+                    var itemInfo = _this.FxxkFirefox(iteminfos[i]);
                     _this.GetPriceOverview(itemInfo, true);
                 }
             }
@@ -157,6 +166,10 @@ var SteamCardMaximumProfit = (function () {
     };
     /**
      * 获取美元区价格, 为了兼容还是采用回调的方式
+     *
+     * @private
+     * @param {rgItem} itemInfo
+     * @param {boolean} [quick=false]
      */
     SteamCardMaximumProfit.prototype.GetPriceOverview = function (itemInfo, quick) {
         var _this = this;
@@ -208,7 +221,12 @@ var SteamCardMaximumProfit = (function () {
         };
     };
     /**
-     * 计算价格并显示
+     * 计算价格
+     *
+     * @private
+     * @param {rgItem} itemInfo
+     * @param {string} lowestPrice
+     * @param {boolean} quick
      */
     SteamCardMaximumProfit.prototype.GetPrice = function (itemInfo, lowestPrice, quick) {
         // 格式化取整
@@ -238,7 +256,9 @@ var SteamCardMaximumProfit = (function () {
         }
     };
     /**
-     * 快速出售
+     * 快速出售，目前采用轮询
+     *
+     * @private
      */
     SteamCardMaximumProfit.prototype.QuickSellItem = function () {
         var _this = this;
@@ -274,6 +294,13 @@ var SteamCardMaximumProfit = (function () {
             }, 1000);
         }
     };
+    /**
+     * 就是改一下框框
+     *
+     * @private
+     * @param {rgItem} itemInfo
+     * @param {boolean} status
+     */
     SteamCardMaximumProfit.prototype.QuickSellStatus = function (itemInfo, status) {
         if (status) {
             itemInfo.element.classList.remove('scmpItemError');
@@ -285,6 +312,18 @@ var SteamCardMaximumProfit = (function () {
             itemInfo.element.classList.add('scmpItemError');
             itemInfo.element.classList.add('scmpItemSelect');
         }
+    };
+    /**
+     * 为了兼容火狐sandbox的wrappedJSObject
+     *
+     * @private
+     * @param {HTMLDivElement} elmDiv
+     * @returns {rgItem}
+     */
+    SteamCardMaximumProfit.prototype.FxxkFirefox = function (elmDiv) {
+        if (typeof elmDiv.wrappedJSObject === 'undefined')
+            return elmDiv.rgItem;
+        return elmDiv.wrappedJSObject.rgItem;
     };
     return SteamCardMaximumProfit;
 }());
