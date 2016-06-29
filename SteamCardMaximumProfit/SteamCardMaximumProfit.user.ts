@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.4
+// @version     0.2.5
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -24,7 +24,7 @@ class SteamCardMaximumProfit {
    */
   constructor() {
     this.D = document
-    this.W = unsafeWindow
+    this.W = (typeof unsafeWindow === 'undefined') ? window : unsafeWindow
   }
   private D: Document
   private W: unsafeWindow
@@ -83,7 +83,7 @@ class SteamCardMaximumProfit {
     // 有点丑
     let elmItems = this.D.querySelectorAll('.itemHolder') as NodeListOf<HTMLDivElement>
     for (let i = 0; i < elmItems.length; i++) {
-      let iteminfo = this.FxxkFirefox(elmItems[i])
+      let iteminfo = this.GetRgItem(elmItems[i])
       if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
         // 选择框
         iteminfo.element.classList.add('scmpItemReady')
@@ -124,7 +124,7 @@ class SteamCardMaximumProfit {
       let evt = e.target as HTMLElement
       // 点击物品
       if (evt.className === 'inventory_item_link') {
-        let itemInfo = this.FxxkFirefox(evt.parentNode as HTMLDivElement)
+        let itemInfo = this.GetRgItem(evt.parentNode as HTMLDivElement)
         let select = itemInfo.element.classList.contains('scmpItemSelect')
         this.GetPriceOverview(itemInfo)
         // 选择逻辑
@@ -142,14 +142,14 @@ class SteamCardMaximumProfit {
             ChangeClass(x)
           }
         }
-        else {
+        else if (e.ctrlKey) {
           ChangeClass(itemInfo.element)
         }
         this.lastChecked = itemInfo.element
       }
       // 点击快速出售
       else if (evt.id === 'scmpQuickSellItem') {
-        let itemInfo = this.FxxkFirefox(this.D.querySelector('.activeInfo') as HTMLDivElement)
+        let itemInfo = this.GetRgItem(this.D.querySelector('.activeInfo') as HTMLDivElement)
         if (itemInfo.element.classList.contains('scmpItemSuccess')) return
         let price = this.W.GetPriceValueAsInt(evt.innerHTML)
         this.quickSells.push({ itemInfo, price })
@@ -158,7 +158,7 @@ class SteamCardMaximumProfit {
       else if (evt.id === 'scmpQuickAllItem') {
         let iteminfos = this.D.querySelectorAll('.scmpItemSelect')
         for (let i = 0; i < iteminfos.length; i++) {
-          let itemInfo = this.FxxkFirefox(iteminfos[i] as HTMLDivElement)
+          let itemInfo = this.GetRgItem(iteminfos[i] as HTMLDivElement)
           this.GetPriceOverview(itemInfo, true)
         }
       }
@@ -332,9 +332,8 @@ class SteamCardMaximumProfit {
    * @param {HTMLDivElement} elmDiv
    * @returns {rgItem}
    */
-  private FxxkFirefox(elmDiv: HTMLDivElement): rgItem {
-    if (typeof elmDiv.wrappedJSObject === 'undefined') return elmDiv.rgItem
-    return elmDiv.wrappedJSObject.rgItem
+  private GetRgItem(elmDiv: HTMLDivElement): rgItem {
+    return ('wrappedJSObject' in elmDiv) ? elmDiv.wrappedJSObject.rgItem : elmDiv.rgItem
   }
 }
 const app = new SteamCardMaximumProfit()

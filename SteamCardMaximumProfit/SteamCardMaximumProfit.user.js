@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.4
+// @version     0.2.5
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -25,7 +25,7 @@ var SteamCardMaximumProfit = (function () {
         this.divItems = [];
         this.quickSells = [];
         this.D = document;
-        this.W = unsafeWindow;
+        this.W = (typeof unsafeWindow === 'undefined') ? window : unsafeWindow;
     }
     /**
      * 加载程序
@@ -81,7 +81,7 @@ var SteamCardMaximumProfit = (function () {
         // 有点丑
         var elmItems = this.D.querySelectorAll('.itemHolder');
         for (var i = 0; i < elmItems.length; i++) {
-            var iteminfo = this.FxxkFirefox(elmItems[i]);
+            var iteminfo = this.GetRgItem(elmItems[i]);
             if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
                 // 选择框
                 iteminfo.element.classList.add('scmpItemReady');
@@ -123,7 +123,7 @@ var SteamCardMaximumProfit = (function () {
             var evt = e.target;
             // 点击物品
             if (evt.className === 'inventory_item_link') {
-                var itemInfo = _this.FxxkFirefox(evt.parentNode);
+                var itemInfo = _this.GetRgItem(evt.parentNode);
                 var select_1 = itemInfo.element.classList.contains('scmpItemSelect');
                 _this.GetPriceOverview(itemInfo);
                 // 选择逻辑
@@ -143,13 +143,13 @@ var SteamCardMaximumProfit = (function () {
                         ChangeClass(x);
                     }
                 }
-                else {
+                else if (e.ctrlKey) {
                     ChangeClass(itemInfo.element);
                 }
                 _this.lastChecked = itemInfo.element;
             }
             else if (evt.id === 'scmpQuickSellItem') {
-                var itemInfo = _this.FxxkFirefox(_this.D.querySelector('.activeInfo'));
+                var itemInfo = _this.GetRgItem(_this.D.querySelector('.activeInfo'));
                 if (itemInfo.element.classList.contains('scmpItemSuccess'))
                     return;
                 var price = _this.W.GetPriceValueAsInt(evt.innerHTML);
@@ -158,7 +158,7 @@ var SteamCardMaximumProfit = (function () {
             else if (evt.id === 'scmpQuickAllItem') {
                 var iteminfos = _this.D.querySelectorAll('.scmpItemSelect');
                 for (var i = 0; i < iteminfos.length; i++) {
-                    var itemInfo = _this.FxxkFirefox(iteminfos[i]);
+                    var itemInfo = _this.GetRgItem(iteminfos[i]);
                     _this.GetPriceOverview(itemInfo, true);
                 }
             }
@@ -320,10 +320,8 @@ var SteamCardMaximumProfit = (function () {
      * @param {HTMLDivElement} elmDiv
      * @returns {rgItem}
      */
-    SteamCardMaximumProfit.prototype.FxxkFirefox = function (elmDiv) {
-        if (typeof elmDiv.wrappedJSObject === 'undefined')
-            return elmDiv.rgItem;
-        return elmDiv.wrappedJSObject.rgItem;
+    SteamCardMaximumProfit.prototype.GetRgItem = function (elmDiv) {
+        return ('wrappedJSObject' in elmDiv) ? elmDiv.wrappedJSObject.rgItem : elmDiv.rgItem;
     };
     return SteamCardMaximumProfit;
 }());
