@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.5
+// @version     0.2.6
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -32,6 +32,8 @@ class SteamCardMaximumProfit {
   private divItems: HTMLDivElement[] = []
   private lastChecked: HTMLDivElement
   private quickSells: { itemInfo: rgItem, price: number }[] = []
+  private quickSurplus: HTMLSpanElement
+  private quickError: HTMLSpanElement
   /**
    * 加载程序
    */
@@ -58,25 +60,36 @@ class SteamCardMaximumProfit {
     let elmStyle = this.D.createElement('style')
     elmStyle.type = 'text/css'
     elmStyle.innerHTML = '\
-.scmpItemReady {\
-  border: 1px dashed yellow !important;\
-}\
 .scmpItemSelect {\
-  border: 1px solid yellow !important;\
+  background: yellow;\
 }\
 .scmpItemRun {\
-  border: 1px solid blue !important;\
+  background: blue;\
 }\
 .scmpItemSuccess {\
-  border: 1px solid green !important;\
+  background: green;\
 }\
 .scmpItemError {\
-  border: 1px solid red !important;\
+  background: red;\
 }\
-.scmpQuickSell {\
+#scmpItemCheckbox {\
+  position: absolute;\
+  z-index: 100;\
+  top: 0;\
+  left: 0;\
+  width: 20px;\
+  height: 20px;\
+  border: 2px solid yellow;\
+  opacity: 0.7;\
+  cursor: default;\
+}\
+#scmpItemCheckbox:hover {\
+  opacity: 1;\
+}\
+#scmpQuickSell {\
   margin: 0px 1em 1em;\
 }\
-.scmpExch {\
+#scmpExch {\
   width: 5em;\
 }'
     this.D.querySelector('body').appendChild(elmStyle)
@@ -85,9 +98,11 @@ class SteamCardMaximumProfit {
     for (let i = 0; i < elmItems.length; i++) {
       let iteminfo = this.GetRgItem(elmItems[i])
       if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
-        // 选择框
-        iteminfo.element.classList.add('scmpItemReady')
         this.divItems.push(iteminfo.element)
+        // 选择框
+        let elmDiv = this.D.createElement('div')
+        elmDiv.id = 'scmpItemCheckbox'
+        iteminfo.element.appendChild(elmDiv)
       }
     }
     // 汇率输入框
@@ -96,12 +111,15 @@ class SteamCardMaximumProfit {
     elmDiv.innerHTML = '\
 <div>\
   <span>汇率: </span>\
-  <input class="filter_search_box scmpExch" type="text">\
-  <span class="btn_green_white_innerfade" id="scmpQuickAllItem">快速出售所选物品</span>&nbsp;\
+  <input class="filter_search_box" id="scmpExch" type="text">\
+  <span class="btn_green_white_innerfade" id="scmpQuickAllItem">快速出售</span><span> 剩余: <span id="scmpQuickSurplus">0</span> 失败: <span id="scmpQuickError">0</span></span>\
 </div>'
     elmInventoryPageRight.appendChild(elmDiv)
+
+    this.quickSurplus = this.D.querySelector('#scmpQuickSurplus') as HTMLSpanElement
+    this.quickError = this.D.querySelector('#scmpQuickError') as HTMLSpanElement
     // 改变汇率
-    this.inputUSDCNY = this.D.querySelector('.scmpExch') as HTMLInputElement
+    this.inputUSDCNY = this.D.querySelector('#scmpExch') as HTMLInputElement
     this.inputUSDCNY.value = '6.50'
     // 在线获取实时汇率
     GM_xmlhttpRequest({
@@ -125,15 +143,12 @@ class SteamCardMaximumProfit {
       // 点击物品
       if (evt.className === 'inventory_item_link') {
         let itemInfo = this.GetRgItem(evt.parentNode as HTMLDivElement)
-        let select = itemInfo.element.classList.contains('scmpItemSelect')
         this.GetPriceOverview(itemInfo)
-        // 选择逻辑
-        let ChangeClass = (elmDiv) => {
-          if (elmDiv.classList.contains('scmpItemSuccess')) return
-          elmDiv.classList.remove('scmpItemError')
-          elmDiv.classList.toggle('scmpItemReady', select)
-          elmDiv.classList.toggle('scmpItemSelect', !select)
-        }
+      }
+      // 选择逻辑
+      else if (evt.id === 'scmpItemCheckbox') {
+        let itemInfo = this.GetRgItem(evt.parentNode as HTMLDivElement)
+        let select = evt.classList.contains('scmpItemSelect')
         if (typeof this.lastChecked !== 'undefined' && e.shiftKey) {
           let start = this.divItems.indexOf(this.lastChecked)
           let end = this.divItems.indexOf(itemInfo.element)
@@ -142,15 +157,26 @@ class SteamCardMaximumProfit {
             ChangeClass(x)
           }
         }
-        else if (e.ctrlKey) {
+        else {
           ChangeClass(itemInfo.element)
         }
         this.lastChecked = itemInfo.element
+        /**
+         * 改变背景
+         * 
+         * @param {HTMLDivElement} elmDiv
+         */
+        function ChangeClass(elmDiv:HTMLDivElement) {
+          let elmCheckbox = elmDiv.querySelector('#scmpItemCheckbox')
+          if (elmCheckbox.classList.contains('scmpItemSuccess')) return
+          elmCheckbox.classList.remove('scmpItemError')
+          elmCheckbox.classList.toggle('scmpItemSelect', !select)
+        }
       }
       // 点击快速出售
       else if (evt.id === 'scmpQuickSellItem') {
         let itemInfo = this.GetRgItem(this.D.querySelector('.activeInfo') as HTMLDivElement)
-        if (itemInfo.element.classList.contains('scmpItemSuccess')) return
+        if (itemInfo.element.querySelector('#scmpItemCheckbox').classList.contains('scmpItemSuccess')) return
         let price = this.W.GetPriceValueAsInt(evt.innerHTML)
         this.quickSells.push({ itemInfo, price })
       }
@@ -158,7 +184,7 @@ class SteamCardMaximumProfit {
       else if (evt.id === 'scmpQuickAllItem') {
         let iteminfos = this.D.querySelectorAll('.scmpItemSelect')
         for (let i = 0; i < iteminfos.length; i++) {
-          let itemInfo = this.GetRgItem(iteminfos[i] as HTMLDivElement)
+          let itemInfo = this.GetRgItem(iteminfos[i].parentNode as HTMLDivElement)
           this.GetPriceOverview(itemInfo, true)
         }
       }
@@ -218,12 +244,12 @@ class SteamCardMaximumProfit {
                 this.GetPrice(itemInfo, lowestPrice, quick)
               }
               else {
-                this.QuickSellStatus(itemInfo, false)
+                this.QuickSellStatus(itemInfo, 'error')
               }
             }
           }
           else {
-            this.QuickSellStatus(itemInfo, false)
+            this.QuickSellStatus(itemInfo, 'error')
           }
         }
       }
@@ -258,7 +284,7 @@ class SteamCardMaximumProfit {
     else {
       // 显示输出
       let elmDiv = this.D.createElement('div')
-      elmDiv.classList.add('scmpQuickSell')
+      elmDiv.id = 'scmpQuickSell'
       elmDiv.innerHTML = `建议最低售价: <span class="btn_green_white_innerfade" id="scmpQuickSellItem" >${formatFirstPrice}</span>&nbsp<span class="btn_green_white_innerfade" id="scmpQuickSellItem" >${formatSecondPrice}</span>`
       let elmDivActions = this.D.querySelector(`#iteminfo${this.W.iActiveSelectView}_item_market_actions`) as HTMLDivElement
       elmDivActions.firstChild.appendChild(elmDiv)
@@ -275,9 +301,7 @@ class SteamCardMaximumProfit {
     if (typeof quickSell !== 'undefined') {
       let itemInfo = quickSell.itemInfo
       let price = quickSell.price
-      itemInfo.element.classList.remove('scmpItemError')
-      itemInfo.element.classList.remove('scmpItemSelect')
-      itemInfo.element.classList.add('scmpItemRun')
+      this.QuickSellStatus(itemInfo, 'run')
       let xhr = new XMLHttpRequest()
       xhr.open(
         'POST',
@@ -293,10 +317,10 @@ class SteamCardMaximumProfit {
         this.QuickSellItem()
         let evt = res.target as XMLHttpRequest
         if (evt.status === 200 && evt.response.success) {
-          this.QuickSellStatus(itemInfo, true)
+          this.QuickSellStatus(itemInfo, 'success')
         }
         else {
-          this.QuickSellStatus(itemInfo, false)
+          this.QuickSellStatus(itemInfo, 'error')
         }
       }
     }
@@ -311,18 +335,26 @@ class SteamCardMaximumProfit {
    * 
    * @private
    * @param {rgItem} itemInfo
-   * @param {boolean} status
+   * @param {string} status
    */
-  private QuickSellStatus(itemInfo: rgItem, status: boolean) {
-    if (status) {
-      itemInfo.element.classList.remove('scmpItemError');
-      itemInfo.element.classList.remove('scmpItemRun')
-      itemInfo.element.classList.add('scmpItemSuccess')
+  private QuickSellStatus(itemInfo: rgItem, status: string) {
+    let elmCheckbox = itemInfo.element.querySelector('#scmpItemCheckbox')
+    if (status === 'run') {
+      this.quickSurplus.innerHTML = this.quickSells.length.toString()
+      elmCheckbox.classList.remove('scmpItemError')
+      elmCheckbox.classList.remove('scmpItemSelect')
+      elmCheckbox.classList.add('scmpItemRun')
     }
-    else {
-      itemInfo.element.classList.remove('scmpItemRun')
-      itemInfo.element.classList.add('scmpItemError')
-      itemInfo.element.classList.add('scmpItemSelect')
+    else if (status === 'success') {
+      elmCheckbox.classList.remove('scmpItemError')
+      elmCheckbox.classList.remove('scmpItemRun')
+      elmCheckbox.classList.add('scmpItemSuccess')
+    }
+    else if (status === 'error') {
+      this.quickError.innerHTML = (parseInt(this.quickError.innerHTML) + 1).toString()
+      elmCheckbox.classList.remove('scmpItemRun')
+      elmCheckbox.classList.add('scmpItemError')
+      elmCheckbox.classList.add('scmpItemSelect')
     }
   }
   /**
