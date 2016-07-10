@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.6
+// @version     0.2.7
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -33,17 +33,25 @@ var SteamCardMaximumProfit = (function () {
     SteamCardMaximumProfit.prototype.Run = function () {
         var _this = this;
         var elmActiveInventoryPage = this.D.querySelector('#active_inventory_page');
-        // 创建观察者对象
-        var observer = new MutationObserver(function (rec) {
-            if (location.hash.match(/^#753|^$/) === null || rec[0].oldValue !== 'display: none;')
-                return;
-            _this.AddUI();
-            _this.Listener();
-            _this.QuickSellItem();
-            observer.disconnect();
-        });
-        // 传入目标节点和观察选项
-        observer.observe(elmActiveInventoryPage, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+        // 这样应该就可以兼容小书签模式了
+        if (location.hash.match(/^#753|^$/) === null || elmActiveInventoryPage.style.cssText === 'display: none;') {
+            // 创建观察者对象
+            var observer_1 = new MutationObserver(function (rec) {
+                if (location.hash.match(/^#753|^$/) === null || rec[0].oldValue !== 'display: none;')
+                    return;
+                _this.AddUI();
+                _this.Listener();
+                _this.QuickSellItem();
+                observer_1.disconnect();
+            });
+            // 传入目标节点和观察选项
+            observer_1.observe(elmActiveInventoryPage, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+        }
+        else {
+            this.AddUI();
+            this.Listener();
+            this.QuickSellItem();
+        }
     };
     /**
      * 添加样式, 复选框和汇率输入框
@@ -53,42 +61,10 @@ var SteamCardMaximumProfit = (function () {
     SteamCardMaximumProfit.prototype.AddUI = function () {
         var _this = this;
         // 样式
-        var elmStyle = this.D.createElement('style');
-        elmStyle.type = 'text/css';
-        elmStyle.innerHTML = '\
-.scmpItemSelect {\
-  background: yellow;\
-}\
-.scmpItemRun {\
-  background: blue;\
-}\
-.scmpItemSuccess {\
-  background: green;\
-}\
-.scmpItemError {\
-  background: red;\
-}\
-#scmpItemCheckbox {\
-  position: absolute;\
-  z-index: 100;\
-  top: 0;\
-  left: 0;\
-  width: 20px;\
-  height: 20px;\
-  border: 2px solid yellow;\
-  opacity: 0.7;\
-  cursor: default;\
-}\
-#scmpItemCheckbox:hover {\
-  opacity: 1;\
-}\
-#scmpQuickSell {\
-  margin: 0px 1em 1em;\
-}\
-#scmpExch {\
-  width: 5em;\
-}';
-        this.D.querySelector('body').appendChild(elmStyle);
+        var styleElm = this.D.createElement('style');
+        styleElm.type = 'text/css';
+        styleElm.innerHTML = "\n.scmpItemSelect {\n  background: yellow;\n}\n.scmpItemRun {\n  background: blue;\n}\n.scmpItemSuccess {\n  background: green;\n}\n.scmpItemError {\n  background: red;\n}\n.scmpQuickSell {\n  margin: 0 0 1em;\n}\n#scmpItemCheckbox {\n  position: absolute;\n  z-index: 100;\n  top: 0;\n  left: 0;\n  width: 20px;\n  height: 20px;\n  border: 2px solid yellow;\n  opacity: 0.7;\n  cursor: default;\n}\n#scmpItemCheckbox:hover {\n  opacity: 1;\n}\n#scmpExch {\n  width: 5em;\n}";
+        this.D.querySelector('body').appendChild(styleElm);
         // 有点丑
         var elmItems = this.D.querySelectorAll('.itemHolder');
         for (var i = 0; i < elmItems.length; i++) {
@@ -101,31 +77,32 @@ var SteamCardMaximumProfit = (function () {
                 iteminfo.element.appendChild(elmDiv_1);
             }
         }
-        // 汇率输入框
+        // 一大坨东西
         var elmInventoryPageRight = this.D.querySelector('.inventory_page_right');
         var elmDiv = this.D.createElement('div');
-        elmDiv.innerHTML = '\
-<div>\
-  <span>汇率: </span>\
-  <input class="filter_search_box" id="scmpExch" type="text">\
-  <span class="btn_green_white_innerfade" id="scmpQuickAllItem">快速出售</span><span> 剩余: <span id="scmpQuickSurplus">0</span> 失败: <span id="scmpQuickError">0</span></span>\
-</div>';
+        elmDiv.innerHTML = "\n<div class=\"scmpQuickSell\">\u5EFA\u8BAE\u6700\u4F4E\u552E\u4EF7: <span class=\"btn_green_white_innerfade\" id=\"scmpQuickSellItem\">null</span> <span class=\"btn_green_white_innerfade\" id=\"scmpQuickSellItem\">null</span></div>\n<div>\u6C47\u7387: <input class=\"filter_search_box\" id=\"scmpExch\" type=\"text\"><span class=\"btn_green_white_innerfade\" id=\"scmpQuickAllItem\">\u5FEB\u901F\u51FA\u552E</span> \u5269\u4F59: <span id=\"scmpQuickSurplus\">0</span> \u5931\u8D25: <span id=\"scmpQuickError\">0</span></div>";
         elmInventoryPageRight.appendChild(elmDiv);
-        this.quickSurplus = this.D.querySelector('#scmpQuickSurplus');
-        this.quickError = this.D.querySelector('#scmpQuickError');
+        var elmQuickSellItem = elmDiv.querySelectorAll('#scmpQuickSellItem');
+        this.spanFirstPrice = elmQuickSellItem[0];
+        this.spanSecondPrice = elmQuickSellItem[1];
+        this.spanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
+        this.spanQuickError = elmDiv.querySelector('#scmpQuickError');
         // 改变汇率
-        this.inputUSDCNY = this.D.querySelector('#scmpExch');
+        this.inputUSDCNY = elmDiv.querySelector('#scmpExch');
         this.inputUSDCNY.value = '6.50';
         // 在线获取实时汇率
-        GM_xmlhttpRequest({
-            method: 'GET',
-            url: 'http://data.forex.hexun.com/data/breedExch_bing.ashx?currency1=%c3%c0%d4%aa&currency2=%c8%cb%c3%f1%b1%d2%d4%aa&format=json&callback=currencyExchange',
-            onload: function (res) {
-                if (res.status === 200) {
-                    _this.inputUSDCNY.value = res.responseText.match(/refePrice:'([^']{5})/)[1];
+        if (typeof GM_xmlhttpRequest === 'function') {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
+                responseType: 'json',
+                onload: function (res) {
+                    if (res.status === 200 && res.response.status === '0') {
+                        _this.inputUSDCNY.value = res.response.data[0].number2;
+                    }
                 }
-            }
-        });
+            });
+        }
     };
     /**
      * 添加监听
@@ -134,18 +111,20 @@ var SteamCardMaximumProfit = (function () {
      */
     SteamCardMaximumProfit.prototype.Listener = function () {
         var _this = this;
-        this.D.addEventListener('click', function (e) {
-            var evt = e.target;
+        this.D.addEventListener('click', function (ev) {
+            var evt = ev.target;
             // 点击物品
             if (evt.className === 'inventory_item_link') {
+                _this.spanFirstPrice.innerText = 'null';
+                _this.spanSecondPrice.innerText = 'null';
                 var itemInfo = _this.GetRgItem(evt.parentNode);
                 _this.GetPriceOverview(itemInfo);
             }
             else if (evt.id === 'scmpItemCheckbox') {
                 var itemInfo = _this.GetRgItem(evt.parentNode);
                 var select_1 = evt.classList.contains('scmpItemSelect');
-                if (typeof _this.lastChecked !== 'undefined' && e.shiftKey) {
-                    var start = _this.divItems.indexOf(_this.lastChecked);
+                if (typeof _this.divLastChecked !== 'undefined' && ev.shiftKey) {
+                    var start = _this.divItems.indexOf(_this.divLastChecked);
                     var end = _this.divItems.indexOf(itemInfo.element);
                     var someDivItems = _this.divItems.slice(Math.min(start, end), Math.max(start, end) + 1);
                     for (var _i = 0, someDivItems_1 = someDivItems; _i < someDivItems_1.length; _i++) {
@@ -156,7 +135,7 @@ var SteamCardMaximumProfit = (function () {
                 else {
                     ChangeClass(itemInfo.element);
                 }
-                _this.lastChecked = itemInfo.element;
+                _this.divLastChecked = itemInfo.element;
                 /**
                  * 改变背景
                  *
@@ -164,18 +143,18 @@ var SteamCardMaximumProfit = (function () {
                  */
                 function ChangeClass(elmDiv) {
                     var elmCheckbox = elmDiv.querySelector('#scmpItemCheckbox');
-                    if (elmCheckbox.classList.contains('scmpItemSuccess'))
-                        return;
-                    elmCheckbox.classList.remove('scmpItemError');
-                    elmCheckbox.classList.toggle('scmpItemSelect', !select_1);
+                    if (elmCheckbox.classList.contains('scmpItemSuccess') === false) {
+                        elmCheckbox.classList.remove('scmpItemError');
+                        elmCheckbox.classList.toggle('scmpItemSelect', !select_1);
+                    }
                 }
             }
             else if (evt.id === 'scmpQuickSellItem') {
                 var itemInfo = _this.GetRgItem(_this.D.querySelector('.activeInfo'));
-                if (itemInfo.element.querySelector('#scmpItemCheckbox').classList.contains('scmpItemSuccess'))
-                    return;
-                var price = _this.W.GetPriceValueAsInt(evt.innerHTML);
-                _this.quickSells.push({ itemInfo: itemInfo, price: price });
+                if (itemInfo.element.querySelector('#scmpItemCheckbox').classList.contains('scmpItemSuccess') === false && evt.innerText !== 'null') {
+                    var price = _this.W.GetPriceValueAsInt(evt.innerText);
+                    _this.quickSells.push({ itemInfo: itemInfo, price: price });
+                }
             }
             else if (evt.id === 'scmpQuickAllItem') {
                 var iteminfos = _this.D.querySelectorAll('.scmpItemSelect');
@@ -254,27 +233,24 @@ var SteamCardMaximumProfit = (function () {
         // 格式化取整
         var firstPrice = this.W.GetPriceValueAsInt(lowestPrice);
         // 手续费
-        var publisherFee = (typeof itemInfo.market_fee === 'undefined') ? this.W.g_rgWalletInfo['wallet_publisher_fee_percent_default'] : itemInfo.market_fee;
+        var publisherFee = (typeof itemInfo.market_fee === 'undefined') ? this.W.g_rgWalletInfo.wallet_publisher_fee_percent_default : itemInfo.market_fee;
         var feeInfo = this.W.CalculateFeeAmount(firstPrice, publisherFee);
         firstPrice = firstPrice - feeInfo.fees;
         // 美元区+1美分
         var secondPrice = Math.floor((firstPrice + 1) * parseFloat(this.inputUSDCNY.value));
         // 格式化
-        var formatSecondPrice = this.W.v_currencyformat(secondPrice, this.W.GetCurrencyCode(this.W.g_rgWalletInfo['wallet_currency']));
+        var formatSecondPrice = this.W.v_currencyformat(secondPrice, this.W.GetCurrencyCode(this.W.g_rgWalletInfo.wallet_currency));
         // 换算成人民币
         firstPrice = Math.floor(firstPrice * parseFloat(this.inputUSDCNY.value));
-        var formatFirstPrice = this.W.v_currencyformat(firstPrice, this.W.GetCurrencyCode(this.W.g_rgWalletInfo['wallet_currency']));
+        var formatFirstPrice = this.W.v_currencyformat(firstPrice, this.W.GetCurrencyCode(this.W.g_rgWalletInfo.wallet_currency));
         if (quick) {
             var price = firstPrice;
             this.quickSells.push({ itemInfo: itemInfo, price: price });
         }
         else {
             // 显示输出
-            var elmDiv = this.D.createElement('div');
-            elmDiv.id = 'scmpQuickSell';
-            elmDiv.innerHTML = "\u5EFA\u8BAE\u6700\u4F4E\u552E\u4EF7: <span class=\"btn_green_white_innerfade\" id=\"scmpQuickSellItem\" >" + formatFirstPrice + "</span>&nbsp<span class=\"btn_green_white_innerfade\" id=\"scmpQuickSellItem\" >" + formatSecondPrice + "</span>";
-            var elmDivActions = this.D.querySelector("#iteminfo" + this.W.iActiveSelectView + "_item_market_actions");
-            elmDivActions.firstChild.appendChild(elmDiv);
+            this.spanFirstPrice.innerText = formatFirstPrice;
+            this.spanSecondPrice.innerText = formatSecondPrice;
         }
     };
     /**
@@ -324,7 +300,7 @@ var SteamCardMaximumProfit = (function () {
     SteamCardMaximumProfit.prototype.QuickSellStatus = function (itemInfo, status) {
         var elmCheckbox = itemInfo.element.querySelector('#scmpItemCheckbox');
         if (status === 'run') {
-            this.quickSurplus.innerHTML = this.quickSells.length.toString();
+            this.spanQuickSurplus.innerText = this.quickSells.length.toString();
             elmCheckbox.classList.remove('scmpItemError');
             elmCheckbox.classList.remove('scmpItemSelect');
             elmCheckbox.classList.add('scmpItemRun');
@@ -335,7 +311,7 @@ var SteamCardMaximumProfit = (function () {
             elmCheckbox.classList.add('scmpItemSuccess');
         }
         else if (status === 'error') {
-            this.quickError.innerHTML = (parseInt(this.quickError.innerHTML) + 1).toString();
+            this.spanQuickError.innerText = (parseInt(this.spanQuickError.innerText) + 1).toString();
             elmCheckbox.classList.remove('scmpItemRun');
             elmCheckbox.classList.add('scmpItemError');
             elmCheckbox.classList.add('scmpItemSelect');
