@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.0
+// @version     2.0.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -156,9 +156,10 @@ class BiLiveNoVIP {
             let checkbox = this.D.getElementById(x);
             checkbox.checked = this.config[x].enable;
             checkbox.addEventListener('change', (ev) => {
-                this.config[x].enable = checkbox.checked;
+                let evt = ev.target;
+                this.config[evt.id].enable = checkbox.checked;
                 localStorage.setItem('blnvConfig', JSON.stringify(this.config));
-                if (x === 'popularWords') {
+                if (evt.id === 'popularWords') {
                     this.PopularWords(checkbox.checked);
                 }
                 else {
