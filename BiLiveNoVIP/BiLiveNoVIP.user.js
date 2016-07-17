@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.1
+// @version     2.0.2
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -91,23 +91,23 @@ class BiLiveNoVIP {
         //css内容
         let cssText = '';
         if (this.config.noVIPIcon.enable)
-            cssText += '.vip-icon {display: none !important;}';
+            cssText += '#chat-msg-list .vip-icon {display: none !important;}';
         if (this.config.noMedalIcon.enable)
-            cssText += '.medal-icon {display: none !important;}';
+            cssText += '#chat-msg-list .medal-icon {display: none !important;}';
         if (this.config.noUserLevelIcon.enable)
-            cssText += '.user-level-icon {display: none !important;}';
+            cssText += '#chat-msg-list .user-level-icon {display: none !important;}';
         if (this.config.noLiveTitleIcon.enable)
-            cssText += '.live-title-icon {display: none !important;}';
+            cssText += '#chat-msg-list .live-title-icon {display: none !important;}';
         if (this.config.noSystemMsg.enable)
-            cssText += '.system-msg {display: none !important;} .announcement-container {display: none !important;}';
+            cssText += '#chat-msg-list .system-msg {display: none !important;} #chat-msg-list .announcement-container {display: none !important;}';
         if (this.config.noGiftMsg.enable)
-            cssText += '.gift-msg {display: none !important;}';
+            cssText += '#chat-msg-list .gift-msg {display: none !important;}';
         if (this.config.noSuperGift.enable)
-            cssText += '.super-gift-ctnr {display: none !important;}';
+            cssText += '#chat-list-ctnr > .super-gift-ctnr {display: none !important;}';
         if (this.config.noSmallGift.enable)
-            cssText += '.gift-msg-1000 {display: none !important;} .chat-msg-list {height: 100% !important;}';
+            cssText += '#chat-list-ctnr > #gift-msg-1000 {display: none !important;} #chat-list-ctnr > #chat-msg-list {height: 100% !important;}';
         if (this.config.fixTreasure.enable)
-            cssText += '.treasure {margin: -160px 0 !important;}';
+            cssText += '#player-container > .treasure {margin: -160px 0 !important;}';
         elmStyle.innerHTML = cssText;
     }
     /**
