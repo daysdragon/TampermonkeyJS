@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.7
+// @version     0.2.8
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -10,7 +10,6 @@
 // @grant       GM_xmlhttpRequest
 // @run-at      document-end
 // ==/UserScript==
-'use strict'
 
 /**
  * 最大化steam卡牌卖出的利润
@@ -18,16 +17,10 @@
  * @class SteamCardMaximumProfit
  */
 class SteamCardMaximumProfit {
-  /**
-   * Creates an instance of SteamCardMaximumProfit.
-   * 
-   */
   constructor() {
-    this.D = document
-    this.W = (typeof unsafeWindow === 'undefined') ? window : unsafeWindow
   }
-  private D: Document
-  private W: unsafeWindow
+  private D = document
+  private W: unsafeWindow = (typeof unsafeWindow === 'undefined') ? window : unsafeWindow
   private inputUSDCNY: HTMLInputElement
   private divItems: HTMLDivElement[] = []
   private divLastChecked: HTMLDivElement
@@ -39,26 +32,18 @@ class SteamCardMaximumProfit {
   /**
    * 加载程序
    */
-  public Run() {
-    let elmActiveInventoryPage = <HTMLDivElement>this.D.querySelector('#active_inventory_page')
-    // 这样应该就可以兼容小书签模式了
-    if (location.hash.match(/^#753|^$/) === null || elmActiveInventoryPage.style.cssText === 'display: none;') {
-      // 创建观察者对象
-      let observer = new MutationObserver((rec) => {
-        if (location.hash.match(/^#753|^$/) === null || rec[0].oldValue !== 'display: none;') return
-        this.AddUI()
-        this.Listener()
-        this.QuickSellItem()
-        observer.disconnect()
-      })
-      // 传入目标节点和观察选项
-      observer.observe(elmActiveInventoryPage, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] })
-    }
-    else {
+  public Start() {
+    let elmDivActiveInventoryPage = <HTMLDivElement>this.D.querySelector('#active_inventory_page')
+    // 创建观察者对象
+    let observer = new MutationObserver((rec) => {
+      if (location.hash.match(/^#753|^$/) === null || rec[0].oldValue !== 'display: none;') return
       this.AddUI()
       this.Listener()
       this.QuickSellItem()
-    }
+      observer.disconnect()
+    })
+    // 传入目标节点和观察选项
+    observer.observe(elmDivActiveInventoryPage, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] })
   }
   /**
    * 添加样式, 复选框和汇率输入框
@@ -67,9 +52,8 @@ class SteamCardMaximumProfit {
    */
   private AddUI() {
     // 样式
-    let styleElm = this.D.createElement('style')
-    styleElm.type = 'text/css'
-    styleElm.innerHTML = `
+    let elmStyle = this.D.createElement('style')
+    elmStyle.innerHTML = `
 .scmpItemSelect {
   background: yellow;
 }
@@ -85,7 +69,7 @@ class SteamCardMaximumProfit {
 .scmpQuickSell {
   margin: 0 0 1em;
 }
-#scmpItemCheckbox {
+.scmpItemCheckbox {
   position: absolute;
   z-index: 100;
   top: 0;
@@ -96,35 +80,36 @@ class SteamCardMaximumProfit {
   opacity: 0.7;
   cursor: default;
 }
-#scmpItemCheckbox:hover {
+.scmpItemCheckbox:hover {
   opacity: 1;
 }
 #scmpExch {
   width: 5em;
 }`
-    this.D.querySelector('body').appendChild(styleElm)
+    this.D.querySelector('body').appendChild(elmStyle)
     // 有点丑
-    let elmItems = <NodeListOf<HTMLDivElement>>this.D.querySelectorAll('.itemHolder')
-    for (let i = 0; i < elmItems.length; i++) {
-      let iteminfo = this.GetRgItem(elmItems[i])
+    let elmDivItems = <NodeListOf<HTMLDivElement>>this.D.querySelectorAll('.itemHolder')
+    for (let y of elmDivItems) {
+      let iteminfo = this.GetRgItem(y)
       if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
         this.divItems.push(iteminfo.element)
         // 选择框
         let elmDiv = this.D.createElement('div')
-        elmDiv.id = 'scmpItemCheckbox'
+        elmDiv.classList.add('scmpItemCheckbox')
         iteminfo.element.appendChild(elmDiv)
       }
     }
-    // 一大坨东西
-    let elmInventoryPageRight = <HTMLDivElement>this.D.querySelector('.inventory_page_right')
+    // 插入快速出售按钮
+    let elmDivInventoryPageRight = <HTMLDivElement>this.D.querySelector('.inventory_page_right')
     let elmDiv = this.D.createElement('div')
     elmDiv.innerHTML = `
-<div class="scmpQuickSell">建议最低售价: <span class="btn_green_white_innerfade" id="scmpQuickSellItem">null</span> <span class="btn_green_white_innerfade" id="scmpQuickSellItem">null</span></div>
+<div class="scmpQuickSell">建议最低售价: <span class="btn_green_white_innerfade scmpQuickSellItem">null</span> <span class="btn_green_white_innerfade scmpQuickSellItem">null</span></div>
 <div>汇率: <input class="filter_search_box" id="scmpExch" type="text"><span class="btn_green_white_innerfade" id="scmpQuickAllItem">快速出售</span> 剩余: <span id="scmpQuickSurplus">0</span> 失败: <span id="scmpQuickError">0</span></div>`
-    elmInventoryPageRight.appendChild(elmDiv)
-    let elmQuickSellItem = <NodeListOf<HTMLSpanElement>>elmDiv.querySelectorAll('#scmpQuickSellItem')
-    this.spanFirstPrice = elmQuickSellItem[0]
-    this.spanSecondPrice = elmQuickSellItem[1]
+    elmDivInventoryPageRight.appendChild(elmDiv)
+    // 获取快速出售按钮
+    let elmSpanQuickSellItems = <NodeListOf<HTMLSpanElement>>elmDiv.querySelectorAll('.scmpQuickSellItem')
+    this.spanFirstPrice = elmSpanQuickSellItems[0]
+    this.spanSecondPrice = elmSpanQuickSellItems[1]
     this.spanQuickSurplus = <HTMLSpanElement>elmDiv.querySelector('#scmpQuickSurplus')
     this.spanQuickError = <HTMLSpanElement>elmDiv.querySelector('#scmpQuickError')
     // 改变汇率
@@ -150,7 +135,7 @@ class SteamCardMaximumProfit {
    * @private
    */
   private Listener() {
-    this.D.addEventListener('click', (ev) => {
+    this.D.querySelector('.inventory_page').addEventListener('click', (ev: MouseEvent) => {
       let evt = <HTMLElement>ev.target
       // 点击物品
       if (evt.className === 'inventory_item_link') {
@@ -160,14 +145,15 @@ class SteamCardMaximumProfit {
         this.GetPriceOverview(itemInfo)
       }
       // 选择逻辑
-      else if (evt.id === 'scmpItemCheckbox') {
+      else if (evt.classList.contains('scmpItemCheckbox')) {
         let itemInfo = this.GetRgItem(<HTMLDivElement>evt.parentNode)
         let select = evt.classList.contains('scmpItemSelect')
+        // shift多选
         if (typeof this.divLastChecked !== 'undefined' && ev.shiftKey) {
           let start = this.divItems.indexOf(this.divLastChecked)
           let end = this.divItems.indexOf(itemInfo.element)
           let someDivItems = this.divItems.slice(Math.min(start, end), Math.max(start, end) + 1)
-          for (let x of someDivItems) { ChangeClass(x) }
+          for (let y of someDivItems) { ChangeClass(y) }
         }
         else {
           ChangeClass(itemInfo.element)
@@ -179,33 +165,37 @@ class SteamCardMaximumProfit {
          * @param {HTMLDivElement} elmDiv
          */
         function ChangeClass(elmDiv: HTMLDivElement) {
-          let elmCheckbox = elmDiv.querySelector('#scmpItemCheckbox')
+          let elmCheckbox = elmDiv.querySelector('.scmpItemCheckbox')
           if (elmCheckbox.classList.contains('scmpItemSuccess') === false) {
             elmCheckbox.classList.remove('scmpItemError')
             elmCheckbox.classList.toggle('scmpItemSelect', !select)
           }
         }
       }
-      // 点击快速出售
-      else if (evt.id === 'scmpQuickSellItem') {
+    })
+    // 点击快速出售
+    let elmDivQuickSellItem = this.D.querySelectorAll('.scmpQuickSellItem')
+    for (let y of elmDivQuickSellItem) {
+      y.addEventListener('click', (ev) => {
+        let evt = <HTMLSpanElement>ev.target
         let itemInfo = this.GetRgItem(<HTMLDivElement>this.D.querySelector('.activeInfo'))
-        if (itemInfo.element.querySelector('#scmpItemCheckbox').classList.contains('scmpItemSuccess') === false && evt.innerText !== 'null') {
+        if (itemInfo.element.querySelector('.scmpItemCheckbox').classList.contains('scmpItemSuccess') === false && evt.innerText !== 'null') {
           let price = this.W.GetPriceValueAsInt(evt.innerText)
           this.quickSells.push({ itemInfo, price })
         }
-      }
-      // 点击全部出售
-      else if (evt.id === 'scmpQuickAllItem') {
-        let iteminfos = this.D.querySelectorAll('.scmpItemSelect')
-        for (let i = 0; i < iteminfos.length; i++) {
-          let itemInfo = this.GetRgItem(<HTMLDivElement>iteminfos[i].parentNode)
-          this.GetPriceOverview(itemInfo, true)
-        }
+      })
+    }
+    // 点击全部出售
+    this.D.querySelector('#scmpQuickAllItem').addEventListener('click', (ev) => {
+      let itemInfos = this.D.querySelectorAll('.scmpItemSelect')
+      for (let y of itemInfos) {
+        let itemInfo = this.GetRgItem(<HTMLDivElement>y.parentNode)
+        this.GetPriceOverview(itemInfo, true)
       }
     })
   }
   /**
-   * 获取美元区价格, 为了兼容还是采用回调的方式
+   * 获取美元区价格
    * 
    * @private
    * @param {rgItem} itemInfo
@@ -213,61 +203,40 @@ class SteamCardMaximumProfit {
    */
   private GetPriceOverview(itemInfo: rgItem, quick = false) {
     if (itemInfo.marketable !== 1) return
-    let xhr = new XMLHttpRequest()
-    xhr.open(
-      'GET',
-      `/market/priceoverview/?country=US&currency=1&appid=${itemInfo.appid}&market_hash_name=${encodeURIComponent(this.W.GetMarketHashName(itemInfo))}`,
-      true
-    )
-    xhr.responseType = 'json'
-    xhr.send()
-    xhr.onload = (res) => {
-      let evt = <XMLHttpRequest>res.target
-      if (evt.status === 200 && evt.response.success && evt.response.lowest_price) {
-        // 对$进行处理, 否则会报错
-        let lowestPrice = evt.response.lowest_price.replace('$', '')
-        this.GetPrice(itemInfo, lowestPrice, quick)
-      }
-      else {
-        // steam对于价格获取频率有限制, 不得不通过抓取商店页面来获取价格
-        let xhr = new XMLHttpRequest()
-        xhr.open(
-          'GET',
-          `/market/listings/${itemInfo.appid}/${encodeURIComponent(this.W.GetMarketHashName(itemInfo))}`,
-          true
-        )
-        xhr.send()
-        xhr.onload = (res) => {
-          let evt = <XMLHttpRequest>res.target
-          if (evt.status === 200) {
-            // 解析出item_nameid
-            let nameid = evt.responseText.match(/Market_LoadOrderSpread\( (\d+)/)[1]
-            let xhr = new XMLHttpRequest()
-            xhr.open(
-              'GET',
-              `/market/itemordershistogram/?country=US&language=english&currency=1&item_nameid=${nameid}&two_factor=0`,
-              true
-            )
-            xhr.responseType = 'json'
-            xhr.send()
-            xhr.onload = (res) => {
-              let evt = <XMLHttpRequest>res.target
-              if (evt.status === 200 && evt.response.success) {
+    let priceoverview = `/market/priceoverview/?country=US&currency=1&appid=${itemInfo.appid}&market_hash_name=${encodeURIComponent(this.W.GetMarketHashName(itemInfo))}`
+    this.XHR<priceoverview>(priceoverview, 'json')
+      .then((resolve) => {
+        if (resolve.success && resolve.lowest_price) {
+          // 对$进行处理, 否则会报错
+          let lowestPrice = resolve.lowest_price.replace('$', '')
+          this.GetPrice(itemInfo, lowestPrice, quick)
+        }
+        else {
+          let marketListings = `/market/listings/${itemInfo.appid}/${encodeURIComponent(this.W.GetMarketHashName(itemInfo))}`
+          this.XHR<string>(marketListings)
+            .then((resolve) => {
+              let nameid = resolve.match(/Market_LoadOrderSpread\( (\d+)/)[1]
+              let marketItemordershistogram = `/market/itemordershistogram/?country=US&language=english&currency=1&item_nameid=${nameid}&two_factor=0`
+              return this.XHR<itemordershistogram>(marketItemordershistogram, 'json')
+            })
+            .then((resolve) => {
+              if (resolve.success) {
                 // 转换为带有一个空格的字符串
-                let lowestPrice = ' ' + evt.response.sell_order_graph[0][0]
+                let lowestPrice = ' ' + resolve.sell_order_graph[0][0]
                 this.GetPrice(itemInfo, lowestPrice, quick)
               }
               else {
                 this.QuickSellStatus(itemInfo, 'error')
               }
-            }
-          }
-          else {
-            this.QuickSellStatus(itemInfo, 'error')
-          }
+            })
+            .catch((reject) => {
+              this.QuickSellStatus(itemInfo, 'error')
+            })
         }
-      }
-    }
+      })
+      .catch((reject) => {
+        this.QuickSellStatus(itemInfo, 'error')
+      })
   }
   /**
    * 计算价格
@@ -307,33 +276,26 @@ class SteamCardMaximumProfit {
    * @private
    */
   private QuickSellItem() {
-    // 用了回调, 顺序触发就不好处理了, 所以轮询吧
+    // 顺序触发不好处理, 所以轮询吧
     let quickSell = this.quickSells.shift()
     if (typeof quickSell !== 'undefined') {
       let itemInfo = quickSell.itemInfo
       let price = quickSell.price
       this.QuickSellStatus(itemInfo, 'run')
-      let xhr = new XMLHttpRequest()
-      xhr.open(
-        'POST',
-        'https://steamcommunity.com/market/sellitem/',
-        true
-      )
-      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8')
-      // 交易采用HTTPS, 有时会产生跨域问题
-      xhr.withCredentials = true
-      xhr.responseType = 'json'
-      xhr.send(`sessionid=${this.W.g_sessionID}&appid=${itemInfo.appid}&contextid=${itemInfo.contextid}&assetid=${itemInfo.id}&amount=1&price=${price}`)
-      xhr.onload = (res) => {
-        this.QuickSellItem()
-        let evt = <XMLHttpRequest>res.target
-        if (evt.status === 200 && evt.response.success) {
-          this.QuickSellStatus(itemInfo, 'success')
-        }
-        else {
+      let marketSellitem = `https://steamcommunity.com/market/sellitem/?sessionid=${this.W.g_sessionID}&appid=${itemInfo.appid}&contextid=${itemInfo.contextid}&assetid=${itemInfo.id}&amount=1&price=${price}`
+      this.XHR<sellitem>(marketSellitem, 'json', 'POST', true)
+        .then((resolve) => {
+          this.QuickSellItem()
+          if (resolve.success) {
+            this.QuickSellStatus(itemInfo, 'success')
+          }
+          else {
+            this.QuickSellStatus(itemInfo, 'error')
+          }
+        })
+        .catch((reject) => {
           this.QuickSellStatus(itemInfo, 'error')
-        }
-      }
+        })
     }
     else {
       setTimeout(() => {
@@ -349,7 +311,7 @@ class SteamCardMaximumProfit {
    * @param {string} status
    */
   private QuickSellStatus(itemInfo: rgItem, status: string) {
-    let elmCheckbox = itemInfo.element.querySelector('#scmpItemCheckbox')
+    let elmCheckbox = itemInfo.element.querySelector('.scmpItemCheckbox')
     if (status === 'run') {
       this.spanQuickSurplus.innerText = this.quickSells.length.toString()
       elmCheckbox.classList.remove('scmpItemError')
@@ -378,11 +340,65 @@ class SteamCardMaximumProfit {
   private GetRgItem(elmDiv: HTMLDivElement): rgItem {
     return ('wrappedJSObject' in elmDiv) ? elmDiv.wrappedJSObject.rgItem : elmDiv.rgItem
   }
+  /**
+   * 使用Promise封装xhr
+   * 
+   * @private
+   * @template T
+   * @param {string} url
+   * @param {string} [type='']
+   * @param {string} [method='GET']
+   * @param {boolean} [cookie=false]
+   * @returns {Promise<T>}
+   */
+  private XHR<T>(url: string, type = '', method = 'GET', cookie = false): Promise<T> {
+    return new Promise((resolve, reject) => {
+      // 并不需要处理错误
+      let timeout = setTimeout(reject, 3e4) //30秒
+      let path = url
+      if (type === 'jsonp') {
+        // 感觉引入jquery还是太大材小用
+        let elmScript = this.D.createElement('script')
+        this.D.body.appendChild(elmScript)
+        this.W['cb'] = (json) => {
+          clearTimeout(timeout)
+          this.D.body.removeChild(elmScript)
+          this.W['cb'] = undefined
+          resolve(json)
+        }
+        elmScript.src = `${path}&callback=cb & _=${Date.now()} `
+      }
+      else {
+        let postData = ''
+        let xhr = new XMLHttpRequest()
+        if (method === 'POST') {
+          path = url.split('?')[0]
+          postData = url.split('?')[1]
+        }
+        xhr.open(method, path, true)
+        if (method === 'POST') xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8')
+        if (cookie) xhr.withCredentials = true
+        xhr.responseType = type
+        xhr.onload = (ev) => {
+          clearTimeout(timeout)
+          resolve((<XMLHttpRequest>ev.target).response)
+        }
+        xhr.send(postData)
+      }
+    })
+  }
 }
-const app = new SteamCardMaximumProfit()
-app.Run()
+const scmp = new SteamCardMaximumProfit()
+scmp.Start()
 
 // 只是为了避免类型错误, 编译时会自动去除
+interface Node {
+  rgItem: rgItem
+  wrappedJSObject: wrappedJSObject
+}
+interface wrappedJSObject {
+  rgItem: rgItem
+}
 interface rgItem {
   appid: string
   contextid: string
@@ -391,19 +407,14 @@ interface rgItem {
   market_fee: string
   marketable: number
 }
-interface wrappedJSObject {
-  rgItem: rgItem
-}
-interface Node {
-  rgItem: rgItem
-  wrappedJSObject: wrappedJSObject
-}
+
 interface FeeAmount {
   steam_fee: number
   publisher_fee: number
   fees: number
   amount: number
 }
+
 interface rgWalletInfo {
   wallet_currency: number;
   wallet_country: string;
@@ -419,7 +430,8 @@ interface rgWalletInfo {
   success: boolean;
   rwgrsn: number;
 }
-interface unsafeWindow {
+
+interface unsafeWindow extends Window {
   iActiveSelectView: number
   g_rgWalletInfo: rgWalletInfo
   g_sessionID: string
@@ -429,10 +441,43 @@ interface unsafeWindow {
   GetPriceValueAsInt(strAmount: string): number
   v_currencyformat(valueInCents: number, currencyCode: string): string
 }
-interface exchData {
-  number2: string;
-}
+
 interface baiduExch {
   status: string;
   data: exchData[];
+}
+interface exchData {
+  number2: string;
+}
+
+interface priceoverview {
+  success: boolean;
+  lowest_price: string;
+  volume: string;
+  median_price: string;
+}
+
+interface itemordershistogram {
+  success: number;
+  sell_order_table: string;
+  sell_order_summary: string;
+  buy_order_table: string;
+  buy_order_summary: string;
+  highest_buy_order: string;
+  lowest_sell_order: string;
+  buy_order_graph: any[][];
+  sell_order_graph: any[][];
+  graph_max_y: number;
+  graph_min_x: number;
+  graph_max_x: number;
+  price_prefix: string;
+  price_suffix: string;
+}
+
+interface sellitem {
+  success: boolean;
+  requires_confirmation: number;
+  needs_mobile_confirmation: boolean;
+  needs_email_confirmation: boolean;
+  email_domain: string;
 }
