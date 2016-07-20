@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.8
+// @version     0.2.9
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -83,7 +83,8 @@ class SteamCardMaximumProfit {
         this.D.querySelector('body').appendChild(elmStyle);
         // 有点丑
         let elmDivItems = this.D.querySelectorAll('.itemHolder');
-        for (let y of elmDivItems) {
+        let elmDivItemsArray = Array.prototype.slice.call(elmDivItems);
+        for (let y of elmDivItemsArray) {
             let iteminfo = this.GetRgItem(y);
             if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
                 this.divItems.push(iteminfo.element);
@@ -129,7 +130,7 @@ class SteamCardMaximumProfit {
      * @private
      */
     Listener() {
-        this.D.querySelector('.inventory_page').addEventListener('click', (ev) => {
+        this.D.addEventListener('click', (ev) => {
             let evt = ev.target;
             // 点击物品
             if (evt.className === 'inventory_item_link') {
@@ -170,7 +171,8 @@ class SteamCardMaximumProfit {
         });
         // 点击快速出售
         let elmDivQuickSellItem = this.D.querySelectorAll('.scmpQuickSellItem');
-        for (let y of elmDivQuickSellItem) {
+        let elmDivQuickSellItemArray = Array.prototype.slice.call(elmDivQuickSellItem);
+        for (let y of elmDivQuickSellItemArray) {
             y.addEventListener('click', (ev) => {
                 let evt = ev.target;
                 let itemInfo = this.GetRgItem(this.D.querySelector('.activeInfo'));
@@ -183,7 +185,8 @@ class SteamCardMaximumProfit {
         // 点击全部出售
         this.D.querySelector('#scmpQuickAllItem').addEventListener('click', (ev) => {
             let itemInfos = this.D.querySelectorAll('.scmpItemSelect');
-            for (let y of itemInfos) {
+            let itemInfosArray = Array.prototype.slice.call(itemInfos);
+            for (let y of itemInfosArray) {
                 let itemInfo = this.GetRgItem(y.parentNode);
                 this.GetPriceOverview(itemInfo, true);
             }
