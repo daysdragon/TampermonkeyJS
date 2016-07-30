@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.9
+// @version     0.2.10
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -89,8 +89,7 @@ class SteamCardMaximumProfit {
     this.D.querySelector('body').appendChild(elmStyle)
     // 有点丑
     let elmDivItems = <NodeListOf<HTMLDivElement>>this.D.querySelectorAll('.itemHolder')
-    let elmDivItemsArray = <HTMLDivElement[]>Array.prototype.slice.call(elmDivItems)
-    for (let y of elmDivItemsArray) {
+    for (let y of elmDivItems) {
       let iteminfo = this.GetRgItem(y)
       if (typeof iteminfo !== 'undefined' && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
         this.divItems.push(iteminfo.element)
@@ -176,8 +175,7 @@ class SteamCardMaximumProfit {
     })
     // 点击快速出售
     let elmDivQuickSellItem = this.D.querySelectorAll('.scmpQuickSellItem')
-    let elmDivQuickSellItemArray = <Element[]>Array.prototype.slice.call(elmDivQuickSellItem)
-    for (let y of elmDivQuickSellItemArray) {
+    for (let y of elmDivQuickSellItem) {
       y.addEventListener('click', (ev) => {
         let evt = <HTMLSpanElement>ev.target
         let itemInfo = this.GetRgItem(<HTMLDivElement>this.D.querySelector('.activeInfo'))
@@ -190,8 +188,7 @@ class SteamCardMaximumProfit {
     // 点击全部出售
     this.D.querySelector('#scmpQuickAllItem').addEventListener('click', (ev) => {
       let itemInfos = this.D.querySelectorAll('.scmpItemSelect')
-      let itemInfosArray = <Element[]>Array.prototype.slice.call(itemInfos)
-      for (let y of itemInfosArray) {
+      for (let y of itemInfos) {
         let itemInfo = this.GetRgItem(<HTMLDivElement>y.parentNode)
         this.GetPriceOverview(itemInfo, true)
       }
