@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.2
+// @version     2.0.3
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -100,7 +100,7 @@ class BiLiveNoVIP {
     if (this.config.noGiftMsg.enable) cssText += '#chat-msg-list .gift-msg {display: none !important;}'
     if (this.config.noSuperGift.enable) cssText += '#chat-list-ctnr > .super-gift-ctnr {display: none !important;}'
     if (this.config.noSmallGift.enable) cssText += '#chat-list-ctnr > #gift-msg-1000 {display: none !important;} #chat-list-ctnr > #chat-msg-list {height: 100% !important;}'
-    if (this.config.fixTreasure.enable) cssText += '#player-container > .treasure {margin: -160px 0 !important;}'
+    if (this.config.fixTreasure.enable) cssText += '#player-container > .treasure-box-ctnr {margin: -160px 0 !important;}'
     elmStyle.innerHTML = cssText
   }
   /**
@@ -168,7 +168,7 @@ class BiLiveNoVIP {
 }
 #gunBut {
   border: 1px solid #999;
-  border-radius: 9px;
+  border-radius: 50%;
   cursor: pointer;
   display: inline-block;
   font-size: 13px;
@@ -178,11 +178,11 @@ class BiLiveNoVIP {
   width: 18px;
   vertical-align: text-top;
 }
-#gunBut #gunMeun {
-  animation:gunMeun 300ms;
+#gunBut > #gunMeun {
+  animation:move-in-right cubic-bezier(.22,.58,.12,.98) .4s;
   background-color: #fff;
   border-radius: 5px;
-  box-shadow: 0 0 20px;
+  box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);
   cursor: default;
   font-size: 12px;
   height: 210px;
@@ -191,7 +191,7 @@ class BiLiveNoVIP {
   position: absolute;
   width: 100px;
 }
-#gunBut #gunMeun div {
+#gunBut > #gunMeun > div {
 	background: darkgray;
 	border-radius: 5px;
 	height: 10px;
@@ -199,7 +199,7 @@ class BiLiveNoVIP {
 	position: relative;
 	width: 20px;
 }
-#gunBut #gunMeun div label {
+#gunBut > #gunMeun > div > label {
 	background: dimgray;
 	border-radius: 50%;
 	cursor: pointer;
@@ -211,25 +211,16 @@ class BiLiveNoVIP {
 	transition: all .5s ease;
 	width: 16px;
 }
-#gunBut #gunMeun div input[type=checkbox]:checked + label {
+#gunBut > #gunMeun > div > input[type=checkbox]:checked + label {
   background: #4fc1e9;
 	left: 7px;
 }
-#gunBut #gunMeun div span {
+#gunBut > #gunMeun > div > span {
   left: 0;
   margin: -3px 0 0 20px;
   position: absolute;
   width: 80px;
 }
-@keyframes gunMeun {
-  from {
-    margin: -250px -200px;
-    opacity: 0;
-  }
-  to {
-    margin: -250px -125px;
-    opacity: 1;
-  }
 }`
     // 插入css
     let elmStyle = this.D.createElement('style')
@@ -265,9 +256,10 @@ class BiLiveNoVIP {
    * @param {string} url
    * @param {string} [type='']
    * @param {string} [method='GET']
+   * @param {boolean} [cookie=false]
    * @returns {Promise<T>}
    */
-  private XHR<T>(url: string, type = '', method = 'GET'): Promise<T> {
+  private XHR<T>(url: string, type = '', method = 'GET', cookie = false): Promise<T> {
     return new Promise((resolve, reject) => {
       // 并不需要处理错误
       let timeout = setTimeout(reject, 3e4) //30秒
@@ -293,6 +285,7 @@ class BiLiveNoVIP {
         }
         xhr.open(method, path, true)
         if (method === 'POST') xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8')
+        if (cookie) xhr.withCredentials = true
         xhr.responseType = type
         xhr.onload = (ev) => {
           clearTimeout(timeout)
