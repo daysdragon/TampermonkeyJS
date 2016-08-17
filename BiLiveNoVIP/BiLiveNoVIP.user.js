@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.3
+// @version     2.0.4
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -21,35 +21,35 @@ class BiLiveNoVIP {
         this.D = document;
         this.defaultConfig = {
             noVIPIcon: {
-                name: '隐藏VIP',
+                name: '老爷标签',
                 enable: false
             },
             noMedalIcon: {
-                name: '隐藏勋章',
+                name: '粉丝勋章',
                 enable: false
             },
             noUserLevelIcon: {
-                name: '隐藏等级',
+                name: '用户等级',
                 enable: false
             },
             noLiveTitleIcon: {
-                name: '隐藏头衔',
+                name: '成就头衔',
                 enable: false
             },
             noSystemMsg: {
-                name: '隐藏系统消息',
+                name: '系统消息',
                 enable: false
             },
             noGiftMsg: {
-                name: '隐藏礼物',
+                name: '礼物信息',
                 enable: false
             },
             noSuperGift: {
-                name: '隐藏礼物连击',
+                name: '礼物连击',
                 enable: false
             },
             noSmallGift: {
-                name: '隐藏下方礼物',
+                name: '下方礼物',
                 enable: false
             },
             fixTreasure: {
@@ -241,13 +241,19 @@ class BiLiveNoVIP {
      */
     PopularWords(disable) {
         let player = `/api/player?id=cid:${this.roomID}&ts=${Date.now().toString(16)}`;
+        let getAllBeats = '/api/ajaxGetAllBeats';
         let popularWords = this.W.flash_popularWords();
-        this.XHR(player, 'document')
+        this.XHR(getAllBeats, 'json')
             .then((resolve) => {
-            return resolve.querySelector('user_sheid_keyword').innerHTML;
+            let publicBeats = resolve.data.public;
+            for (let y of publicBeats) {
+                popularWords.push(y.content);
+            }
+            return this.XHR(player, 'document');
         })
             .then((resolve) => {
-            let userKeyword = new Set(resolve.split(','));
+            let keyword = resolve.querySelector('user_sheid_keyword').innerHTML;
+            let userKeyword = new Set(keyword.split(','));
             let hotWords = [...popularWords].filter((y) => (disable) ? !userKeyword.has(y) : userKeyword.has(y));
             for (let y of hotWords) {
                 let shield = `/liveact/shield_keyword?keyword=${encodeURIComponent(y)}&roomid=${this.roomID}&type=${(disable) ? 1 : 0}`;
