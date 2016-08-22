@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.10
+// @version     0.2.11
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -79,18 +79,16 @@ var SteamCardMaximumProfit = (function () {
         this.inputUSDCNY = elmDiv.querySelector('#scmpExch');
         this.inputUSDCNY.value = '6.50';
         // 在线获取实时汇率
-        if (typeof GM_xmlhttpRequest === 'function') {
-            GM_xmlhttpRequest({
-                method: 'GET',
-                url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
-                responseType: 'json',
-                onload: function (res) {
-                    if (res.status === 200 && res.response.status === '0') {
-                        _this.inputUSDCNY.value = res.response.data[0].number2;
-                    }
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
+            responseType: 'json',
+            onload: function (res) {
+                if (res.status === 200 && res.response.status === '0') {
+                    _this.inputUSDCNY.value = res.response.data[0].number2;
                 }
-            });
-        }
+            }
+        });
     };
     /**
      * 添加监听
@@ -177,7 +175,7 @@ var SteamCardMaximumProfit = (function () {
         var priceoverview = "/market/priceoverview/?country=US&currency=1&appid=" + itemInfo.appid + "&market_hash_name=" + encodeURIComponent(this.W.GetMarketHashName(itemInfo));
         this.XHR(priceoverview, 'json')
             .then(function (resolve) {
-            if (resolve.success && resolve.lowest_price) {
+            if (resolve !== null && resolve.success && resolve.lowest_price !== '') {
                 // 对$进行处理, 否则会报错
                 var lowestPrice = resolve.lowest_price.replace('$', '');
                 _this.GetPrice(itemInfo, lowestPrice, quick);
@@ -191,7 +189,7 @@ var SteamCardMaximumProfit = (function () {
                     return _this.XHR(marketItemordershistogram, 'json');
                 })
                     .then(function (resolve) {
-                    if (resolve.success) {
+                    if (resolve !== null && resolve.success) {
                         // 转换为带有一个空格的字符串
                         var lowestPrice = ' ' + resolve.sell_order_graph[0][0];
                         _this.GetPrice(itemInfo, lowestPrice, quick);
@@ -258,7 +256,7 @@ var SteamCardMaximumProfit = (function () {
             this.XHR(marketSellitem, 'json', 'POST', true)
                 .then(function (resolve) {
                 _this.QuickSellItem();
-                if (resolve.success) {
+                if (resolve !== null && resolve.success) {
                     _this.QuickSellStatus(itemInfo_1, 'success');
                 }
                 else {
