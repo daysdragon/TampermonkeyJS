@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.5
+// @version     2.0.6
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -102,15 +102,16 @@ class BiLiveNoVIP {
     this.AddUI()
     this.ChangeCSS()
     this.AddDanmaku()
-    this.W.msg_history = {
-      get: () => {
-        if (this.config.menu.replaceDanmaku.enable) {
-          this.ReplaceDanmaku(true)
-          if (this.config.menu.popularWords.enable) this.PopularWords(true)
-          if (this.config.menu.beatStorm.enable) this.BeatStorm(true)
-        }
+    let elmViewerCount = this.D.querySelector('.v-bottom.dp-none')
+    let viewerCountObserver = new MutationObserver(() => {
+      if (this.config.menu.replaceDanmaku.enable) {
+        this.ReplaceDanmaku(true)
+        if (this.config.menu.popularWords.enable) this.PopularWords(true)
+        if (this.config.menu.beatStorm.enable) this.BeatStorm(true)
       }
-    }
+      viewerCountObserver.disconnect()
+    })
+    viewerCountObserver.observe(elmViewerCount, { childList: true })
   }
   /**
    * 模拟实时屏蔽
@@ -242,7 +243,7 @@ class BiLiveNoVIP {
       this.CM.width = danmaku.clientWidth
       this.CM.height = danmaku.clientHeight
     })
-    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+    bodyObserver.observe(this.D.body, { attributes: true, attributeFilter: ['class'] })
     this.W.addEventListener('resize', () => {
       this.CM.width = danmaku.clientWidth
       this.CM.height = danmaku.clientHeight
@@ -329,7 +330,6 @@ class BiLiveNoVIP {
     }
     else {
       this.W.protocol.DANMU_MSG = this.DANMU_MSG
-      this.W.msg_history = undefined
       this.CM.stop()
       this.CM.clear()
       this.playerObject.showComments(true)

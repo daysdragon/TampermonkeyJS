@@ -3,9 +3,6 @@ interface Window {
   player_fullwin(full: boolean): void
   sendBeatStorm(beat: privateBeats): void
   protocol: Protocol
-  msg_history: {
-    get: () => void
-  }
   ROOMID: number
   MASTERID: number
 }
@@ -63,7 +60,7 @@ interface configMenu {
   replaceDanmaku: configMenuData
   popularWords: configMenuData
   beatStorm: configMenuData
-  closeDanmaku:configMenuData
+  closeDanmaku: configMenuData
 }
 interface configMenuData {
   name: string
@@ -112,3 +109,30 @@ interface privateBeats {
   num: number
   time: number
 }
+// 监听聊天窗口
+// let chatObserver = new MutationObserver((res) => {
+//   for (let y of res) {
+//     let chatNodes = y.addedNodes
+//     if (chatNodes.length !== 0) {
+//       let chatMsg = <HTMLElement>chatNodes[0].firstChild
+//       if (chatMsg.className === 'chat-msg') {
+//         let danmuColor = 16777215
+//         if (chatMsg.querySelector('.master') !== null) {
+//           danmuColor = 6737151
+//         }
+//         else if (chatMsg.querySelector('.admin') !== null) {
+//           danmuColor = 16750592
+//         }
+//         let chatText = (<HTMLElement>chatMsg.lastChild).innerText
+//         let danmu = {
+//           mode: 1,
+//           text: chatText,
+//           size: 0.25 * localStorage.getItem('danmuSize'),
+//           color: danmuColor,
+//           shadow: true
+//         }
+//         CM.send(danmu)
+//       }
+//     }
+//   }
+// })
