@@ -6,7 +6,7 @@
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
 // @include     /^http:\/\/live\.bilibili\.com\/\d.*$/
-// @require     https://greasyfork.org/scripts/19695-commentcorelibrary/code/CommentCoreLibrary.js?version=125789
+// @require     https://github.com/jabbany/CommentCoreLibrary/raw/master/build/CommentCoreLibrary.js
 // @license     MIT
 // @grant       none
 // @run-at      document-end
