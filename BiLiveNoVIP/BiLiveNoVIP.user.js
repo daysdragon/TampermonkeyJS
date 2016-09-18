@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.6
+// @version     2.0.7
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -23,8 +23,12 @@ class BiLiveNoVIP {
         this.D = document;
         this.tempWord = new Set();
         this.defaultConfig = {
-            version: 1472476221722,
+            version: 1474187009714,
             menu: {
+                noHDIcon: {
+                    name: '活动标识',
+                    enable: false
+                },
                 noVIPIcon: {
                     name: '老爷标签',
                     enable: false
@@ -124,14 +128,16 @@ class BiLiveNoVIP {
         }
         //css内容
         let cssText = '';
+        if (this.config.menu.noHDIcon.enable)
+            cssText += '#chat-msg-list a[href="/hd/aki2016"] {display: none !important;}';
         if (this.config.menu.noVIPIcon.enable)
-            cssText += '#chat-msg-list .vip-icon {display: none !important;}';
+            cssText += '#chat-msg-list a[href="/i#to-vip"] {display: none !important;}';
         if (this.config.menu.noMedalIcon.enable)
             cssText += '#chat-msg-list .medal-icon {display: none !important;}';
         if (this.config.menu.noUserLevelIcon.enable)
             cssText += '#chat-msg-list .user-level-icon {display: none !important;}';
         if (this.config.menu.noLiveTitleIcon.enable)
-            cssText += '#chat-msg-list .live-title-icon {display: none !important;}';
+            cssText += '#chat-msg-list a[href="/i/myTitle#list"] {display: none !important;}';
         if (this.config.menu.noSystemMsg.enable)
             cssText += '#chat-msg-list .system-msg, .announcement-container {display: none !important;}';
         if (this.config.menu.noGiftMsg.enable)
@@ -408,7 +414,7 @@ class BiLiveNoVIP {
   box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);
   cursor: default;
   font-size: 12px;
-  height: 230px;
+  height: 250px;
   margin: -250px -125px;
   padding: 10px;
   position: absolute;
@@ -451,7 +457,7 @@ class BiLiveNoVIP {
   width: 100%;
   height: 93%;
   overflow: hidden;
-  z-index: 10;
+  z-index: 1;
   cursor: pointer;
   pointer-events: none;
 }

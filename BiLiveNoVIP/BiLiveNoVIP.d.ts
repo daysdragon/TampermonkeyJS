@@ -50,6 +50,7 @@ interface config {
   menu: configMenu
 }
 interface configMenu {
+  noHDIcon: configMenuData
   noVIPIcon: configMenuData
   noMedalIcon: configMenuData
   noUserLevelIcon: configMenuData
