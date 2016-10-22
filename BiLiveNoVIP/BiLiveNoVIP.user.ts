@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.7
+// @version     2.0.9
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -20,9 +20,9 @@
 class BiLiveNoVIP {
   constructor() {
     // 加载设置
-    let config = <config>JSON.parse(localStorage.getItem('blnvConfig'))
+    let config = <config>JSON.parse(localStorage.getItem('blnvConfig') || '{}')
     let defaultConfig = this.defaultConfig
-    if (config === null || config.version === undefined || config.version < defaultConfig.version) {
+    if (config.version === undefined || config.version < defaultConfig.version) {
       for (let x in defaultConfig.menu) {
         try {
           defaultConfig.menu[x].enable = config.menu[x].enable
@@ -42,12 +42,11 @@ class BiLiveNoVIP {
   private DANMU_MSG: (danmu: danmuObject) => void
   private sendBeatStorm: (beat: privateBeats) => void
   private playerObject: playerObject
-  // CommentCoreLibrary (//github.com/jabbany/CommentCoreLibrary) - Licensed under the MIT license
   private CM: CommentManager
-  private tempWord = new Set()
+  private tempWord = new Set<string>()
   private config: config
   private defaultConfig: config = {
-    version: 1474187009714,
+    version: 1477154320105,
     menu: {
       noHDIcon: {
         name: '活动标识',
@@ -132,14 +131,69 @@ class BiLiveNoVIP {
     }
     //css内容
     let cssText = ''
-    if (this.config.menu.noHDIcon.enable) cssText += '#chat-msg-list a[href="/hd/aki2016"] {display: none !important;}'
-    if (this.config.menu.noVIPIcon.enable) cssText += '#chat-msg-list a[href="/i#to-vip"] {display: none !important;}'
-    if (this.config.menu.noMedalIcon.enable) cssText += '#chat-msg-list .medal-icon {display: none !important;}'
-    if (this.config.menu.noUserLevelIcon.enable) cssText += '#chat-msg-list .user-level-icon {display: none !important;}'
-    if (this.config.menu.noLiveTitleIcon.enable) cssText += '#chat-msg-list a[href="/i/myTitle#list"] {display: none !important;}'
-    if (this.config.menu.noSystemMsg.enable) cssText += '#chat-msg-list .system-msg, .announcement-container {display: none !important;}'
-    if (this.config.menu.noGiftMsg.enable) cssText += '#chat-msg-list .gift-msg {display: none !important;} #chat-list-ctnr > .super-gift-ctnr, #gift-msg-1000 {display: none !important;} #chat-list-ctnr > #chat-msg-list {height: 100% !important;}'
-    if (this.config.menu.fixTreasure.enable) cssText += '#player-container > .treasure-box-ctnr {margin: -160px 0 !important;}'
+    if (this.config.menu.noHDIcon.enable) cssText += `
+    #chat-msg-list a[href="/hd/aki2016"] {
+      display: none !important;
+    }
+    #chat-msg-list a[href="/hd/guard"] {
+      display: none !important;
+    }
+    #chat-msg-list .guard-msg {
+        margin: auto !important;
+        padding: 4px 5px !important;
+    }
+    #chat-msg-list .guard-msg:after {
+        display: none !important;
+    }
+    #chat-msg-list .guard-lv1:before {
+        display: none !important;
+    }
+    #chat-msg-list .guard-lv2:before {
+        display: none !important;
+    }
+    #chat-msg-list .guard-lv1 .user-name.color {
+        color: #4fc1e9 !important;
+    }
+    #chat-msg-list .guard-lv2 .user-name.color {
+        color: #4fc1e9 !important;
+    }
+    #chat-msg-list .guard-lv3 .user-name.color {
+        color: #4fc1e9 !important;
+    }`
+    if (this.config.menu.noVIPIcon.enable) cssText += `
+    #chat-msg-list a[href="/i#to-vip"] {
+      display: none !important;
+    }`
+    if (this.config.menu.noMedalIcon.enable) cssText += `
+    #chat-msg-list .medal-icon {
+      display: none !important;
+    }`
+    if (this.config.menu.noUserLevelIcon.enable) cssText += `
+    #chat-msg-list .user-level-icon {
+      display: none !important;
+    }`
+    if (this.config.menu.noLiveTitleIcon.enable) cssText += `
+    #chat-msg-list .check-my-title {
+      display: none !important;
+    }`
+    if (this.config.menu.noSystemMsg.enable) cssText += `
+    #chat-msg-list .system-msg, .announcement-container {
+      display: none !important;
+    }`
+    if (this.config.menu.noGiftMsg.enable) cssText += `
+    #chat-msg-list .gift-msg {
+      display: none !important;
+    }
+    #chat-list-ctnr > .super-gift-ctnr, #gift-msg-1000 {
+      display: none !important;
+    }
+    #chat-list-ctnr > #chat-msg-list {
+      height: 100% !important;
+    }`
+    if (this.config.menu.fixTreasure.enable) cssText += `
+    #player-container > .treasure-box-ctnr {
+      margin: -160px 0 !important;
+    }`
     elmStyle.innerHTML = cssText
   }
   /**
@@ -159,11 +213,11 @@ class BiLiveNoVIP {
     // 循环插入内容
     for (let x in this.config.menu) {
       html += `
-<div>
-  <input type="checkbox" id="${x}" class="gunHide" />
-	<label for="${x}"></label>
-  <span>${this.config.menu[x].name}</span>
-</div>`
+      <div>
+        <input type="checkbox" id="${x}" class="gunHide" />
+      	<label for="${x}"></label>
+        <span>${this.config.menu[x].name}</span>
+      </div>`
     }
     html += '</div>'
     elmDivGun.innerHTML = html
@@ -236,13 +290,14 @@ class BiLiveNoVIP {
     danmaku.appendChild(danmakuContainer)
     this.playerObject.parentNode.appendChild(danmaku)
     this.CM = new CommentManager(danmakuContainer)
+    // CommentCoreLibrary (//github.com/jabbany/CommentCoreLibrary) - Licensed under the MIT license
     this.CM.init()
     // 透明度
-    this.CM.options.scroll.opacity = parseInt(localStorage.getItem('danmuAlpha')) / 100
+    this.CM.options.scroll.opacity = parseInt(localStorage.getItem('danmuAlpha') || '100') / 100
     // 存在时间7s
     this.CM.options.scroll.scale = 1.75
     // 弹幕密度
-    this.CM.options.limit = parseDensity(localStorage.getItem('danmuDensity'))
+    this.CM.options.limit = parseDensity(localStorage.getItem('danmuDensity') || '30')
     // 监听视频窗口大小
     let bodyObserver = new MutationObserver(() => {
       this.CM.width = danmaku.clientWidth
@@ -323,7 +378,7 @@ class BiLiveNoVIP {
             let danmu = {
               mode: 1,
               text: chatText,
-              size: 0.25 * localStorage.getItem('danmuSize'),
+              size: 0.25 * parseInt(localStorage.getItem('danmuSize') || '100'),
               color: danmuColor,
               shadow: true
             }
@@ -348,9 +403,9 @@ class BiLiveNoVIP {
    */
   private PopularWords(disable: boolean) {
     let popularWords = this.W.flash_popularWords()
-    for (let y of popularWords) {
-      (disable) ? this.tempWord.add(y) : this.tempWord.delete(y)
-    }
+    popularWords.forEach((word) => {
+      (disable) ? this.tempWord.add(word) : this.tempWord.delete(word)
+    })
   }
   /**
    * 屏蔽节奏风暴
@@ -363,9 +418,9 @@ class BiLiveNoVIP {
     this.XHR<getAllBeats>(getAllBeats, 'json')
       .then((resolve) => {
         let publicBeats = resolve.data.public
-        for (let y of publicBeats) {
-          (disable) ? this.tempWord.add(y.content) : this.tempWord.delete(y.content)
-        }
+        publicBeats.forEach((beat) => {
+          (disable) ? this.tempWord.add(beat.content) : this.tempWord.delete(beat.content)
+        })
       })
     if (disable) {
       this.sendBeatStorm = this.W.sendBeatStorm
@@ -384,113 +439,113 @@ class BiLiveNoVIP {
    */
   private AddCSS() {
     let cssText = `
-.gunHide {
-  display: none;
-}
-#gunBut {
-  border: 1px solid #999;
-  border-radius: 50%;
-  cursor: pointer;
-  display: inline-block;
-  font-size: 13px;
-  height: 18px;
-  margin: -3px 5px;
-  text-align: center;
-  width: 18px;
-  vertical-align: text-top;
-}
-#gunBut > #gunMenu {
-  animation:move-in-right cubic-bezier(.22,.58,.12,.98) .4s;
-  background-color: #fff;
-  border-radius: 5px;
-  box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);
-  cursor: default;
-  font-size: 12px;
-  height: 250px;
-  margin: -250px -125px;
-  padding: 10px;
-  position: absolute;
-  width: 100px;
-}
-#gunBut > #gunMenu > div {
-	background: darkgray;
-	border-radius: 5px;
-	height: 10px;
-	margin: 0 0 12px 0;
-	position: relative;
-	width: 20px;
-}
-#gunBut > #gunMenu > div > label {
-	background: dimgray;
-	border-radius: 50%;
-	cursor: pointer;
-	display: block;
-	height: 16px;
-	left: -3px;
-	position: absolute;
-	top: -3px;
-	transition: all .5s ease;
-	width: 16px;
-}
-#gunBut > #gunMenu > div > input[type=checkbox]:checked + label {
-  background: #4fc1e9;
-	left: 7px;
-}
-#gunBut > #gunMenu > div > span {
-  left: 0;
-  margin: -3px 0 0 20px;
-  position: absolute;
-  width: 80px;
-}
-.gunDanmaku {
-  position:absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 93%;
-  overflow: hidden;
-  z-index: 1;
-  cursor: pointer;
-  pointer-events: none;
-}
-.gunDanmaku .gunDanmakuContainer {
-  transform: matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
-  position: absolute;
-  display: block;
-  overflow: hidden;
-  margin: 0;
-  border: 0;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: 9999;
-  touch-callout: none;
-  user-select: none;
-}
-.gunDanmaku .gunDanmakuContainer .cmt {
-  transform: matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
-  transform-origin: 0% 0%;
-  position: absolute;
-  padding: 3px 0 0 0;
-  margin: 0;
-  color: #fff;
-  font-family: "Microsoft YaHei", SimHei;
-  font-size: 25px;
-  text-decoration: none;
-  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
-  text-size-adjust: none;
-  line-height: 100%;
-  letter-spacing: 0;
-  word-break: keep-all;
-  white-space: pre;
-}
-.gunDanmaku .gunDanmakuContainer .cmt.noshadow {
-  text-shadow: none;
-}
-.gunDanmaku .gunDanmakuContainer .cmt.rshadow {
-  text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
-}`
+    .gunHide {
+      display: none;
+    }
+    #gunBut {
+      border: 1px solid #999;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-block;
+      font-size: 13px;
+      height: 18px;
+      margin: -3px 5px;
+      text-align: center;
+      width: 18px;
+      vertical-align: text-top;
+    }
+    #gunBut > #gunMenu {
+      animation:move-in-right cubic-bezier(.22,.58,.12,.98) .4s;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);
+      cursor: default;
+      font-size: 12px;
+      height: 250px;
+      margin: -250px -125px;
+      padding: 10px;
+      position: absolute;
+      width: 100px;
+    }
+    #gunBut > #gunMenu > div {
+    	background: darkgray;
+    	border-radius: 5px;
+    	height: 10px;
+    	margin: 0 0 12px 0;
+    	position: relative;
+    	width: 20px;
+    }
+    #gunBut > #gunMenu > div > label {
+    	background: dimgray;
+    	border-radius: 50%;
+    	cursor: pointer;
+    	display: block;
+    	height: 16px;
+    	left: -3px;
+    	position: absolute;
+    	top: -3px;
+    	transition: all .5s ease;
+    	width: 16px;
+    }
+    #gunBut > #gunMenu > div > input[type=checkbox]:checked + label {
+      background: #4fc1e9;
+    	left: 7px;
+    }
+    #gunBut > #gunMenu > div > span {
+      left: 0;
+      margin: -3px 0 0 20px;
+      position: absolute;
+      width: 80px;
+    }
+    .gunDanmaku {
+      position:absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 93%;
+      overflow: hidden;
+      z-index: 1;
+      cursor: pointer;
+      pointer-events: none;
+    }
+    .gunDanmaku .gunDanmakuContainer {
+      transform: matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
+      position: absolute;
+      display: block;
+      overflow: hidden;
+      margin: 0;
+      border: 0;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      z-index: 9999;
+      touch-callout: none;
+      user-select: none;
+    }
+    .gunDanmaku .gunDanmakuContainer .cmt {
+      transform: matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
+      transform-origin: 0% 0%;
+      position: absolute;
+      padding: 3px 0 0 0;
+      margin: 0;
+      color: #fff;
+      font-family: "Microsoft YaHei", SimHei;
+      font-size: 25px;
+      text-decoration: none;
+      text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+      text-size-adjust: none;
+      line-height: 100%;
+      letter-spacing: 0;
+      word-break: keep-all;
+      white-space: pre;
+    }
+    .gunDanmaku .gunDanmakuContainer .cmt.noshadow {
+      text-shadow: none;
+    }
+    .gunDanmaku .gunDanmakuContainer .cmt.rshadow {
+      text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+    }`
     // 插入css
     let elmStyle = this.D.createElement('style')
     elmStyle.innerHTML = cssText
