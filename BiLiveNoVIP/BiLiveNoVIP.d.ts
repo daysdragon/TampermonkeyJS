@@ -2,6 +2,7 @@ interface Window {
   flash_popularWords(): string[]
   player_fullwin(full: boolean): void
   sendBeatStorm(beat: privateBeats): void
+  msg_history: { get(): void }
   protocol: Protocol
   ROOMID: number
   MASTERID: number

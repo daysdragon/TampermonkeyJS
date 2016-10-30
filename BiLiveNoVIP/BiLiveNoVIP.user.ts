@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.9
+// @version     2.0.10
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -46,7 +46,7 @@ class BiLiveNoVIP {
   private tempWord = new Set<string>()
   private config: config
   private defaultConfig: config = {
-    version: 1477154320105,
+    version: 1477835918251,
     menu: {
       noHDIcon: {
         name: '活动标识',
@@ -105,16 +105,15 @@ class BiLiveNoVIP {
     this.AddUI()
     this.ChangeCSS()
     this.AddDanmaku()
-    let elmViewerCount = this.D.querySelector('.v-bottom.dp-none')
-    let viewerCountObserver = new MutationObserver(() => {
-      if (this.config.menu.replaceDanmaku.enable) {
-        this.ReplaceDanmaku(true)
-        if (this.config.menu.popularWords.enable) this.PopularWords(true)
-        if (this.config.menu.beatStorm.enable) this.BeatStorm(true)
+    this.W.msg_history = {
+      get: () => {
+        if (this.config.menu.replaceDanmaku.enable) {
+          this.ReplaceDanmaku(true)
+          if (this.config.menu.popularWords.enable) this.PopularWords(true)
+          if (this.config.menu.beatStorm.enable) this.BeatStorm(true)
+        }
       }
-      viewerCountObserver.disconnect()
-    })
-    viewerCountObserver.observe(elmViewerCount, { childList: true })
+    }
   }
   /**
    * 模拟实时屏蔽
@@ -139,26 +138,29 @@ class BiLiveNoVIP {
       display: none !important;
     }
     #chat-msg-list .guard-msg {
-        margin: auto !important;
-        padding: 4px 5px !important;
+      margin: auto !important;
+      padding: 4px 5px !important;
     }
     #chat-msg-list .guard-msg:after {
-        display: none !important;
+      display: none !important;
+    }
+    #chat-msg-list .guard-msg .msg-content {
+      color: #646c7a !important;
     }
     #chat-msg-list .guard-lv1:before {
-        display: none !important;
+      display: none !important;
     }
     #chat-msg-list .guard-lv2:before {
-        display: none !important;
+      display: none !important;
     }
     #chat-msg-list .guard-lv1 .user-name.color {
-        color: #4fc1e9 !important;
+      color: #4fc1e9 !important;
     }
     #chat-msg-list .guard-lv2 .user-name.color {
-        color: #4fc1e9 !important;
+      color: #4fc1e9 !important;
     }
     #chat-msg-list .guard-lv3 .user-name.color {
-        color: #4fc1e9 !important;
+      color: #4fc1e9 !important;
     }`
     if (this.config.menu.noVIPIcon.enable) cssText += `
     #chat-msg-list a[href="/i#to-vip"] {
@@ -237,7 +239,7 @@ class BiLiveNoVIP {
     })
     // 循环设置监听插入的DOM
     let replaceDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#replaceDanmaku')
-    let closeDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#closeDanmaku')
+    // let closeDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#closeDanmaku')
     let popularWordsCheckbox = <HTMLInputElement>this.D.querySelector('#popularWords')
     let beatStormCheckbox = <HTMLInputElement>this.D.querySelector('#beatStorm')
     for (let x in this.config.menu) {
@@ -390,6 +392,7 @@ class BiLiveNoVIP {
     }
     else {
       this.W.protocol.DANMU_MSG = this.DANMU_MSG
+      this.W.msg_history = { get: () => { } }
       this.CM.stop()
       this.CM.clear()
       this.playerObject.showComments(true)
