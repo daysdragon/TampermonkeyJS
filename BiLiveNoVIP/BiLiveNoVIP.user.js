@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.10
+// @version     2.0.11
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -21,9 +21,9 @@ var BiLiveNoVIP = (function () {
     function BiLiveNoVIP() {
         this.W = window;
         this.D = document;
-        this.tempWord = new Set();
+        this.tempWord = [];
         this.defaultConfig = {
-            version: 1477835918251,
+            version: 1477917918435,
             menu: {
                 noHDIcon: {
                     name: '活动标识',
@@ -95,12 +95,15 @@ var BiLiveNoVIP = (function () {
     }
     /**
      * 开始
+     *
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.Start = function () {
         var _this = this;
         this.AddUI();
         this.ChangeCSS();
         this.AddDanmaku();
+        // flash加载完成后的回调函数
         this.W.msg_history = {
             get: function () {
                 if (_this.config.menu.replaceDanmaku.enable) {
@@ -117,6 +120,7 @@ var BiLiveNoVIP = (function () {
      * 模拟实时屏蔽
      *
      * @private
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.ChangeCSS = function () {
         // 获取或者插入style
@@ -129,7 +133,7 @@ var BiLiveNoVIP = (function () {
         //css内容
         var cssText = '';
         if (this.config.menu.noHDIcon.enable)
-            cssText += "\n    #chat-msg-list a[href=\"/hd/aki2016\"] {\n      display: none !important;\n    }\n    #chat-msg-list a[href=\"/hd/guard\"] {\n      display: none !important;\n    }\n    #chat-msg-list .guard-msg {\n      margin: auto !important;\n      padding: 4px 5px !important;\n    }\n    #chat-msg-list .guard-msg:after {\n      display: none !important;\n    }\n    #chat-msg-list .guard-msg .msg-content {\n      color: #646c7a !important;\n    }\n    #chat-msg-list .guard-lv1:before {\n      display: none !important;\n    }\n    #chat-msg-list .guard-lv2:before {\n      display: none !important;\n    }\n    #chat-msg-list .guard-lv1 .user-name.color {\n      color: #4fc1e9 !important;\n    }\n    #chat-msg-list .guard-lv2 .user-name.color {\n      color: #4fc1e9 !important;\n    }\n    #chat-msg-list .guard-lv3 .user-name.color {\n      color: #4fc1e9 !important;\n    }";
+            cssText += "\n    #chat-msg-list a[href^=\"/hd/\"] {\n      display: none !important;\n    }\n    #chat-msg-list .guard-msg {\n      margin: auto !important;\n      padding: 4px 5px !important;\n    }\n    #chat-msg-list *:before {\n      display: none !important;\n    }\n    #chat-msg-list *:after {\n      display: none !important;\n    }\n    #chat-msg-list .user-name.color {\n      color: #4fc1e9 !important;\n    }\n    #chat-msg-list .msg-content {\n      color: #646c7a !important;\n    }";
         if (this.config.menu.noVIPIcon.enable)
             cssText += "\n    #chat-msg-list a[href=\"/i#to-vip\"] {\n      display: none !important;\n    }";
         if (this.config.menu.noMedalIcon.enable)
@@ -150,6 +154,7 @@ var BiLiveNoVIP = (function () {
      * 添加按钮
      *
      * @private
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.AddUI = function () {
         var _this = this;
@@ -184,7 +189,7 @@ var BiLiveNoVIP = (function () {
         });
         // 循环设置监听插入的DOM
         var replaceDanmakuCheckbox = this.D.querySelector('#replaceDanmaku');
-        // let closeDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#closeDanmaku')
+        var closeDanmakuCheckbox = this.D.querySelector('#closeDanmaku');
         var popularWordsCheckbox = this.D.querySelector('#popularWords');
         var beatStormCheckbox = this.D.querySelector('#beatStorm');
         for (var x in this.config.menu) {
@@ -198,6 +203,9 @@ var BiLiveNoVIP = (function () {
                     case 'replaceDanmaku':
                         _this.ReplaceDanmaku(evt.checked);
                         if (!evt.checked) {
+                            // 关闭热词和节奏风暴选项
+                            if (closeDanmakuCheckbox.checked = true)
+                                closeDanmakuCheckbox.click();
                             if (popularWordsCheckbox.checked = true)
                                 popularWordsCheckbox.click();
                             if (beatStormCheckbox.checked = true)
@@ -205,6 +213,7 @@ var BiLiveNoVIP = (function () {
                         }
                         break;
                     case 'closeDanmaku':
+                        _this.CM.clear();
                         if (evt.checked && !replaceDanmakuCheckbox.checked)
                             replaceDanmakuCheckbox.click();
                         break;
@@ -229,6 +238,7 @@ var BiLiveNoVIP = (function () {
      * 添加弹幕层
      *
      * @private
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.AddDanmaku = function () {
         var _this = this;
@@ -272,7 +282,7 @@ var BiLiveNoVIP = (function () {
          * 计算弹幕密度
          *
          * @param {string} density
-         * @returns {number}
+         * @returns
          */
         function parseDensity(density) {
             var limit;
@@ -307,6 +317,7 @@ var BiLiveNoVIP = (function () {
      *
      * @private
      * @param {boolean} enable
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.ReplaceDanmaku = function (enable) {
         var _this = this;
@@ -318,26 +329,26 @@ var BiLiveNoVIP = (function () {
             // 获取聊天信息
             this.DANMU_MSG = this.W.protocol.DANMU_MSG;
             this.W.protocol.DANMU_MSG = function (json) {
-                if (_this.config.menu.closeDanmaku.enable) {
-                    _this.DANMU_MSG(json);
+                // 屏蔽关键词
+                if (_this.tempWord.indexOf(json.info[1]) !== -1)
+                    return;
+                if (!_this.config.menu.closeDanmaku.enable) {
+                    // 添加弹幕
+                    var danmuColor = 16777215;
+                    // 主播与管理员特殊颜色
+                    if (json.info[2][2] === 1)
+                        danmuColor = (json.info[2][0] === masterID_1) ? 6737151 : 16750592;
+                    var danmu = {
+                        mode: 1,
+                        text: json.info[1],
+                        size: 0.25 * parseInt(localStorage.getItem('danmuSize') || '100'),
+                        color: danmuColor,
+                        shadow: true
+                    };
+                    _this.CM.send(danmu);
                 }
-                else {
-                    var chatText = json.info[1];
-                    if (!_this.tempWord.has(chatText)) {
-                        var danmuColor = 16777215;
-                        if (json.info[2][2] === 1)
-                            danmuColor = (json.info[2][0] === masterID_1) ? 6737151 : 16750592;
-                        var danmu = {
-                            mode: 1,
-                            text: chatText,
-                            size: 0.25 * parseInt(localStorage.getItem('danmuSize') || '100'),
-                            color: danmuColor,
-                            shadow: true
-                        };
-                        _this.CM.send(danmu);
-                        _this.DANMU_MSG(json);
-                    }
-                }
+                // 添加到聊天列表
+                _this.DANMU_MSG(json);
             };
         }
         else {
@@ -353,44 +364,34 @@ var BiLiveNoVIP = (function () {
      *
      * @private
      * @param {boolean} disable
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.PopularWords = function (disable) {
-        var _this = this;
-        var popularWords = this.W.flash_popularWords();
-        popularWords.forEach(function (word) {
-            (disable) ? _this.tempWord.add(word) : _this.tempWord.delete(word);
-        });
+        this.tempWord = (disable) ? this.W.flash_popularWords() : [];
     };
     /**
      * 屏蔽节奏风暴
      *
      * @private
      * @param {boolean} disable
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.BeatStorm = function (disable) {
         var _this = this;
-        var getAllBeats = '/api/ajaxGetAllBeats';
-        this.XHR(getAllBeats, 'json')
-            .then(function (resolve) {
-            var publicBeats = resolve.data.public;
-            publicBeats.forEach(function (beat) {
-                (disable) ? _this.tempWord.add(beat.content) : _this.tempWord.delete(beat.content);
-            });
-        });
         if (disable) {
             this.sendBeatStorm = this.W.sendBeatStorm;
             this.W.sendBeatStorm = function (json) {
-                _this.tempWord.add(json.content);
+                _this.tempWord.push(json.content);
             };
         }
-        else {
+        else
             this.W.sendBeatStorm = this.sendBeatStorm;
-        }
     };
     /**
      * 添加样式
      *
      * @private
+     * @memberOf BiLiveNoVIP
      */
     BiLiveNoVIP.prototype.AddCSS = function () {
         var cssText = "\n    .gunHide {\n      display: none;\n    }\n    #gunBut {\n      border: 1px solid #999;\n      border-radius: 50%;\n      cursor: pointer;\n      display: inline-block;\n      font-size: 13px;\n      height: 18px;\n      margin: -3px 5px;\n      text-align: center;\n      width: 18px;\n      vertical-align: text-top;\n    }\n    #gunBut > #gunMenu {\n      animation:move-in-right cubic-bezier(.22,.58,.12,.98) .4s;\n      background-color: #fff;\n      border-radius: 5px;\n      box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);\n      cursor: default;\n      font-size: 12px;\n      height: 250px;\n      margin: -250px -125px;\n      padding: 10px;\n      position: absolute;\n      width: 100px;\n    }\n    #gunBut > #gunMenu > div {\n    \tbackground: darkgray;\n    \tborder-radius: 5px;\n    \theight: 10px;\n    \tmargin: 0 0 12px 0;\n    \tposition: relative;\n    \twidth: 20px;\n    }\n    #gunBut > #gunMenu > div > label {\n    \tbackground: dimgray;\n    \tborder-radius: 50%;\n    \tcursor: pointer;\n    \tdisplay: block;\n    \theight: 16px;\n    \tleft: -3px;\n    \tposition: absolute;\n    \ttop: -3px;\n    \ttransition: all .5s ease;\n    \twidth: 16px;\n    }\n    #gunBut > #gunMenu > div > input[type=checkbox]:checked + label {\n      background: #4fc1e9;\n    \tleft: 7px;\n    }\n    #gunBut > #gunMenu > div > span {\n      left: 0;\n      margin: -3px 0 0 20px;\n      position: absolute;\n      width: 80px;\n    }\n    .gunDanmaku {\n      position:absolute;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 93%;\n      overflow: hidden;\n      z-index: 1;\n      cursor: pointer;\n      pointer-events: none;\n    }\n    .gunDanmaku .gunDanmakuContainer {\n      transform: matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);\n      position: absolute;\n      display: block;\n      overflow: hidden;\n      margin: 0;\n      border: 0;\n      top: 0;\n      left: 0;\n      bottom: 0;\n      right: 0;\n      z-index: 9999;\n      touch-callout: none;\n      user-select: none;\n    }\n    .gunDanmaku .gunDanmakuContainer .cmt {\n      transform: matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);\n      transform-origin: 0% 0%;\n      position: absolute;\n      padding: 3px 0 0 0;\n      margin: 0;\n      color: #fff;\n      font-family: \"Microsoft YaHei\", SimHei;\n      font-size: 25px;\n      text-decoration: none;\n      text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;\n      text-size-adjust: none;\n      line-height: 100%;\n      letter-spacing: 0;\n      word-break: keep-all;\n      white-space: pre;\n    }\n    .gunDanmaku .gunDanmakuContainer .cmt.noshadow {\n      text-shadow: none;\n    }\n    .gunDanmaku .gunDanmakuContainer .cmt.rshadow {\n      text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;\n    }";
@@ -398,60 +399,6 @@ var BiLiveNoVIP = (function () {
         var elmStyle = this.D.createElement('style');
         elmStyle.innerHTML = cssText;
         this.D.body.appendChild(elmStyle);
-    };
-    /**
-     * 使用Promise封装xhr
-     *
-     * @private
-     * @template T
-     * @param {string} url
-     * @param {string} [type='']
-     * @param {string} [method='GET']
-     * @param {boolean} [cookie=false]
-     * @returns {Promise<T>}
-     */
-    BiLiveNoVIP.prototype.XHR = function (url, type, method, cookie) {
-        var _this = this;
-        if (type === void 0) { type = ''; }
-        if (method === void 0) { method = 'GET'; }
-        if (cookie === void 0) { cookie = false; }
-        return new Promise(function (resolve, reject) {
-            // 并不需要处理错误
-            var timeout = setTimeout(reject, 3e4); //30秒
-            var path = url;
-            if (type === 'jsonp') {
-                // 感觉引入jquery还是太大材小用
-                var cbRandom_1 = Math.floor(Math.random() * 1e15);
-                var elmScript_1 = _this.D.createElement('script');
-                _this.D.body.appendChild(elmScript_1);
-                _this.W[("cb" + cbRandom_1)] = function (json) {
-                    clearTimeout(timeout);
-                    _this.D.body.removeChild(elmScript_1);
-                    _this.W[("cb" + cbRandom_1)] = undefined;
-                    resolve(json);
-                };
-                elmScript_1.src = path + "&callback=cb" + cbRandom_1 + "&_=" + Date.now() + " ";
-            }
-            else {
-                var postData = '';
-                var xhr = new XMLHttpRequest();
-                if (method === 'POST') {
-                    path = url.split('?')[0];
-                    postData = url.split('?')[1];
-                }
-                xhr.open(method, path, true);
-                if (method === 'POST')
-                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-                if (cookie)
-                    xhr.withCredentials = true;
-                xhr.responseType = type;
-                xhr.onload = function (ev) {
-                    clearTimeout(timeout);
-                    resolve(ev.target.response);
-                };
-                xhr.send(postData);
-            }
-        });
     };
     return BiLiveNoVIP;
 }());

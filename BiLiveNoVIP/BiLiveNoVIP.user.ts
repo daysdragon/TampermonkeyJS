@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.10
+// @version     2.0.11
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -43,10 +43,10 @@ class BiLiveNoVIP {
   private sendBeatStorm: (beat: privateBeats) => void
   private playerObject: playerObject
   private CM: CommentManager
-  private tempWord = new Set<string>()
+  private tempWord: string[] = []
   private config: config
   private defaultConfig: config = {
-    version: 1477835918251,
+    version: 1477917918435,
     menu: {
       noHDIcon: {
         name: '活动标识',
@@ -100,11 +100,14 @@ class BiLiveNoVIP {
   }
   /**
    * 开始
+   * 
+   * @memberOf BiLiveNoVIP
    */
   public Start() {
     this.AddUI()
     this.ChangeCSS()
     this.AddDanmaku()
+    // flash加载完成后的回调函数
     this.W.msg_history = {
       get: () => {
         if (this.config.menu.replaceDanmaku.enable) {
@@ -119,6 +122,7 @@ class BiLiveNoVIP {
    * 模拟实时屏蔽
    * 
    * @private
+   * @memberOf BiLiveNoVIP
    */
   private ChangeCSS() {
     // 获取或者插入style
@@ -131,36 +135,24 @@ class BiLiveNoVIP {
     //css内容
     let cssText = ''
     if (this.config.menu.noHDIcon.enable) cssText += `
-    #chat-msg-list a[href="/hd/aki2016"] {
-      display: none !important;
-    }
-    #chat-msg-list a[href="/hd/guard"] {
+    #chat-msg-list a[href^="/hd/"] {
       display: none !important;
     }
     #chat-msg-list .guard-msg {
       margin: auto !important;
       padding: 4px 5px !important;
     }
-    #chat-msg-list .guard-msg:after {
+    #chat-msg-list *:before {
       display: none !important;
     }
-    #chat-msg-list .guard-msg .msg-content {
+    #chat-msg-list *:after {
+      display: none !important;
+    }
+    #chat-msg-list .user-name.color {
+      color: #4fc1e9 !important;
+    }
+    #chat-msg-list .msg-content {
       color: #646c7a !important;
-    }
-    #chat-msg-list .guard-lv1:before {
-      display: none !important;
-    }
-    #chat-msg-list .guard-lv2:before {
-      display: none !important;
-    }
-    #chat-msg-list .guard-lv1 .user-name.color {
-      color: #4fc1e9 !important;
-    }
-    #chat-msg-list .guard-lv2 .user-name.color {
-      color: #4fc1e9 !important;
-    }
-    #chat-msg-list .guard-lv3 .user-name.color {
-      color: #4fc1e9 !important;
     }`
     if (this.config.menu.noVIPIcon.enable) cssText += `
     #chat-msg-list a[href="/i#to-vip"] {
@@ -202,6 +194,7 @@ class BiLiveNoVIP {
    * 添加按钮
    * 
    * @private
+   * @memberOf BiLiveNoVIP
    */
   private AddUI() {
     // 添加按钮相关的css
@@ -239,7 +232,7 @@ class BiLiveNoVIP {
     })
     // 循环设置监听插入的DOM
     let replaceDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#replaceDanmaku')
-    // let closeDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#closeDanmaku')
+    let closeDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#closeDanmaku')
     let popularWordsCheckbox = <HTMLInputElement>this.D.querySelector('#popularWords')
     let beatStormCheckbox = <HTMLInputElement>this.D.querySelector('#beatStorm')
     for (let x in this.config.menu) {
@@ -253,11 +246,14 @@ class BiLiveNoVIP {
           case 'replaceDanmaku':
             this.ReplaceDanmaku(evt.checked)
             if (!evt.checked) {
+              // 关闭热词和节奏风暴选项
+              if (closeDanmakuCheckbox.checked = true) closeDanmakuCheckbox.click()
               if (popularWordsCheckbox.checked = true) popularWordsCheckbox.click()
               if (beatStormCheckbox.checked = true) beatStormCheckbox.click()
             }
             break
           case 'closeDanmaku':
+            this.CM.clear()
             if (evt.checked && !replaceDanmakuCheckbox.checked) replaceDanmakuCheckbox.click()
             break
           case 'popularWords':
@@ -279,6 +275,7 @@ class BiLiveNoVIP {
    * 添加弹幕层
    * 
    * @private
+   * @memberOf BiLiveNoVIP
    */
   private AddDanmaku() {
     // 获取播放器节点
@@ -311,20 +308,18 @@ class BiLiveNoVIP {
       this.CM.height = danmaku.clientHeight
     })
     // 控制条
-    this.D.querySelector('#danmu-alpha-ctrl').addEventListener('input',
-      (ev) => {
-        this.CM.options.scroll.opacity = parseInt((<HTMLInputElement>ev.target).value) / 100
-      }
+    this.D.querySelector('#danmu-alpha-ctrl').addEventListener('input', (ev) => {
+      this.CM.options.scroll.opacity = parseInt((<HTMLInputElement>ev.target).value) / 100
+    }
     )
-    this.D.querySelector('#danmu-density-ctrl').addEventListener('input',
-      (ev) => {
-        this.CM.options.limit = parseDensity((<HTMLInputElement>ev.target).value)
-      })
+    this.D.querySelector('#danmu-density-ctrl').addEventListener('input', (ev) => {
+      this.CM.options.limit = parseDensity((<HTMLInputElement>ev.target).value)
+    })
     /**
      * 计算弹幕密度
      * 
      * @param {string} density
-     * @returns {number}
+     * @returns
      */
     function parseDensity(density: string) {
       let limit: number
@@ -359,6 +354,7 @@ class BiLiveNoVIP {
    * 
    * @private
    * @param {boolean} enable
+   * @memberOf BiLiveNoVIP
    */
   private ReplaceDanmaku(enable: boolean) {
     if (enable) {
@@ -369,25 +365,24 @@ class BiLiveNoVIP {
       // 获取聊天信息
       this.DANMU_MSG = this.W.protocol.DANMU_MSG
       this.W.protocol.DANMU_MSG = (json: danmuObject) => {
-        if (this.config.menu.closeDanmaku.enable) {
-          this.DANMU_MSG(json)
-        }
-        else {
-          let chatText = json.info[1]
-          if (!this.tempWord.has(chatText)) {
-            let danmuColor = 16777215
-            if (json.info[2][2] === 1) danmuColor = (json.info[2][0] === masterID) ? 6737151 : 16750592
-            let danmu = {
-              mode: 1,
-              text: chatText,
-              size: 0.25 * parseInt(localStorage.getItem('danmuSize') || '100'),
-              color: danmuColor,
-              shadow: true
-            }
-            this.CM.send(danmu)
-            this.DANMU_MSG(json)
+        // 屏蔽关键词
+        if (this.tempWord.indexOf(json.info[1]) !== -1) return
+        if (!this.config.menu.closeDanmaku.enable) {
+          // 添加弹幕
+          let danmuColor = 16777215
+          // 主播与管理员特殊颜色
+          if (json.info[2][2] === 1) danmuColor = (json.info[2][0] === masterID) ? 6737151 : 16750592
+          let danmu = {
+            mode: 1,
+            text: json.info[1],
+            size: 0.25 * parseInt(localStorage.getItem('danmuSize') || '100'),
+            color: danmuColor,
+            shadow: true
           }
+          this.CM.send(danmu)
         }
+        // 添加到聊天列表
+        this.DANMU_MSG(json)
       }
     }
     else {
@@ -403,42 +398,32 @@ class BiLiveNoVIP {
    * 
    * @private
    * @param {boolean} disable
+   * @memberOf BiLiveNoVIP
    */
   private PopularWords(disable: boolean) {
-    let popularWords = this.W.flash_popularWords()
-    popularWords.forEach((word) => {
-      (disable) ? this.tempWord.add(word) : this.tempWord.delete(word)
-    })
+    this.tempWord = (disable) ? this.W.flash_popularWords() : []
   }
   /**
    * 屏蔽节奏风暴
    * 
    * @private
    * @param {boolean} disable
+   * @memberOf BiLiveNoVIP
    */
   private BeatStorm(disable: boolean) {
-    let getAllBeats = '/api/ajaxGetAllBeats'
-    this.XHR<getAllBeats>(getAllBeats, 'json')
-      .then((resolve) => {
-        let publicBeats = resolve.data.public
-        publicBeats.forEach((beat) => {
-          (disable) ? this.tempWord.add(beat.content) : this.tempWord.delete(beat.content)
-        })
-      })
     if (disable) {
       this.sendBeatStorm = this.W.sendBeatStorm
       this.W.sendBeatStorm = (json: privateBeats) => {
-        this.tempWord.add(json.content)
+        this.tempWord.push(json.content)
       }
     }
-    else {
-      this.W.sendBeatStorm = this.sendBeatStorm
-    }
+    else this.W.sendBeatStorm = this.sendBeatStorm
   }
   /**
    * 添加样式
    * 
    * @private
+   * @memberOf BiLiveNoVIP
    */
   private AddCSS() {
     let cssText = `
@@ -553,54 +538,6 @@ class BiLiveNoVIP {
     let elmStyle = this.D.createElement('style')
     elmStyle.innerHTML = cssText
     this.D.body.appendChild(elmStyle)
-  }
-  /**
-   * 使用Promise封装xhr
-   * 
-   * @private
-   * @template T
-   * @param {string} url
-   * @param {string} [type='']
-   * @param {string} [method='GET']
-   * @param {boolean} [cookie=false]
-   * @returns {Promise<T>}
-   */
-  private XHR<T>(url: string, type = '', method = 'GET', cookie = false): Promise<T> {
-    return new Promise((resolve, reject) => {
-      // 并不需要处理错误
-      let timeout = setTimeout(reject, 3e4) //30秒
-      let path = url
-      if (type === 'jsonp') {
-        // 感觉引入jquery还是太大材小用
-        let cbRandom = Math.floor(Math.random() * 1e15)
-        let elmScript = this.D.createElement('script')
-        this.D.body.appendChild(elmScript)
-        this.W[`cb${cbRandom}`] = (json) => {
-          clearTimeout(timeout)
-          this.D.body.removeChild(elmScript)
-          this.W[`cb${cbRandom}`] = undefined
-          resolve(json)
-        }
-        elmScript.src = `${path}&callback=cb${cbRandom}&_=${Date.now()} `
-      }
-      else {
-        let postData = ''
-        let xhr = new XMLHttpRequest()
-        if (method === 'POST') {
-          path = url.split('?')[0]
-          postData = url.split('?')[1]
-        }
-        xhr.open(method, path, true)
-        if (method === 'POST') xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8')
-        if (cookie) xhr.withCredentials = true
-        xhr.responseType = type
-        xhr.onload = (ev) => {
-          clearTimeout(timeout)
-          resolve((<XMLHttpRequest>ev.target).response)
-        }
-        xhr.send(postData)
-      }
-    })
   }
 }
 const gun = new BiLiveNoVIP()
