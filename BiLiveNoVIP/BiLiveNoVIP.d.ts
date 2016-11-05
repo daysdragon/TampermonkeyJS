@@ -1,7 +1,6 @@
 interface Window {
   flash_popularWords(): string[]
   player_fullwin(full: boolean): void
-  sendBeatStorm(beat: privateBeats): void
   msg_history: { get(): void }
   protocol: Protocol
   ROOMID: number
@@ -9,6 +8,7 @@ interface Window {
 }
 interface Protocol {
   DANMU_MSG(danmu: danmuObject): void
+  SPECIAL_GIFT(beat: SPECIAL_GIFT): void
 }
 // CommentCoreLibrary
 declare class CommentManager {
@@ -83,33 +83,22 @@ interface danmuObject {
   cmd: string
   color: number
 }
-// 默认节奏
-interface getAllBeats {
-  code: number
-  msg: string
-  data: getAllBeatsData
+// 特殊礼物消息
+interface SPECIAL_GIFT {
+  cmd: string
+  data: SPECIAL_GIFT_Data
+  roomid: number
 }
-interface getAllBeatsData {
-  public: getAllBeatsDataPublic[]
-  private: getAllBeatsDataPrivate
+interface SPECIAL_GIFT_Data {
+  '39': SPECIAL_GIFT_Data_BeatStorm
 }
-interface getAllBeatsDataPublic {
-  id: number
-  content: string
-}
-interface getAllBeatsDataPrivate {
-  id: number
-  status: number
-  content: string
-}
-// 自定义节奏
-interface privateBeats {
-  action: string
-  content: string
-  hadJoin: number
+interface SPECIAL_GIFT_Data_BeatStorm {
   id: string
   num: number
   time: number
+  content: string
+  hadJoin: number
+  action: string
 }
 // 监听聊天窗口
 // let chatObserver = new MutationObserver((res) => {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.12
+// @version     2.0.13
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -40,20 +40,20 @@ class BiLiveNoVIP {
   private W = window
   private D = document
   private DANMU_MSG: (danmu: danmuObject) => void
-  private sendBeatStorm: (beat: privateBeats) => void
+  private SPECIAL_GIFT: (beat: SPECIAL_GIFT) => void
   private playerObject: playerObject
   private CM: CommentManager
   private tempWord: string[] = []
   private config: config
   private defaultConfig: config = {
-    version: 1478004841701,
+    version: 1478364052339,
     menu: {
       noHDIcon: {
         name: '活动标识',
         enable: false
       },
       noVIPIcon: {
-        name: '老爷标签',
+        name: '老爷标识',
         enable: false
       },
       noMedalIcon: {
@@ -69,7 +69,7 @@ class BiLiveNoVIP {
         enable: false
       },
       noSystemMsg: {
-        name: '系统消息',
+        name: '系统公告',
         enable: false
       },
       noGiftMsg: {
@@ -149,8 +149,12 @@ class BiLiveNoVIP {
       color: #646c7a !important;
     }`
     if (this.config.menu.noVIPIcon.enable) cssText += `
-    #chat-msg-list a[href="/i#to-vip"] {
+    #chat-msg-list a[href="/i#to-vip"], #chat-msg-list .system-msg .square-icon, #chat-msg-list .system-msg .v-middle {
       display: none !important;
+    }
+    #chat-msg-list .system-msg {
+      padding:0 10px;
+      height:auto;
     }`
     if (this.config.menu.noMedalIcon.enable) cssText += `
     #chat-msg-list .medal-icon {
@@ -165,7 +169,7 @@ class BiLiveNoVIP {
       display: none !important;
     }`
     if (this.config.menu.noSystemMsg.enable) cssText += `
-    #chat-msg-list .system-msg, #chat-msg-list .announcement-container {
+    #chat-msg-list .announcement-container {
       display: none !important;
     }`
     if (this.config.menu.noGiftMsg.enable) cssText += `
@@ -403,12 +407,12 @@ class BiLiveNoVIP {
    */
   private BeatStorm(disable: boolean) {
     if (disable) {
-      this.sendBeatStorm = this.W.sendBeatStorm
-      this.W.sendBeatStorm = (json: privateBeats) => {
-        this.tempWord.push(json.content)
+      this.SPECIAL_GIFT = this.W.protocol.SPECIAL_GIFT
+      this.W.protocol.SPECIAL_GIFT = (json: SPECIAL_GIFT) => {
+        if (json.data['39'] && json.data['39'].action === 'start') this.tempWord.push(json.data['39'].content)
       }
     }
-    else this.W.sendBeatStorm = this.sendBeatStorm
+    else this.W.protocol.SPECIAL_GIFT = this.SPECIAL_GIFT
   }
   /**
    * 添加样式
@@ -418,6 +422,9 @@ class BiLiveNoVIP {
    */
   private AddCSS() {
     let cssText = `
+    #chat-ctrl-panel .chat-ctrl-btns .btn {
+      margin: 0 3px;
+    }
     .gunHide {
       display: none;
     }
@@ -428,7 +435,7 @@ class BiLiveNoVIP {
       display: inline-block;
       font-size: 13px;
       height: 18px;
-      margin: -3px 5px;
+      margin: -3px 3px;
       text-align: center;
       width: 18px;
       vertical-align: text-top;
