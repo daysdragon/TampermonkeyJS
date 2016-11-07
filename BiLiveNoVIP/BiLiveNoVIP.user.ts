@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.13
+// @version     2.0.14
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -46,7 +46,7 @@ class BiLiveNoVIP {
   private tempWord: string[] = []
   private config: config
   private defaultConfig: config = {
-    version: 1478364052339,
+    version: 1478536633943,
     menu: {
       noHDIcon: {
         name: '活动标识',
@@ -293,11 +293,23 @@ class BiLiveNoVIP {
     // 弹幕密度
     this.CM.options.limit = parseDensity(localStorage.getItem('danmuDensity') || '30')
     // 监听视频窗口大小
-    let bodyObserver = new MutationObserver(() => {
+    let bodyObserver = new MutationObserver((ev) => {
       this.CM.width = danmaku.clientWidth
       this.CM.height = danmaku.clientHeight
+      // 排行榜
+      let evt = ev[0]
+      let elmDivRand = <HTMLDivElement>this.D.querySelector('#rank-list-ctnr')
+      let elmDivChat = <HTMLDivElement>this.D.querySelector('#chat-list-ctnr')
+      if (evt.oldValue && evt.oldValue.indexOf('player-full-win') === -1) {
+        elmDivRand.style.cssText = 'display: none'
+        elmDivChat.style.cssText = 'height: calc(100% - 150px)'
+      }
+      else {
+        elmDivRand.style.cssText = ''
+        elmDivChat.style.cssText = ''
+      }
     })
-    bodyObserver.observe(this.D.body, { attributes: true, attributeFilter: ['class'] })
+    bodyObserver.observe(this.D.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class'] })
     this.W.addEventListener('resize', () => {
       this.CM.width = danmaku.clientWidth
       this.CM.height = danmaku.clientHeight
@@ -452,6 +464,7 @@ class BiLiveNoVIP {
       padding: 10px;
       position: absolute;
       width: 100px;
+      z-index: 10;
     }
     #gunBut > #gunMenu > div {
     	background: darkgray;
