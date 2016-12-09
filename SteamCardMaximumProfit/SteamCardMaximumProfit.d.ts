@@ -4,7 +4,7 @@ interface Window {
   g_sessionID: string
   CalculateFeeAmount(amount: number, publisherFee: string): FeeAmount
   GetCurrencyCode(currencyId: number): string
-  GetMarketHashName(rgDescriptionData: rgItem): string
+  GetMarketHashName(rgDescriptionData: description): string
   GetPriceValueAsInt(strAmount: string): number
   v_currencyformat(valueInCents: number, currencyCode: string): string
 }
@@ -32,9 +32,14 @@ interface itemInfo {
 // 物品信息
 interface rgItem {
   appid: string
+  assetid: string
   contextid: string
+  description: description
   element: HTMLDivElement
-  id: string
+}
+// 物品描述
+interface description {
+  appid: number
   market_fee: string
   marketable: number
 }

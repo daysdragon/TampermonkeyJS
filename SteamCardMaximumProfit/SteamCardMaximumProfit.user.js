@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.12
+// @version     0.2.13
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -33,7 +33,12 @@ var SteamCardMaximumProfit = (function () {
         var elmDivActiveInventoryPage = this._D.querySelector('#active_inventory_page');
         // 创建观察者对象
         var observer = new MutationObserver(function (rec) {
-            if (location.hash.match(/^#753|^$/) == null || rec[0].oldValue !== 'display: none;')
+            var display = false;
+            for (var i = 0; i < rec.length; i++) {
+                if (rec[i].oldValue === 'display: none;')
+                    display = true;
+            }
+            if (location.hash.match(/^#753|^$/) == null || !display)
                 return;
             _this._AddUI();
             _this._Listener();
@@ -41,7 +46,7 @@ var SteamCardMaximumProfit = (function () {
             observer.disconnect();
         });
         // 传入目标节点和观察选项
-        observer.observe(elmDivActiveInventoryPage, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+        observer.observe(elmDivActiveInventoryPage, { attributes: true, subtree: true, attributeOldValue: true, attributeFilter: ['style'] });
     };
     /**
      * 添加样式, 复选框和汇率输入框
@@ -58,13 +63,13 @@ var SteamCardMaximumProfit = (function () {
         // 有点丑的复选框
         var elmDivItems = this._D.querySelectorAll('.itemHolder');
         for (var i = 0; i < elmDivItems.length; i++) {
-            var iteminfo = this._GetRgItem(elmDivItems[i]);
-            if (iteminfo != null && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
-                this._divItems.push(iteminfo.element);
+            var rgItem = this._GetRgItem(elmDivItems[i]);
+            if (rgItem != null && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+                this._divItems.push(rgItem.element);
                 // 选择框
                 var elmDiv_1 = this._D.createElement('div');
                 elmDiv_1.classList.add('scmpItemCheckbox');
-                iteminfo.element.appendChild(elmDiv_1);
+                rgItem.element.appendChild(elmDiv_1);
             }
         }
         // 插入快速出售按钮
@@ -111,6 +116,10 @@ var SteamCardMaximumProfit = (function () {
                     .then(function (resolve) {
                     _this._spanFirstPrice.innerText = resolve.firstFormatPrice;
                     _this._spanSecondPrice.innerText = resolve.secondFormatPrice;
+                })
+                    .catch(function (reject) {
+                    reject.status = 'error';
+                    _this._QuickSellStatus(reject);
                 });
             }
             else if (evt.classList.contains('scmpItemCheckbox')) {
@@ -157,7 +166,7 @@ var SteamCardMaximumProfit = (function () {
             var itemInfos = _this._D.querySelectorAll('.scmpItemSelect');
             for (var i = 0; i < itemInfos.length; i++) {
                 var rgItem = _this._GetRgItem(itemInfos[i].parentNode);
-                if (rgItem.marketable === 1) {
+                if (rgItem.description.marketable === 1) {
                     _this._GetPriceOverview({ rgItem: rgItem })
                         .then(function (resolve) {
                         _this._quickSells.push(resolve);
@@ -177,7 +186,7 @@ var SteamCardMaximumProfit = (function () {
     SteamCardMaximumProfit.prototype._GetPriceOverview = function (itemInfo) {
         var _this = this;
         return new Promise(function (resolved, rejected) {
-            var priceoverview = "/market/priceoverview/?country=US&currency=1&appid=" + itemInfo.rgItem.appid + "&market_hash_name=" + encodeURIComponent(_this._W.GetMarketHashName(itemInfo.rgItem));
+            var priceoverview = "/market/priceoverview/?country=US&currency=1&appid=" + itemInfo.rgItem.description.appid + "&market_hash_name=" + encodeURIComponent(_this._W.GetMarketHashName(itemInfo.rgItem.description));
             _this._XHR(priceoverview, 'json')
                 .then(function (resolve) {
                 if (resolve != null && resolve.success && resolve.lowest_price !== '') {
@@ -186,7 +195,7 @@ var SteamCardMaximumProfit = (function () {
                     resolved(_this._CalculatePrice(itemInfo));
                 }
                 else {
-                    var marketListings = "/market/listings/" + itemInfo.rgItem.appid + "/" + encodeURIComponent(_this._W.GetMarketHashName(itemInfo.rgItem));
+                    var marketListings = "/market/listings/" + itemInfo.rgItem.description.appid + "/" + encodeURIComponent(_this._W.GetMarketHashName(itemInfo.rgItem.description));
                     _this._XHR(marketListings)
                         .then(function (resolve) {
                         var marketLoadOrderSpread = resolve.toString().match(/Market_LoadOrderSpread\( (\d+)/);
@@ -196,7 +205,7 @@ var SteamCardMaximumProfit = (function () {
                             return _this._XHR(marketItemordershistogram, 'json');
                         }
                         else {
-                            return Promise.reject(null);
+                            return Promise.reject(itemInfo);
                         }
                     })
                         .then(function (resolve) {
@@ -207,12 +216,12 @@ var SteamCardMaximumProfit = (function () {
                         }
                     })
                         .catch(function () {
-                        rejected(null);
+                        rejected(itemInfo);
                     });
                 }
             })
                 .catch(function () {
-                rejected(null);
+                rejected(itemInfo);
             });
         });
     };
@@ -228,7 +237,7 @@ var SteamCardMaximumProfit = (function () {
         // 格式化取整
         var firstPrice = this._W.GetPriceValueAsInt(itemInfo.lowestPrice);
         // 手续费
-        var publisherFee = itemInfo.rgItem.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default;
+        var publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default;
         var feeInfo = this._W.CalculateFeeAmount(firstPrice, publisherFee);
         firstPrice = firstPrice - feeInfo.fees;
         // 换算成人民币
@@ -253,7 +262,7 @@ var SteamCardMaximumProfit = (function () {
         var price = itemInfo.price || itemInfo.firstPrice;
         itemInfo.status = 'run';
         this._QuickSellStatus(itemInfo);
-        var marketSellitem = "https://steamcommunity.com/market/sellitem/?sessionid=" + this._W.g_sessionID + "&appid=" + itemInfo.rgItem.appid + "&contextid=" + itemInfo.rgItem.contextid + "&assetid=" + itemInfo.rgItem.id + "&amount=1&price=" + price;
+        var marketSellitem = "https://steamcommunity.com/market/sellitem/?sessionid=" + this._W.g_sessionID + "&appid=" + itemInfo.rgItem.description.appid + "&contextid=" + itemInfo.rgItem.contextid + "&assetid=" + itemInfo.rgItem.assetid + "&amount=1&price=" + price;
         return this._XHR(marketSellitem, 'json', 'POST', true)
             .then(function (resolve) {
             if (resolve != null && resolve.success) {

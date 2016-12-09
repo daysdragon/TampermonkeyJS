@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.12
+// @version     0.2.13
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -38,14 +38,18 @@ class SteamCardMaximumProfit {
     let elmDivActiveInventoryPage = <HTMLDivElement>this._D.querySelector('#active_inventory_page')
     // 创建观察者对象
     let observer = new MutationObserver((rec) => {
-      if (location.hash.match(/^#753|^$/) == null || rec[0].oldValue !== 'display: none;') return
+      let display = false
+      for (let i = 0; i < rec.length; i++) {
+        if (rec[i].oldValue === 'display: none;') display = true
+      }
+      if (location.hash.match(/^#753|^$/) == null || !display) return
       this._AddUI()
       this._Listener()
       this._DoLoop()
       observer.disconnect()
     })
     // 传入目标节点和观察选项
-    observer.observe(elmDivActiveInventoryPage, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] })
+    observer.observe(elmDivActiveInventoryPage, { attributes: true, subtree: true, attributeOldValue: true, attributeFilter: ['style'] })
   }
   /**
    * 添加样式, 复选框和汇率输入框
@@ -93,13 +97,13 @@ class SteamCardMaximumProfit {
     // 有点丑的复选框
     let elmDivItems = <NodeListOf<HTMLDivElement>>this._D.querySelectorAll('.itemHolder')
     for (let i = 0; i < elmDivItems.length; i++) {
-      let iteminfo = this._GetRgItem(elmDivItems[i])
-      if (iteminfo != null && iteminfo.appid.toString() === '753' && iteminfo.marketable === 1) {
-        this._divItems.push(iteminfo.element)
+      let rgItem = this._GetRgItem(elmDivItems[i])
+      if (rgItem != null && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+        this._divItems.push(rgItem.element)
         // 选择框
         let elmDiv = this._D.createElement('div')
         elmDiv.classList.add('scmpItemCheckbox')
-        iteminfo.element.appendChild(elmDiv)
+        rgItem.element.appendChild(elmDiv)
       }
     }
     // 插入快速出售按钮
@@ -147,6 +151,10 @@ class SteamCardMaximumProfit {
             this._spanFirstPrice.innerText = <string>resolve.firstFormatPrice
             this._spanSecondPrice.innerText = <string>resolve.secondFormatPrice
           })
+          .catch((reject) => {
+            reject.status = 'error'
+            this._QuickSellStatus(reject)
+          })
       }
       // 选择逻辑
       else if (evt.classList.contains('scmpItemCheckbox')) {
@@ -190,7 +198,7 @@ class SteamCardMaximumProfit {
       let itemInfos = this._D.querySelectorAll('.scmpItemSelect')
       for (let i = 0; i < itemInfos.length; i++) {
         let rgItem = this._GetRgItem(<HTMLDivElement>itemInfos[i].parentNode)
-        if (rgItem.marketable === 1) {
+        if (rgItem.description.marketable === 1) {
           this._GetPriceOverview({ rgItem })
             .then((resolve) => {
               this._quickSells.push(resolve)
@@ -209,7 +217,7 @@ class SteamCardMaximumProfit {
    */
   private _GetPriceOverview(itemInfo: itemInfo): Promise<itemInfo> {
     return new Promise((resolved, rejected) => {
-      let priceoverview = `/market/priceoverview/?country=US&currency=1&appid=${itemInfo.rgItem.appid}&market_hash_name=${encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem))}`
+      let priceoverview = `/market/priceoverview/?country=US&currency=1&appid=${itemInfo.rgItem.description.appid}&market_hash_name=${encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem.description))}`
       this._XHR<priceoverview>(priceoverview, 'json')
         .then((resolve) => {
           if (resolve != null && resolve.success && resolve.lowest_price !== '') {
@@ -218,7 +226,7 @@ class SteamCardMaximumProfit {
             resolved(this._CalculatePrice(itemInfo))
           }
           else {
-            let marketListings = `/market/listings/${itemInfo.rgItem.appid}/${encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem))}`
+            let marketListings = `/market/listings/${itemInfo.rgItem.description.appid}/${encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem.description))}`
             this._XHR<string>(marketListings)
               .then((resolve) => {
                 let marketLoadOrderSpread = resolve.toString().match(/Market_LoadOrderSpread\( (\d+)/)
@@ -228,7 +236,7 @@ class SteamCardMaximumProfit {
                   return this._XHR<itemordershistogram>(marketItemordershistogram, 'json')
                 }
                 else {
-                  return Promise.reject(null)
+                  return Promise.reject(itemInfo)
                 }
               })
               .then((resolve) => {
@@ -239,12 +247,12 @@ class SteamCardMaximumProfit {
                 }
               })
               .catch(() => {
-                rejected(null)
+                rejected(itemInfo)
               })
           }
         })
         .catch(() => {
-          rejected(null)
+          rejected(itemInfo)
         })
     })
   }
@@ -260,7 +268,7 @@ class SteamCardMaximumProfit {
     // 格式化取整
     let firstPrice = this._W.GetPriceValueAsInt(<string>itemInfo.lowestPrice)
     // 手续费
-    let publisherFee = itemInfo.rgItem.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default
+    let publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default
     let feeInfo = this._W.CalculateFeeAmount(firstPrice, publisherFee)
     firstPrice = firstPrice - feeInfo.fees
     // 换算成人民币
@@ -284,7 +292,7 @@ class SteamCardMaximumProfit {
     let price = itemInfo.price || itemInfo.firstPrice
     itemInfo.status = 'run'
     this._QuickSellStatus(itemInfo)
-    let marketSellitem = `https://steamcommunity.com/market/sellitem/?sessionid=${this._W.g_sessionID}&appid=${itemInfo.rgItem.appid}&contextid=${itemInfo.rgItem.contextid}&assetid=${itemInfo.rgItem.id}&amount=1&price=${price}`
+    let marketSellitem = `https://steamcommunity.com/market/sellitem/?sessionid=${this._W.g_sessionID}&appid=${itemInfo.rgItem.description.appid}&contextid=${itemInfo.rgItem.contextid}&assetid=${itemInfo.rgItem.assetid}&amount=1&price=${price}`
     return this._XHR<sellitem>(marketSellitem, 'json', 'POST', true)
       .then((resolve) => {
         if (resolve != null && resolve.success) {
