@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.13
+// @version     0.2.14
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -30,23 +30,26 @@ var SteamCardMaximumProfit = (function () {
      */
     SteamCardMaximumProfit.prototype.Start = function () {
         var _this = this;
-        var elmDivActiveInventoryPage = this._D.querySelector('#active_inventory_page');
+        var elmDivActiveInventoryPage = this._D.querySelector('#inventories');
         // 创建观察者对象
         var observer = new MutationObserver(function (rec) {
             var display = false;
             for (var i = 0; i < rec.length; i++) {
-                if (rec[i].oldValue === 'display: none;')
+                var rgItem = rec[i].target.rgItem;
+                if (rgItem != null && rgItem.description.appid === 753) {
                     display = true;
+                    break;
+                }
             }
-            if (location.hash.match(/^#753|^$/) == null || !display)
-                return;
-            _this._AddUI();
-            _this._Listener();
-            _this._DoLoop();
-            observer.disconnect();
+            if (location.hash.match(/^#753|^$/) != null && display) {
+                _this._AddUI();
+                _this._Listener();
+                _this._DoLoop();
+                observer.disconnect();
+            }
         });
         // 传入目标节点和观察选项
-        observer.observe(elmDivActiveInventoryPage, { attributes: true, subtree: true, attributeOldValue: true, attributeFilter: ['style'] });
+        observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true });
     };
     /**
      * 添加样式, 复选框和汇率输入框
