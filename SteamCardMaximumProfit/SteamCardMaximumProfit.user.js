@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.15
+// @version     0.2.16
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -30,22 +30,23 @@ var SteamCardMaximumProfit = (function () {
      */
     SteamCardMaximumProfit.prototype.Start = function () {
         var _this = this;
+        this._AddUI();
+        this._DoLoop();
         var elmDivActiveInventoryPage = this._D.querySelector('#inventories');
         // 创建观察者对象
         var observer = new MutationObserver(function (rec) {
-            var display = false;
-            for (var i = 0; i < rec.length; i++) {
-                var rgItem = rec[i].target.rgItem;
-                if (rgItem != null && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
-                    display = true;
-                    break;
+            if (location.hash.match(/^#753|^$/)) {
+                // 有点丑的复选框
+                for (var i = 0; i < rec.length; i++) {
+                    var rgItem = _this._GetRgItem(rec[i].target);
+                    if (rgItem != null && _this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+                        _this._divItems.push(rgItem.element);
+                        // 选择框
+                        var elmDiv = _this._D.createElement('div');
+                        elmDiv.classList.add('scmpItemCheckbox');
+                        rgItem.element.appendChild(elmDiv);
+                    }
                 }
-            }
-            if (location.hash.match(/^#753|^$/) != null && display) {
-                _this._AddUI();
-                _this._Listener();
-                _this._DoLoop();
-                observer.disconnect();
             }
         });
         // 传入目标节点和观察选项
@@ -63,18 +64,6 @@ var SteamCardMaximumProfit = (function () {
         var elmStyle = this._D.createElement('style');
         elmStyle.innerHTML = "\n    .scmpItemSelect {\n      background: yellow;\n    }\n    .scmpItemRun {\n      background: blue;\n    }\n    .scmpItemSuccess {\n      background: green;\n    }\n    .scmpItemError {\n      background: red;\n    }\n    .scmpQuickSell {\n      margin: 0 0 1em;\n    }\n    .scmpItemCheckbox {\n      position: absolute;\n      z-index: 100;\n      top: 0;\n      left: 0;\n      width: 20px;\n      height: 20px;\n      border: 2px solid yellow;\n      opacity: 0.7;\n      cursor: default;\n    }\n    .scmpItemCheckbox:hover {\n      opacity: 1;\n    }\n    #scmpExch {\n      width: 5em;\n    }";
         this._D.querySelector('body').appendChild(elmStyle);
-        // 有点丑的复选框
-        var elmDivItems = this._D.querySelectorAll('.itemHolder');
-        for (var i = 0; i < elmDivItems.length; i++) {
-            var rgItem = this._GetRgItem(elmDivItems[i]);
-            if (rgItem != null && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
-                this._divItems.push(rgItem.element);
-                // 选择框
-                var elmDiv_1 = this._D.createElement('div');
-                elmDiv_1.classList.add('scmpItemCheckbox');
-                rgItem.element.appendChild(elmDiv_1);
-            }
-        }
         // 插入快速出售按钮
         var elmDivInventoryPageRight = this._D.querySelector('.inventory_page_right');
         var elmDiv = this._D.createElement('div');
@@ -82,43 +71,20 @@ var SteamCardMaximumProfit = (function () {
         elmDivInventoryPageRight.appendChild(elmDiv);
         // 获取快速出售按钮
         var elmSpanQuickSellItems = elmDiv.querySelectorAll('.scmpQuickSellItem');
-        this._spanFirstPrice = elmSpanQuickSellItems[0];
-        this._spanSecondPrice = elmSpanQuickSellItems[1];
         this._spanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
         this._spanQuickError = elmDiv.querySelector('#scmpQuickError');
-        // 改变汇率
-        this._inputUSDCNY = elmDiv.querySelector('#scmpExch');
-        this._inputUSDCNY.value = '6.50';
-        // 在线获取实时汇率
-        GM_xmlhttpRequest({
-            method: 'GET',
-            url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
-            responseType: 'json',
-            onload: function (res) {
-                if (res.status === 200 && res.response.status === '0')
-                    _this._inputUSDCNY.value = res.response.data[0].number2;
-            }
-        });
-    };
-    /**
-     * 添加监听
-     *
-     * @private
-     * @memberOf SteamCardMaximumProfit
-     */
-    SteamCardMaximumProfit.prototype._Listener = function () {
-        var _this = this;
+        // 监听事件
         this._D.addEventListener('click', function (ev) {
             var evt = ev.target;
             // 点击物品
             if (evt.className === 'inventory_item_link') {
-                _this._spanFirstPrice.innerText = 'null';
-                _this._spanSecondPrice.innerText = 'null';
+                elmSpanQuickSellItems[0].innerText = 'null';
+                elmSpanQuickSellItems[1].innerText = 'null';
                 var rgItem = _this._GetRgItem(evt.parentNode);
                 _this._GetPriceOverview({ rgItem: rgItem })
                     .then(function (resolve) {
-                    _this._spanFirstPrice.innerText = resolve.firstFormatPrice;
-                    _this._spanSecondPrice.innerText = resolve.secondFormatPrice;
+                    elmSpanQuickSellItems[0].innerText = resolve.firstFormatPrice;
+                    elmSpanQuickSellItems[1].innerText = resolve.secondFormatPrice;
                 })
                     .catch(function (reject) {
                     reject.status = 'error';
@@ -131,13 +97,13 @@ var SteamCardMaximumProfit = (function () {
                 // 改变背景
                 var ChangeClass = function (elmDiv) {
                     var elmCheckbox = elmDiv.querySelector('.scmpItemCheckbox');
-                    if (elmCheckbox.classList.contains('scmpItemSuccess') === false) {
+                    if (elmDiv.parentNode.style.display !== 'none' && elmCheckbox.classList.contains('scmpItemSuccess') === false) {
                         elmCheckbox.classList.remove('scmpItemError');
                         elmCheckbox.classList.toggle('scmpItemSelect', !select_1);
                     }
                 };
                 // shift多选
-                if (_this._divLastChecked !== undefined && ev.shiftKey) {
+                if (_this._divLastChecked != null && ev.shiftKey) {
                     var start = _this._divItems.indexOf(_this._divLastChecked);
                     var end = _this._divItems.indexOf(rgItem.element);
                     var someDivItems = _this._divItems.slice(Math.min(start, end), Math.max(start, end) + 1);
@@ -175,6 +141,19 @@ var SteamCardMaximumProfit = (function () {
                         _this._quickSells.push(resolve);
                     });
                 }
+            }
+        });
+        // 改变汇率
+        this._inputUSDCNY = elmDiv.querySelector('#scmpExch');
+        this._inputUSDCNY.value = '6.50';
+        // 在线获取实时汇率
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
+            responseType: 'json',
+            onload: function (res) {
+                if (res.status === 200 && res.response.status === '0')
+                    _this._inputUSDCNY.value = res.response.data[0].number2;
             }
         });
     };

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.15
+// @version     0.2.16
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -24,8 +24,6 @@ class SteamCardMaximumProfit {
   private _inputUSDCNY: HTMLInputElement
   private _divItems: HTMLDivElement[] = []
   private _divLastChecked: HTMLDivElement
-  private _spanFirstPrice: HTMLSpanElement
-  private _spanSecondPrice: HTMLSpanElement
   private _quickSells: itemInfo[] = []
   private _spanQuickSurplus: HTMLSpanElement
   private _spanQuickError: HTMLSpanElement
@@ -35,22 +33,23 @@ class SteamCardMaximumProfit {
    * @memberOf SteamCardMaximumProfit
    */
   public Start() {
+    this._AddUI()
+    this._DoLoop()
     let elmDivActiveInventoryPage = <HTMLDivElement>this._D.querySelector('#inventories')
     // 创建观察者对象
     let observer = new MutationObserver((rec) => {
-      let display = false
-      for (let i = 0; i < rec.length; i++) {
-        let rgItem = rec[i].target.rgItem
-        if (rgItem != null && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
-          display = true
-          break
+      if (location.hash.match(/^#753|^$/)) {
+        // 有点丑的复选框
+        for (let i = 0; i < rec.length; i++) {
+          let rgItem = this._GetRgItem(<HTMLDivElement>rec[i].target)
+          if (rgItem != null && this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+            this._divItems.push(rgItem.element)
+            // 选择框
+            let elmDiv = this._D.createElement('div')
+            elmDiv.classList.add('scmpItemCheckbox')
+            rgItem.element.appendChild(elmDiv)
+          }
         }
-      }
-      if (location.hash.match(/^#753|^$/) != null && display) {
-        this._AddUI()
-        this._Listener()
-        this._DoLoop()
-        observer.disconnect()
       }
     })
     // 传入目标节点和观察选项
@@ -99,18 +98,6 @@ class SteamCardMaximumProfit {
       width: 5em;
     }`
     this._D.querySelector('body').appendChild(elmStyle)
-    // 有点丑的复选框
-    let elmDivItems = <NodeListOf<HTMLDivElement>>this._D.querySelectorAll('.itemHolder')
-    for (let i = 0; i < elmDivItems.length; i++) {
-      let rgItem = this._GetRgItem(elmDivItems[i])
-      if (rgItem != null && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
-        this._divItems.push(rgItem.element)
-        // 选择框
-        let elmDiv = this._D.createElement('div')
-        elmDiv.classList.add('scmpItemCheckbox')
-        rgItem.element.appendChild(elmDiv)
-      }
-    }
     // 插入快速出售按钮
     let elmDivInventoryPageRight = <HTMLDivElement>this._D.querySelector('.inventory_page_right')
     let elmDiv = this._D.createElement('div')
@@ -120,41 +107,20 @@ class SteamCardMaximumProfit {
     elmDivInventoryPageRight.appendChild(elmDiv)
     // 获取快速出售按钮
     let elmSpanQuickSellItems = <NodeListOf<HTMLSpanElement>>elmDiv.querySelectorAll('.scmpQuickSellItem')
-    this._spanFirstPrice = elmSpanQuickSellItems[0]
-    this._spanSecondPrice = elmSpanQuickSellItems[1]
     this._spanQuickSurplus = <HTMLSpanElement>elmDiv.querySelector('#scmpQuickSurplus')
     this._spanQuickError = <HTMLSpanElement>elmDiv.querySelector('#scmpQuickError')
-    // 改变汇率
-    this._inputUSDCNY = <HTMLInputElement>elmDiv.querySelector('#scmpExch')
-    this._inputUSDCNY.value = '6.50'
-    // 在线获取实时汇率
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url: `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=${Date.now()}&ie=utf8&oe=utf8&format=json&tn=baidu`,
-      responseType: 'json',
-      onload: (res) => {
-        if (res.status === 200 && (<baiduExch>res.response).status === '0') this._inputUSDCNY.value = (<baiduExch>res.response).data[0].number2
-      }
-    })
-  }
-  /**
-   * 添加监听
-   * 
-   * @private
-   * @memberOf SteamCardMaximumProfit
-   */
-  private _Listener() {
+    // 监听事件
     this._D.addEventListener('click', (ev: MouseEvent) => {
       let evt = <HTMLElement>ev.target
       // 点击物品
       if (evt.className === 'inventory_item_link') {
-        this._spanFirstPrice.innerText = 'null'
-        this._spanSecondPrice.innerText = 'null'
+        elmSpanQuickSellItems[0].innerText = 'null'
+        elmSpanQuickSellItems[1].innerText = 'null'
         let rgItem = this._GetRgItem(<HTMLDivElement>evt.parentNode)
         this._GetPriceOverview({ rgItem })
           .then((resolve) => {
-            this._spanFirstPrice.innerText = <string>resolve.firstFormatPrice
-            this._spanSecondPrice.innerText = <string>resolve.secondFormatPrice
+            elmSpanQuickSellItems[0].innerText = <string>resolve.firstFormatPrice
+            elmSpanQuickSellItems[1].innerText = <string>resolve.secondFormatPrice
           })
           .catch((reject) => {
             reject.status = 'error'
@@ -168,13 +134,13 @@ class SteamCardMaximumProfit {
         // 改变背景
         let ChangeClass = (elmDiv: HTMLDivElement) => {
           let elmCheckbox = elmDiv.querySelector('.scmpItemCheckbox')
-          if (elmCheckbox.classList.contains('scmpItemSuccess') === false) {
+          if ((<HTMLDivElement>elmDiv.parentNode).style.display !== 'none' && elmCheckbox.classList.contains('scmpItemSuccess') === false) {
             elmCheckbox.classList.remove('scmpItemError')
             elmCheckbox.classList.toggle('scmpItemSelect', !select)
           }
         }
         // shift多选
-        if (this._divLastChecked !== undefined && ev.shiftKey) {
+        if (this._divLastChecked != null && ev.shiftKey) {
           let start = this._divItems.indexOf(this._divLastChecked)
           let end = this._divItems.indexOf(rgItem.element)
           let someDivItems = this._divItems.slice(Math.min(start, end), Math.max(start, end) + 1)
@@ -209,6 +175,18 @@ class SteamCardMaximumProfit {
               this._quickSells.push(resolve)
             })
         }
+      }
+    })
+    // 改变汇率
+    this._inputUSDCNY = <HTMLInputElement>elmDiv.querySelector('#scmpExch')
+    this._inputUSDCNY.value = '6.50'
+    // 在线获取实时汇率
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=${Date.now()}&ie=utf8&oe=utf8&format=json&tn=baidu`,
+      responseType: 'json',
+      onload: (res) => {
+        if (res.status === 200 && (<baiduExch>res.response).status === '0') this._inputUSDCNY.value = (<baiduExch>res.response).data[0].number2
       }
     })
   }
