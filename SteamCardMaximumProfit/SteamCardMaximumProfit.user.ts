@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.14
+// @version     0.2.15
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -41,7 +41,7 @@ class SteamCardMaximumProfit {
       let display = false
       for (let i = 0; i < rec.length; i++) {
         let rgItem = rec[i].target.rgItem
-        if (rgItem != null && rgItem.description.appid === 753) {
+        if (rgItem != null && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
           display = true
           break
         }
