@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.14
+// @version     2.0.15
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -21,7 +21,7 @@ class BiLiveNoVIP {
   constructor() {
     // 加载设置
     let config = <config>JSON.parse(localStorage.getItem('blnvConfig') || '{}')
-    let defaultConfig = this.defaultConfig
+    let defaultConfig = this._defaultConfig
     if (config.version === undefined || config.version < defaultConfig.version) {
       for (let x in defaultConfig.menu) {
         try {
@@ -31,22 +31,22 @@ class BiLiveNoVIP {
           console.error(error)
         }
       }
-      this.config = defaultConfig
+      this._config = defaultConfig
     }
     else {
-      this.config = config
+      this._config = config
     }
   }
-  private W = window
-  private D = document
-  private DANMU_MSG: (danmu: danmuObject) => void
-  private SPECIAL_GIFT: (beat: SPECIAL_GIFT) => void
-  private playerObject: playerObject
-  private CM: CommentManager
-  private tempWord: string[] = []
-  private config: config
-  private defaultConfig: config = {
-    version: 1478536633943,
+  private _W = window
+  private _D = document
+  private _DANMU_MSG: (danmu: danmuObject) => void
+  private _SPECIAL_GIFT: (beat: SPECIAL_GIFT) => void
+  private _playerObject: playerObject
+  private _CM: CommentManager
+  private _tempWord: string[] = []
+  private _config: config
+  private _defaultConfig: config = {
+    version: 1481733300450,
     menu: {
       noHDIcon: {
         name: '活动标识',
@@ -104,17 +104,17 @@ class BiLiveNoVIP {
    * @memberOf BiLiveNoVIP
    */
   public Start() {
-    this.AddUI()
-    this.ChangeCSS()
-    this.AddDanmaku()
+    this._AddUI()
+    this._ChangeCSS()
     // flash加载完成后的回调函数
-    this.W.msg_history = {
-      get: () => {
-        if (this.config.menu.replaceDanmaku.enable) {
-          this.ReplaceDanmaku(true)
-          if (this.config.menu.popularWords.enable) this.PopularWords(true)
-          if (this.config.menu.beatStorm.enable) this.BeatStorm(true)
-        }
+    let flashCallback = this._W['flash_on_ready_callback']
+    this._W['flash_on_ready_callback'] = () => {
+      flashCallback()
+      this._AddDanmaku()
+      if (this._config.menu.replaceDanmaku.enable) {
+        this._ReplaceDanmaku(true)
+        if (this._config.menu.popularWords.enable) this._PopularWords(true)
+        if (this._config.menu.beatStorm.enable) this._BeatStorm(true)
       }
     }
   }
@@ -124,18 +124,18 @@ class BiLiveNoVIP {
    * @private
    * @memberOf BiLiveNoVIP
    */
-  private ChangeCSS() {
+  private _ChangeCSS() {
     // 获取或者插入style
-    let elmStyle = <HTMLStyleElement>this.D.querySelector('#gunCSS')
+    let elmStyle = <HTMLStyleElement>this._D.querySelector('#gunCSS')
     if (elmStyle === null) {
-      elmStyle = this.D.createElement('style')
+      elmStyle = this._D.createElement('style')
       elmStyle.id = 'gunCSS'
-      this.D.body.appendChild(elmStyle)
+      this._D.body.appendChild(elmStyle)
     }
     //css内容
     let cssText = ''
-    if (this.config.menu.noHDIcon.enable) cssText += `
-    #chat-msg-list a[href^="/hd/"], #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
+    if (this._config.menu.noHDIcon.enable) cssText += `
+    #chat-msg-list a[href^="/hd/"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
       display: none !important;
     }
     #chat-msg-list .guard-msg {
@@ -148,7 +148,7 @@ class BiLiveNoVIP {
     #chat-msg-list .msg-content {
       color: #646c7a !important;
     }`
-    if (this.config.menu.noVIPIcon.enable) cssText += `
+    if (this._config.menu.noVIPIcon.enable) cssText += `
     #chat-msg-list a[href="/i#to-vip"], #chat-msg-list .system-msg .square-icon, #chat-msg-list .system-msg .v-middle {
       display: none !important;
     }
@@ -156,30 +156,30 @@ class BiLiveNoVIP {
       padding:0 10px;
       height:auto;
     }`
-    if (this.config.menu.noMedalIcon.enable) cssText += `
+    if (this._config.menu.noMedalIcon.enable) cssText += `
     #chat-msg-list .medal-icon {
       display: none !important;
     }`
-    if (this.config.menu.noUserLevelIcon.enable) cssText += `
+    if (this._config.menu.noUserLevelIcon.enable) cssText += `
     #chat-msg-list .user-level-icon {
       display: none !important;
     }`
-    if (this.config.menu.noLiveTitleIcon.enable) cssText += `
+    if (this._config.menu.noLiveTitleIcon.enable) cssText += `
     #chat-msg-list .check-my-title {
       display: none !important;
     }`
-    if (this.config.menu.noSystemMsg.enable) cssText += `
+    if (this._config.menu.noSystemMsg.enable) cssText += `
     #chat-msg-list .announcement-container {
       display: none !important;
     }`
-    if (this.config.menu.noGiftMsg.enable) cssText += `
+    if (this._config.menu.noGiftMsg.enable) cssText += `
     #chat-msg-list .gift-msg, #chat-list-ctnr > .super-gift-ctnr, #chat-list-ctnr > #gift-msg-1000 {
       display: none !important;
     }
     #chat-list-ctnr > #chat-msg-list {
       height: 100% !important;
     }`
-    if (this.config.menu.fixTreasure.enable) cssText += `
+    if (this._config.menu.fixTreasure.enable) cssText += `
     #player-container > .treasure-box-ctnr {
       margin: -160px 0 !important;
     }`
@@ -191,22 +191,22 @@ class BiLiveNoVIP {
    * @private
    * @memberOf BiLiveNoVIP
    */
-  private AddUI() {
+  private _AddUI() {
     // 添加按钮相关的css
-    this.AddCSS()
+    this._AddCSS()
     // 获取按钮插入的位置
-    let elmDivBtns = this.D.querySelector('.btns')
+    let elmDivBtns = this._D.querySelector('.btns')
     // 传说中的UI, 真的很丑
-    let elmDivGun = this.D.createElement('div')
+    let elmDivGun = this._D.createElement('div')
     elmDivGun.id = 'gunBut'
     let html = '滚<div id="gunMenu" class="gunHide">'
     // 循环插入内容
-    for (let x in this.config.menu) {
+    for (let x in this._config.menu) {
       html += `
       <div>
         <input type="checkbox" id="${x}" class="gunHide" />
       	<label for="${x}"></label>
-        <span>${this.config.menu[x].name}</span>
+        <span>${this._config.menu[x].name}</span>
       </div>`
     }
     html += '</div>'
@@ -214,9 +214,9 @@ class BiLiveNoVIP {
     // 插入菜单按钮
     elmDivBtns.appendChild(elmDivGun)
     // 获取刚刚插入的DOM
-    let elmDivMenu = this.D.querySelector('#gunMenu')
+    let elmDivMenu = this._D.querySelector('#gunMenu')
     // 为了和b站更搭, 所以监听body的click
-    this.D.body.addEventListener('click', (ev) => {
+    this._D.body.addEventListener('click', (ev) => {
       let evt = <HTMLElement>ev.target
       if (elmDivGun.contains(evt)) {
         if (evt === elmDivGun) elmDivMenu.classList.toggle('gunHide')
@@ -226,20 +226,20 @@ class BiLiveNoVIP {
       }
     })
     // 循环设置监听插入的DOM
-    let replaceDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#replaceDanmaku')
-    let closeDanmakuCheckbox = <HTMLInputElement>this.D.querySelector('#closeDanmaku')
-    let popularWordsCheckbox = <HTMLInputElement>this.D.querySelector('#popularWords')
-    let beatStormCheckbox = <HTMLInputElement>this.D.querySelector('#beatStorm')
-    for (let x in this.config.menu) {
-      let checkbox = <HTMLInputElement>this.D.getElementById(x)
-      checkbox.checked = this.config.menu[x].enable
+    let replaceDanmakuCheckbox = <HTMLInputElement>this._D.querySelector('#replaceDanmaku')
+    let closeDanmakuCheckbox = <HTMLInputElement>this._D.querySelector('#closeDanmaku')
+    let popularWordsCheckbox = <HTMLInputElement>this._D.querySelector('#popularWords')
+    let beatStormCheckbox = <HTMLInputElement>this._D.querySelector('#beatStorm')
+    for (let x in this._config.menu) {
+      let checkbox = <HTMLInputElement>this._D.getElementById(x)
+      checkbox.checked = this._config.menu[x].enable
       checkbox.addEventListener('change', (ev) => {
         let evt = <HTMLInputElement>ev.target
-        this.config.menu[evt.id].enable = evt.checked
-        localStorage.setItem('blnvConfig', JSON.stringify(this.config))
+        this._config.menu[evt.id].enable = evt.checked
+        localStorage.setItem('blnvConfig', JSON.stringify(this._config))
         switch (evt.id) {
           case 'replaceDanmaku':
-            this.ReplaceDanmaku(evt.checked)
+            this._ReplaceDanmaku(evt.checked)
             if (!evt.checked) {
               // 关闭热词和节奏风暴选项
               if (closeDanmakuCheckbox.checked = true) closeDanmakuCheckbox.click()
@@ -248,19 +248,19 @@ class BiLiveNoVIP {
             }
             break
           case 'closeDanmaku':
-            this.CM.clear()
+            this._CM.clear()
             if (evt.checked && !replaceDanmakuCheckbox.checked) replaceDanmakuCheckbox.click()
             break
           case 'popularWords':
-            this.PopularWords(evt.checked)
+            this._PopularWords(evt.checked)
             if (evt.checked && !replaceDanmakuCheckbox.checked) replaceDanmakuCheckbox.click()
             break
           case 'beatStorm':
-            this.BeatStorm(evt.checked)
+            this._BeatStorm(evt.checked)
             if (evt.checked && !replaceDanmakuCheckbox.checked) replaceDanmakuCheckbox.click()
             break
           default:
-            this.ChangeCSS()
+            this._ChangeCSS()
             break
         }
       })
@@ -272,34 +272,34 @@ class BiLiveNoVIP {
    * @private
    * @memberOf BiLiveNoVIP
    */
-  private AddDanmaku() {
+  private _AddDanmaku() {
     // 获取播放器节点
-    this.playerObject = <playerObject>this.D.querySelector('#player_object')
+    this._playerObject = <playerObject>this._D.querySelector('#player_object')
     // 创建弹幕层
-    let danmaku = this.D.createElement('div')
+    let danmaku = this._D.createElement('div')
     danmaku.className = 'gunDanmaku'
-    let danmakuContainer = this.D.createElement('div')
+    let danmakuContainer = this._D.createElement('div')
     danmakuContainer.className = 'gunDanmakuContainer'
     // 插入弹幕层
     danmaku.appendChild(danmakuContainer)
-    this.playerObject.parentNode.appendChild(danmaku)
-    this.CM = new CommentManager(danmakuContainer)
+    this._playerObject.parentNode.appendChild(danmaku)
+    this._CM = new CommentManager(danmakuContainer)
     // CommentCoreLibrary (//github.com/jabbany/CommentCoreLibrary) - Licensed under the MIT license
-    this.CM.init()
+    this._CM.init()
     // 透明度
-    this.CM.options.scroll.opacity = parseInt(localStorage.getItem('danmuAlpha') || '100') / 100
+    this._CM.options.scroll.opacity = parseInt(localStorage.getItem('danmuAlpha') || '100') / 100
     // 存在时间7s
-    this.CM.options.scroll.scale = 1.75
+    this._CM.options.scroll.scale = 1.75
     // 弹幕密度
-    this.CM.options.limit = parseDensity(localStorage.getItem('danmuDensity') || '30')
+    this._CM.options.limit = parseDensity(localStorage.getItem('danmuDensity') || '30')
     // 监听视频窗口大小
     let bodyObserver = new MutationObserver((ev) => {
-      this.CM.width = danmaku.clientWidth
-      this.CM.height = danmaku.clientHeight
+      this._CM.width = danmaku.clientWidth
+      this._CM.height = danmaku.clientHeight
       // 排行榜
       let evt = ev[0]
-      let elmDivRand = <HTMLDivElement>this.D.querySelector('#rank-list-ctnr')
-      let elmDivChat = <HTMLDivElement>this.D.querySelector('#chat-list-ctnr')
+      let elmDivRand = <HTMLDivElement>this._D.querySelector('#rank-list-ctnr')
+      let elmDivChat = <HTMLDivElement>this._D.querySelector('#chat-list-ctnr')
       if (evt.oldValue && evt.oldValue.indexOf('player-full-win') === -1) {
         elmDivRand.style.cssText = 'display: none'
         elmDivChat.style.cssText = 'height: calc(100% - 150px)'
@@ -309,18 +309,18 @@ class BiLiveNoVIP {
         elmDivChat.style.cssText = ''
       }
     })
-    bodyObserver.observe(this.D.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class'] })
-    this.W.addEventListener('resize', () => {
-      this.CM.width = danmaku.clientWidth
-      this.CM.height = danmaku.clientHeight
+    bodyObserver.observe(this._D.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class'] })
+    this._W.addEventListener('resize', () => {
+      this._CM.width = danmaku.clientWidth
+      this._CM.height = danmaku.clientHeight
     })
     // 控制条
-    this.D.querySelector('#danmu-alpha-ctrl').addEventListener('input', (ev) => {
-      this.CM.options.scroll.opacity = parseInt((<HTMLInputElement>ev.target).value) / 100
+    this._D.querySelector('#danmu-alpha-ctrl').addEventListener('input', (ev) => {
+      this._CM.options.scroll.opacity = parseInt((<HTMLInputElement>ev.target).value) / 100
     }
     )
-    this.D.querySelector('#danmu-density-ctrl').addEventListener('input', (ev) => {
-      this.CM.options.limit = parseDensity((<HTMLInputElement>ev.target).value)
+    this._D.querySelector('#danmu-density-ctrl').addEventListener('input', (ev) => {
+      this._CM.options.limit = parseDensity((<HTMLInputElement>ev.target).value)
     })
     /**
      * 计算弹幕密度
@@ -363,18 +363,18 @@ class BiLiveNoVIP {
    * @param {boolean} enable
    * @memberOf BiLiveNoVIP
    */
-  private ReplaceDanmaku(enable: boolean) {
+  private _ReplaceDanmaku(enable: boolean) {
     if (enable) {
-      this.CM.start()
+      this._CM.start()
       // 替换弹幕
-      this.playerObject.showComments(false)
-      let masterID = this.W.MASTERID
+      this._playerObject.showComments(false)
+      let masterID = this._W.MASTERID
       // 获取聊天信息
-      this.DANMU_MSG = this.W.protocol.DANMU_MSG
-      this.W.protocol.DANMU_MSG = (json: danmuObject) => {
+      this._DANMU_MSG = this._W.protocol.DANMU_MSG
+      this._W.protocol.DANMU_MSG = (json: danmuObject) => {
         // 屏蔽关键词
-        if (this.tempWord.indexOf(json.info[1]) !== -1) return
-        if (!this.config.menu.closeDanmaku.enable) {
+        if (this._tempWord.indexOf(json.info[1]) !== -1) return
+        if (!this._config.menu.closeDanmaku.enable) {
           // 添加弹幕
           let danmuColor = 16777215
           // 主播与管理员特殊颜色
@@ -386,18 +386,18 @@ class BiLiveNoVIP {
             color: danmuColor,
             shadow: true
           }
-          this.CM.send(danmu)
+          this._CM.send(danmu)
         }
         // 添加到聊天列表
-        this.DANMU_MSG(json)
+        this._DANMU_MSG(json)
       }
     }
     else {
-      this.W.protocol.DANMU_MSG = this.DANMU_MSG
-      this.W.msg_history = { get: () => { } }
-      this.CM.stop()
-      this.CM.clear()
-      this.playerObject.showComments(true)
+      this._W.protocol.DANMU_MSG = this._DANMU_MSG
+      this._W.msg_history = { get: () => { } }
+      this._CM.stop()
+      this._CM.clear()
+      this._playerObject.showComments(true)
     }
   }
   /**
@@ -407,8 +407,8 @@ class BiLiveNoVIP {
    * @param {boolean} disable
    * @memberOf BiLiveNoVIP
    */
-  private PopularWords(disable: boolean) {
-    this.tempWord = (disable) ? this.W.flash_popularWords() : []
+  private _PopularWords(disable: boolean) {
+    this._tempWord = (disable) ? this._W.flash_popularWords() : []
   }
   /**
    * 屏蔽节奏风暴
@@ -417,14 +417,14 @@ class BiLiveNoVIP {
    * @param {boolean} disable
    * @memberOf BiLiveNoVIP
    */
-  private BeatStorm(disable: boolean) {
+  private _BeatStorm(disable: boolean) {
     if (disable) {
-      this.SPECIAL_GIFT = this.W.protocol.SPECIAL_GIFT
-      this.W.protocol.SPECIAL_GIFT = (json: SPECIAL_GIFT) => {
-        if (json.data['39'] && json.data['39'].action === 'start') this.tempWord.push(json.data['39'].content)
+      this._SPECIAL_GIFT = this._W.protocol.SPECIAL_GIFT
+      this._W.protocol.SPECIAL_GIFT = (json: SPECIAL_GIFT) => {
+        if (json.data['39'] && json.data['39'].content != null) this._tempWord.push(json.data['39'].content)
       }
     }
-    else this.W.protocol.SPECIAL_GIFT = this.SPECIAL_GIFT
+    else this._W.protocol.SPECIAL_GIFT = this._SPECIAL_GIFT
   }
   /**
    * 添加样式
@@ -432,7 +432,7 @@ class BiLiveNoVIP {
    * @private
    * @memberOf BiLiveNoVIP
    */
-  private AddCSS() {
+  private _AddCSS() {
     let cssText = `
     #chat-ctrl-panel .chat-ctrl-btns .btn {
       margin: 0 3px;
@@ -546,9 +546,9 @@ class BiLiveNoVIP {
       text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
     }`
     // 插入css
-    let elmStyle = this.D.createElement('style')
+    let elmStyle = this._D.createElement('style')
     elmStyle.innerHTML = cssText
-    this.D.body.appendChild(elmStyle)
+    this._D.body.appendChild(elmStyle)
   }
 }
 const gun = new BiLiveNoVIP()
