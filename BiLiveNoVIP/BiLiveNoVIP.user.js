@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.15
+// @version     2.0.16
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -23,7 +23,7 @@ var BiLiveNoVIP = (function () {
         this._D = document;
         this._tempWord = [];
         this._defaultConfig = {
-            version: 1481733300450,
+            version: 1481799896225,
             menu: {
                 noHDIcon: {
                     name: '活动标识',
@@ -133,7 +133,7 @@ var BiLiveNoVIP = (function () {
         //css内容
         var cssText = '';
         if (this._config.menu.noHDIcon.enable)
-            cssText += "\n    #chat-msg-list a[href^=\"/hd/\"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {\n      display: none !important;\n    }\n    #chat-msg-list .guard-msg {\n      margin: auto !important;\n      padding: 4px 5px !important;\n    }\n    #chat-msg-list .user-name.color {\n      color: #4fc1e9 !important;\n    }\n    #chat-msg-list .msg-content {\n      color: #646c7a !important;\n    }";
+            cssText += "\n    #chat-msg-list a[href^=\"/hd/\"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before, .live-haruna-ctnr {\n      display: none !important;\n    }\n    #chat-msg-list .guard-msg {\n      margin: auto !important;\n      padding: 4px 5px !important;\n    }\n    #chat-msg-list .user-name.color {\n      color: #4fc1e9 !important;\n    }\n    #chat-msg-list .msg-content {\n      color: #646c7a !important;\n    }";
         if (this._config.menu.noVIPIcon.enable)
             cssText += "\n    #chat-msg-list a[href=\"/i#to-vip\"], #chat-msg-list .system-msg .square-icon, #chat-msg-list .system-msg .v-middle {\n      display: none !important;\n    }\n    #chat-msg-list .system-msg {\n      padding:0 10px;\n      height:auto;\n    }";
         if (this._config.menu.noMedalIcon.enable)

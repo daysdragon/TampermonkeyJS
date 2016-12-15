@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.15
+// @version     2.0.16
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -46,7 +46,7 @@ class BiLiveNoVIP {
   private _tempWord: string[] = []
   private _config: config
   private _defaultConfig: config = {
-    version: 1481733300450,
+    version: 1481799896225,
     menu: {
       noHDIcon: {
         name: '活动标识',
@@ -135,7 +135,7 @@ class BiLiveNoVIP {
     //css内容
     let cssText = ''
     if (this._config.menu.noHDIcon.enable) cssText += `
-    #chat-msg-list a[href^="/hd/"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
+    #chat-msg-list a[href^="/hd/"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before, .live-haruna-ctnr {
       display: none !important;
     }
     #chat-msg-list .guard-msg {
