@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.16
+// @version     2.0.17
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -46,8 +46,12 @@ class BiLiveNoVIP {
   private _tempWord: string[] = []
   private _config: config
   private _defaultConfig: config = {
-    version: 1481799896225,
+    version: 1481883398389,
     menu: {
+      noKanBanMusume: {
+        name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
+        enable: false
+      },
       noHDIcon: {
         name: '活动标识',
         enable: false
@@ -134,8 +138,12 @@ class BiLiveNoVIP {
     }
     //css内容
     let cssText = ''
+    if (this._config.menu.noKanBanMusume.enable) cssText += `
+    .live-haruna-ctnr {
+      display: none !important;
+    }`
     if (this._config.menu.noHDIcon.enable) cssText += `
-    #chat-msg-list a[href^="/hd/"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before, .live-haruna-ctnr {
+    #chat-msg-list a[href^="/hd/"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before, #santa-hint-ctnr {
       display: none !important;
     }
     #chat-msg-list .guard-msg {
@@ -173,7 +181,7 @@ class BiLiveNoVIP {
       display: none !important;
     }`
     if (this._config.menu.noGiftMsg.enable) cssText += `
-    #chat-msg-list .gift-msg, #chat-list-ctnr > .super-gift-ctnr, #chat-list-ctnr > #gift-msg-1000 {
+    #chat-msg-list .gift-msg, #chat-list-ctnr > .super-gift-ctnr, #chat-list-ctnr > #gift-msg-1000, #super-gift-ctnr-haruna {
       display: none !important;
     }
     #chat-list-ctnr > #chat-msg-list {
@@ -459,7 +467,7 @@ class BiLiveNoVIP {
       box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);
       cursor: default;
       font-size: 12px;
-      height: 250px;
+      height: 275px;
       margin: -250px -125px;
       padding: 10px;
       position: absolute;
