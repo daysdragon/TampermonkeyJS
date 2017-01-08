@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.17
+// @version     2.0.18
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -46,10 +46,14 @@ class BiLiveNoVIP {
   private _tempWord: string[] = []
   private _config: config
   private _defaultConfig: config = {
-    version: 1481883398389,
+    version: 1483877189410,
     menu: {
       noKanBanMusume: {
         name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
+        enable: false
+      },
+      noGuardIcon: {
+        name: '舰队相关',
         enable: false
       },
       noHDIcon: {
@@ -142,8 +146,8 @@ class BiLiveNoVIP {
     .live-haruna-ctnr {
       display: none !important;
     }`
-    if (this._config.menu.noHDIcon.enable) cssText += `
-    #chat-msg-list a[href^="/hd/"], #chat-msg-list .system-msg.guard-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before, #santa-hint-ctnr {
+    if (this._config.menu.noGuardIcon.enable) cssText += `
+    .tab-switcher[data-type="guard"], .guard-rank, #chat-msg-list a[href^="/i/guardBuy"], #chat-msg-list .system-msg.guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
       display: none !important;
     }
     #chat-msg-list .guard-msg {
@@ -155,6 +159,13 @@ class BiLiveNoVIP {
     }
     #chat-msg-list .msg-content {
       color: #646c7a !important;
+    }
+    .rank-lists {
+      height: auto !important;
+    }`
+    if (this._config.menu.noHDIcon.enable) cssText += `
+    #chat-msg-list a[href^="/hd/"], #santa-hint-ctnr {
+      display: none !important;
     }`
     if (this._config.menu.noVIPIcon.enable) cssText += `
     #chat-msg-list a[href="/i#to-vip"], #chat-msg-list .system-msg .square-icon, #chat-msg-list .system-msg .v-middle {
@@ -467,12 +478,12 @@ class BiLiveNoVIP {
       box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);
       cursor: default;
       font-size: 12px;
-      height: 275px;
-      margin: -250px -125px;
+      height: 300px;
+      margin: -300px -125px;
       padding: 10px;
       position: absolute;
       width: 100px;
-      z-index: 10;
+      z-index: 101;
     }
     #gunBut > #gunMenu > div {
     	background: darkgray;

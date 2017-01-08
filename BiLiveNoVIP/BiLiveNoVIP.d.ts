@@ -52,6 +52,7 @@ interface config {
 }
 interface configMenu {
   noKanBanMusume: configMenuData
+  noGuardIcon: configMenuData
   noHDIcon: configMenuData
   noVIPIcon: configMenuData
   noMedalIcon: configMenuData
