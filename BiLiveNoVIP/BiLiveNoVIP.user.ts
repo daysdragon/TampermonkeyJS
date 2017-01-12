@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.18
+// @version     2.0.19
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -46,7 +46,7 @@ class BiLiveNoVIP {
   private _tempWord: string[] = []
   private _config: config
   private _defaultConfig: config = {
-    version: 1483877189410,
+    version: 1484236938674,
     menu: {
       noKanBanMusume: {
         name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -118,11 +118,17 @@ class BiLiveNoVIP {
     let flashCallback = this._W['flash_on_ready_callback']
     this._W['flash_on_ready_callback'] = () => {
       flashCallback()
+      this._W['flash_on_ready_callback'] = flashCallback
       this._AddDanmaku()
       if (this._config.menu.replaceDanmaku.enable) {
         this._ReplaceDanmaku(true)
         if (this._config.menu.popularWords.enable) this._PopularWords(true)
         if (this._config.menu.beatStorm.enable) this._BeatStorm(true)
+      }
+      // 排行榜
+      if (this._config.menu.noGuardIcon.enable) {
+        let elmDivSevenRank = <HTMLDivElement>this._D.querySelector('.tab-switcher[data-type="seven-rank"]')
+        elmDivSevenRank.click()
       }
     }
   }
@@ -159,16 +165,13 @@ class BiLiveNoVIP {
     }
     #chat-msg-list .msg-content {
       color: #646c7a !important;
-    }
-    .rank-lists {
-      height: auto !important;
     }`
     if (this._config.menu.noHDIcon.enable) cssText += `
     #chat-msg-list a[href^="/hd/"], #santa-hint-ctnr {
       display: none !important;
     }`
     if (this._config.menu.noVIPIcon.enable) cssText += `
-    #chat-msg-list a[href="/i#to-vip"], #chat-msg-list .system-msg .square-icon, #chat-msg-list .system-msg .v-middle {
+    #chat-msg-list a[href="/i#to-vip"], #chat-msg-list .system-msg > a[href="/i#to-vip"] ~ span {
       display: none !important;
     }
     #chat-msg-list .system-msg {
