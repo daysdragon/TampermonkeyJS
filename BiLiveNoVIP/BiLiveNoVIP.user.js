@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.19
+// @version     2.0.20
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -23,7 +23,7 @@ var BiLiveNoVIP = (function () {
         this._D = document;
         this._tempWord = [];
         this._defaultConfig = {
-            version: 1484236938674,
+            version: 1484995751472,
             menu: {
                 noKanBanMusume: {
                     name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -114,7 +114,8 @@ var BiLiveNoVIP = (function () {
         var flashCallback = this._W['flash_on_ready_callback'];
         this._W['flash_on_ready_callback'] = function () {
             flashCallback();
-            _this._W['flash_on_ready_callback'] = flashCallback;
+            if (_this._CM != null)
+                return;
             _this._AddDanmaku();
             if (_this._config.menu.replaceDanmaku.enable) {
                 _this._ReplaceDanmaku(true);
