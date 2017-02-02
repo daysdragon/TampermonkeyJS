@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.20
+// @version     2.0.21
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^http:\/\/live\.bilibili\.com\/\d.*$/
+// @include     /^https?:\/\/live\.bilibili\.com\/\d.*$/
 // @require     https://github.com/jabbany/CommentCoreLibrary/raw/master/build/CommentCoreLibrary.js
 // @license     MIT
-// @grant       none
+// @grant       GM_getValue
+// @grant       GM_setValue
 // @run-at      document-end
 // ==/UserScript==
 /// <reference path="BiLiveNoVIP.d.ts" />
@@ -19,11 +20,11 @@
  */
 var BiLiveNoVIP = (function () {
     function BiLiveNoVIP() {
-        this._W = window;
+        this._W = unsafeWindow || window;
         this._D = document;
         this._tempWord = [];
         this._defaultConfig = {
-            version: 1484995751472,
+            version: 1486002088028,
             menu: {
                 noKanBanMusume: {
                     name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -84,7 +85,7 @@ var BiLiveNoVIP = (function () {
             }
         };
         // 加载设置
-        var config = JSON.parse(localStorage.getItem('blnvConfig') || '{}');
+        var config = JSON.parse(GM_getValue('blnvConfig') || '{}');
         var defaultConfig = this._defaultConfig;
         if (config.version === undefined || config.version < defaultConfig.version) {
             for (var x in defaultConfig.menu) {
@@ -112,7 +113,7 @@ var BiLiveNoVIP = (function () {
         this._ChangeCSS();
         // flash加载完成后的回调函数
         var flashCallback = this._W['flash_on_ready_callback'];
-        this._W['flash_on_ready_callback'] = function () {
+        var flashOnReady = function () {
             flashCallback();
             if (_this._CM != null)
                 return;
@@ -130,6 +131,11 @@ var BiLiveNoVIP = (function () {
                 elmDivSevenRank.click();
             }
         };
+        // 兼容火狐
+        if (typeof exportFunction === 'function')
+            exportFunction(flashOnReady.bind(this), this._W, { defineAs: 'flash_on_ready_callback' });
+        else
+            this._W['flash_on_ready_callback'] = flashOnReady;
     };
     /**
      * 模拟实时屏蔽
@@ -192,18 +198,20 @@ var BiLiveNoVIP = (function () {
         html += '</div>';
         elmDivGun.innerHTML = html;
         // 插入菜单按钮
-        elmDivBtns.appendChild(elmDivGun);
+        if (elmDivBtns != null)
+            elmDivBtns.appendChild(elmDivGun);
         // 获取刚刚插入的DOM
         var elmDivMenu = this._D.querySelector('#gunMenu');
         // 为了和b站更搭, 所以监听body的click
         this._D.body.addEventListener('click', function (ev) {
             var evt = ev.target;
             if (elmDivGun.contains(evt)) {
-                if (evt === elmDivGun)
+                if (evt === elmDivGun && elmDivMenu != null)
                     elmDivMenu.classList.toggle('gunHide');
             }
             else {
-                elmDivMenu.classList.add('gunHide');
+                if (elmDivMenu != null)
+                    elmDivMenu.classList.add('gunHide');
             }
         });
         // 循环设置监听插入的DOM
@@ -217,7 +225,7 @@ var BiLiveNoVIP = (function () {
             checkbox.addEventListener('change', function (ev) {
                 var evt = ev.target;
                 _this._config.menu[evt.id].enable = evt.checked;
-                localStorage.setItem('blnvConfig', JSON.stringify(_this._config));
+                GM_setValue('blnvConfig', JSON.stringify(_this._config));
                 switch (evt.id) {
                     case 'replaceDanmaku':
                         _this._ReplaceDanmaku(evt.checked);
@@ -262,7 +270,9 @@ var BiLiveNoVIP = (function () {
     BiLiveNoVIP.prototype._AddDanmaku = function () {
         var _this = this;
         // 获取播放器节点
-        this._playerObject = this._D.querySelector('#player_object');
+        var playerObject = this._D.querySelector('#player_object');
+        // 兼容火狐
+        this._playerObject = ('wrappedJSObject' in playerObject) ? playerObject.wrappedJSObject : playerObject;
         // 创建弹幕层
         var danmaku = this._D.createElement('div');
         danmaku.className = 'gunDanmaku';
@@ -270,7 +280,9 @@ var BiLiveNoVIP = (function () {
         danmakuContainer.className = 'gunDanmakuContainer';
         // 插入弹幕层
         danmaku.appendChild(danmakuContainer);
-        this._playerObject.parentNode.appendChild(danmaku);
+        var playerParentNode = this._playerObject.parentNode;
+        if (playerParentNode != null)
+            playerParentNode.appendChild(danmaku);
         this._CM = new CommentManager(danmakuContainer);
         // CommentCoreLibrary (//github.com/jabbany/CommentCoreLibrary) - Licensed under the MIT license
         this._CM.init();
@@ -303,12 +315,18 @@ var BiLiveNoVIP = (function () {
             _this._CM.height = danmaku.clientHeight;
         });
         // 控制条
-        this._D.querySelector('#danmu-alpha-ctrl').addEventListener('input', function (ev) {
-            _this._CM.options.scroll.opacity = parseInt(ev.target.value) / 100;
-        });
-        this._D.querySelector('#danmu-density-ctrl').addEventListener('input', function (ev) {
-            _this._CM.options.limit = parseDensity(ev.target.value);
-        });
+        var danmuAlphaCtrl = this._D.querySelector('#danmu-alpha-ctrl');
+        if (danmuAlphaCtrl != null) {
+            danmuAlphaCtrl.addEventListener('input', function (ev) {
+                _this._CM.options.scroll.opacity = parseInt(ev.target.value) / 100;
+            });
+        }
+        var danmuDensityCtrl = this._D.querySelector('#danmu-density-ctrl');
+        if (danmuDensityCtrl != null) {
+            danmuDensityCtrl.addEventListener('input', function (ev) {
+                _this._CM.options.limit = parseDensity(ev.target.value);
+            });
+        }
         /**
          * 计算弹幕密度
          *
@@ -359,7 +377,7 @@ var BiLiveNoVIP = (function () {
             var masterID_1 = this._W.MASTERID;
             // 获取聊天信息
             this._DANMU_MSG = this._W.protocol.DANMU_MSG;
-            this._W.protocol.DANMU_MSG = function (json) {
+            var danmuMsg = function (json) {
                 // 屏蔽关键词
                 if (_this._tempWord.indexOf(json.info[1]) !== -1)
                     return;
@@ -381,10 +399,14 @@ var BiLiveNoVIP = (function () {
                 // 添加到聊天列表
                 _this._DANMU_MSG(json);
             };
+            // 兼容火狐
+            if (typeof exportFunction === 'function')
+                exportFunction(danmuMsg.bind(this), this._W.protocol, { defineAs: 'DANMU_MSG' });
+            else
+                this._W.protocol.DANMU_MSG = danmuMsg;
         }
         else {
             this._W.protocol.DANMU_MSG = this._DANMU_MSG;
-            this._W.msg_history = { get: function () { } };
             this._CM.stop();
             this._CM.clear();
             this._playerObject.showComments(true);
@@ -411,10 +433,15 @@ var BiLiveNoVIP = (function () {
         var _this = this;
         if (disable) {
             this._SPECIAL_GIFT = this._W.protocol.SPECIAL_GIFT;
-            this._W.protocol.SPECIAL_GIFT = function (json) {
+            var beatStorm = function (json) {
                 if (json.data['39'] && json.data['39'].content != null)
                     _this._tempWord.push(json.data['39'].content);
             };
+            // 兼容火狐
+            if (typeof exportFunction === 'function')
+                exportFunction(beatStorm.bind(this), this._W.protocol, { defineAs: 'SPECIAL_GIFT' });
+            else
+                this._W.protocol.SPECIAL_GIFT = beatStorm;
         }
         else
             this._W.protocol.SPECIAL_GIFT = this._SPECIAL_GIFT;

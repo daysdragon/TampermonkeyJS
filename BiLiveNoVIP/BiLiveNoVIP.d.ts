@@ -1,7 +1,6 @@
 interface Window {
   flash_popularWords(): string[]
   player_fullwin(full: boolean): void
-  msg_history: { get(): void }
   protocol: Protocol
   ROOMID: number
   MASTERID: number
@@ -10,6 +9,10 @@ interface Protocol {
   DANMU_MSG(danmu: danmuObject): void
   SPECIAL_GIFT(beat: SPECIAL_GIFT): void
 }
+declare function exportFunction(func: Function, targetScope: Object, options?: Object): void
+// GM_Api
+declare function GM_getValue(name: string): string
+declare function GM_setValue(name: string, value: string): void
 // CommentCoreLibrary
 declare class CommentManager {
   constructor(HTMLElement: HTMLElement)
@@ -44,6 +47,7 @@ interface CCLOptions {
 // player_object
 interface playerObject extends HTMLElement {
   showComments(show: boolean): boolean
+  wrappedJSObject: playerObject
 }
 // 设置信息
 interface config {

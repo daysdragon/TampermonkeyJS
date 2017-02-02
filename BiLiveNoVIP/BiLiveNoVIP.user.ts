@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.20
+// @version     2.0.21
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^http:\/\/live\.bilibili\.com\/\d.*$/
+// @include     /^https?:\/\/live\.bilibili\.com\/\d.*$/
 // @require     https://github.com/jabbany/CommentCoreLibrary/raw/master/build/CommentCoreLibrary.js
 // @license     MIT
-// @grant       none
+// @grant       GM_getValue
+// @grant       GM_setValue
 // @run-at      document-end
 // ==/UserScript==
 /// <reference path="BiLiveNoVIP.d.ts" />
@@ -20,7 +21,7 @@
 class BiLiveNoVIP {
   constructor() {
     // 加载设置
-    let config = <config>JSON.parse(localStorage.getItem('blnvConfig') || '{}')
+    let config = <config>JSON.parse(GM_getValue('blnvConfig') || '{}')
     let defaultConfig = this._defaultConfig
     if (config.version === undefined || config.version < defaultConfig.version) {
       for (let x in defaultConfig.menu) {
@@ -37,7 +38,7 @@ class BiLiveNoVIP {
       this._config = config
     }
   }
-  private _W = window
+  private _W = unsafeWindow || window
   private _D = document
   private _DANMU_MSG: (danmu: danmuObject) => void
   private _SPECIAL_GIFT: (beat: SPECIAL_GIFT) => void
@@ -46,7 +47,7 @@ class BiLiveNoVIP {
   private _tempWord: string[] = []
   private _config: config
   private _defaultConfig: config = {
-    version: 1484995751472,
+    version: 1486002088028,
     menu: {
       noKanBanMusume: {
         name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -116,7 +117,7 @@ class BiLiveNoVIP {
     this._ChangeCSS()
     // flash加载完成后的回调函数
     let flashCallback = this._W['flash_on_ready_callback']
-    this._W['flash_on_ready_callback'] = () => {
+    let flashOnReady = () => {
       flashCallback()
       if (this._CM != null) return
       this._AddDanmaku()
@@ -131,6 +132,9 @@ class BiLiveNoVIP {
         elmDivSevenRank.click()
       }
     }
+    // 兼容火狐
+    if (typeof exportFunction === 'function') exportFunction(flashOnReady.bind(this), this._W, { defineAs: 'flash_on_ready_callback' })
+    else this._W['flash_on_ready_callback'] = flashOnReady
   }
   /**
    * 模拟实时屏蔽
@@ -234,17 +238,17 @@ class BiLiveNoVIP {
     html += '</div>'
     elmDivGun.innerHTML = html
     // 插入菜单按钮
-    elmDivBtns.appendChild(elmDivGun)
+    if (elmDivBtns != null) elmDivBtns.appendChild(elmDivGun)
     // 获取刚刚插入的DOM
     let elmDivMenu = this._D.querySelector('#gunMenu')
     // 为了和b站更搭, 所以监听body的click
     this._D.body.addEventListener('click', (ev) => {
       let evt = <HTMLElement>ev.target
       if (elmDivGun.contains(evt)) {
-        if (evt === elmDivGun) elmDivMenu.classList.toggle('gunHide')
+        if (evt === elmDivGun && elmDivMenu != null) elmDivMenu.classList.toggle('gunHide')
       }
       else {
-        elmDivMenu.classList.add('gunHide')
+        if (elmDivMenu != null) elmDivMenu.classList.add('gunHide')
       }
     })
     // 循环设置监听插入的DOM
@@ -258,7 +262,7 @@ class BiLiveNoVIP {
       checkbox.addEventListener('change', (ev) => {
         let evt = <HTMLInputElement>ev.target
         this._config.menu[evt.id].enable = evt.checked
-        localStorage.setItem('blnvConfig', JSON.stringify(this._config))
+        GM_setValue('blnvConfig', JSON.stringify(this._config))
         switch (evt.id) {
           case 'replaceDanmaku':
             this._ReplaceDanmaku(evt.checked)
@@ -296,7 +300,9 @@ class BiLiveNoVIP {
    */
   private _AddDanmaku() {
     // 获取播放器节点
-    this._playerObject = <playerObject>this._D.querySelector('#player_object')
+    let playerObject = <playerObject>this._D.querySelector('#player_object')
+    // 兼容火狐
+    this._playerObject = ('wrappedJSObject' in playerObject) ? playerObject.wrappedJSObject : playerObject
     // 创建弹幕层
     let danmaku = this._D.createElement('div')
     danmaku.className = 'gunDanmaku'
@@ -304,7 +310,8 @@ class BiLiveNoVIP {
     danmakuContainer.className = 'gunDanmakuContainer'
     // 插入弹幕层
     danmaku.appendChild(danmakuContainer)
-    this._playerObject.parentNode.appendChild(danmaku)
+    let playerParentNode = this._playerObject.parentNode
+    if (playerParentNode != null) playerParentNode.appendChild(danmaku)
     this._CM = new CommentManager(danmakuContainer)
     // CommentCoreLibrary (//github.com/jabbany/CommentCoreLibrary) - Licensed under the MIT license
     this._CM.init()
@@ -337,13 +344,18 @@ class BiLiveNoVIP {
       this._CM.height = danmaku.clientHeight
     })
     // 控制条
-    this._D.querySelector('#danmu-alpha-ctrl').addEventListener('input', (ev) => {
-      this._CM.options.scroll.opacity = parseInt((<HTMLInputElement>ev.target).value) / 100
+    let danmuAlphaCtrl = this._D.querySelector('#danmu-alpha-ctrl')
+    if (danmuAlphaCtrl != null) {
+      danmuAlphaCtrl.addEventListener('input', (ev) => {
+        this._CM.options.scroll.opacity = parseInt((<HTMLInputElement>ev.target).value) / 100
+      })
     }
-    )
-    this._D.querySelector('#danmu-density-ctrl').addEventListener('input', (ev) => {
-      this._CM.options.limit = parseDensity((<HTMLInputElement>ev.target).value)
-    })
+    let danmuDensityCtrl = this._D.querySelector('#danmu-density-ctrl')
+    if (danmuDensityCtrl != null) {
+      danmuDensityCtrl.addEventListener('input', (ev) => {
+        this._CM.options.limit = parseDensity((<HTMLInputElement>ev.target).value)
+      })
+    }
     /**
      * 计算弹幕密度
      * 
@@ -393,7 +405,7 @@ class BiLiveNoVIP {
       let masterID = this._W.MASTERID
       // 获取聊天信息
       this._DANMU_MSG = this._W.protocol.DANMU_MSG
-      this._W.protocol.DANMU_MSG = (json: danmuObject) => {
+      let danmuMsg = (json: danmuObject) => {
         // 屏蔽关键词
         if (this._tempWord.indexOf(json.info[1]) !== -1) return
         if (!this._config.menu.closeDanmaku.enable) {
@@ -413,10 +425,12 @@ class BiLiveNoVIP {
         // 添加到聊天列表
         this._DANMU_MSG(json)
       }
+      // 兼容火狐
+      if (typeof exportFunction === 'function') exportFunction(danmuMsg.bind(this), this._W.protocol, { defineAs: 'DANMU_MSG' })
+      else this._W.protocol.DANMU_MSG = danmuMsg
     }
     else {
       this._W.protocol.DANMU_MSG = this._DANMU_MSG
-      this._W.msg_history = { get: () => { } }
       this._CM.stop()
       this._CM.clear()
       this._playerObject.showComments(true)
@@ -442,9 +456,12 @@ class BiLiveNoVIP {
   private _BeatStorm(disable: boolean) {
     if (disable) {
       this._SPECIAL_GIFT = this._W.protocol.SPECIAL_GIFT
-      this._W.protocol.SPECIAL_GIFT = (json: SPECIAL_GIFT) => {
+      let beatStorm = (json: SPECIAL_GIFT) => {
         if (json.data['39'] && json.data['39'].content != null) this._tempWord.push(json.data['39'].content)
       }
+      // 兼容火狐
+      if (typeof exportFunction === 'function') exportFunction(beatStorm.bind(this), this._W.protocol, { defineAs: 'SPECIAL_GIFT' })
+      else this._W.protocol.SPECIAL_GIFT = beatStorm
     }
     else this._W.protocol.SPECIAL_GIFT = this._SPECIAL_GIFT
   }
