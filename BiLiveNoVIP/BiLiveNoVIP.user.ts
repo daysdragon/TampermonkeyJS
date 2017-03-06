@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.21
+// @version     2.0.22
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -47,7 +47,7 @@ class BiLiveNoVIP {
   private _tempWord: string[] = []
   private _config: config
   private _defaultConfig: config = {
-    version: 1486002088028,
+    version: 1488809237366,
     menu: {
       noKanBanMusume: {
         name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -175,7 +175,7 @@ class BiLiveNoVIP {
       display: none !important;
     }`
     if (this._config.menu.noVIPIcon.enable) cssText += `
-    #chat-msg-list a[href="/i#to-vip"], #chat-msg-list .system-msg > a[href="/i#to-vip"] ~ span {
+    #chat-msg-list .vip-icon, #chat-msg-list .system-msg > .vip-color, #chat-msg-list .system-msg > .vip-color ~ span {
       display: none !important;
     }
     #chat-msg-list .system-msg {
