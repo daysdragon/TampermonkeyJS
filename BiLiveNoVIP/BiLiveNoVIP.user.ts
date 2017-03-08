@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.22
+// @version     2.0.23
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -47,7 +47,7 @@ class BiLiveNoVIP {
   private _tempWord: string[] = []
   private _config: config
   private _defaultConfig: config = {
-    version: 1488809237366,
+    version: 1488982828014,
     menu: {
       noKanBanMusume: {
         name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -157,7 +157,7 @@ class BiLiveNoVIP {
       display: none !important;
     }`
     if (this._config.menu.noGuardIcon.enable) cssText += `
-    .tab-switcher[data-type="guard"], .guard-rank, #chat-msg-list a[href^="/i/guardBuy"], #chat-msg-list .system-msg.guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
+    .tab-switcher[data-type="guard"], .guard-rank, #chat-msg-list .guard-icon-small, #chat-msg-list .guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
       display: none !important;
     }
     #chat-msg-list .guard-msg {
@@ -175,12 +175,11 @@ class BiLiveNoVIP {
       display: none !important;
     }`
     if (this._config.menu.noVIPIcon.enable) cssText += `
-    #chat-msg-list .vip-icon, #chat-msg-list .system-msg > .vip-color, #chat-msg-list .system-msg > .vip-color ~ span {
+    #chat-msg-list .vip-icon, #chat-msg-list .system-msg:not(.guard-sys) .v-middle {
       display: none !important;
     }
     #chat-msg-list .system-msg {
-      padding:0 10px;
-      height:auto;
+      padding:0 5px;
     }`
     if (this._config.menu.noMedalIcon.enable) cssText += `
     #chat-msg-list .medal-icon {
