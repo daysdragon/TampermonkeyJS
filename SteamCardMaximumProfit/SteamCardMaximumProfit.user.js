@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.16
+// @version     0.2.17
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -37,20 +37,27 @@ var SteamCardMaximumProfit = (function () {
         var observer = new MutationObserver(function (rec) {
             if (location.hash.match(/^#753|^$/)) {
                 // 有点丑的复选框
-                for (var i = 0; i < rec.length; i++) {
-                    var rgItem = _this._GetRgItem(rec[i].target);
-                    if (rgItem != null && _this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
-                        _this._divItems.push(rgItem.element);
-                        // 选择框
-                        var elmDiv = _this._D.createElement('div');
-                        elmDiv.classList.add('scmpItemCheckbox');
-                        rgItem.element.appendChild(elmDiv);
+                for (var _i = 0, rec_1 = rec; _i < rec_1.length; _i++) {
+                    var r = rec_1[_i];
+                    var rt = r.target;
+                    if (rt.classList.contains('inventory_page')) {
+                        var itemHolders = rt.querySelectorAll('.itemHolder');
+                        for (var i = 0; i < itemHolders.length; i++) {
+                            var rgItem = _this._GetRgItem(itemHolders[i]);
+                            if (rgItem != null && _this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+                                _this._divItems.push(rgItem.element);
+                                // 选择框
+                                var elmDiv = _this._D.createElement('div');
+                                elmDiv.classList.add('scmpItemCheckbox');
+                                rgItem.element.appendChild(elmDiv);
+                            }
+                        }
                     }
                 }
             }
         });
         // 传入目标节点和观察选项
-        observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true });
+        observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributeFilter: ['style'] });
     };
     /**
      * 添加样式, 复选框和汇率输入框
@@ -63,7 +70,7 @@ var SteamCardMaximumProfit = (function () {
         // 样式
         var elmStyle = this._D.createElement('style');
         elmStyle.innerHTML = "\n    .scmpItemSelect {\n      background: yellow;\n    }\n    .scmpItemRun {\n      background: blue;\n    }\n    .scmpItemSuccess {\n      background: green;\n    }\n    .scmpItemError {\n      background: red;\n    }\n    .scmpQuickSell {\n      margin: 0 0 1em;\n    }\n    .scmpItemCheckbox {\n      position: absolute;\n      z-index: 100;\n      top: 0;\n      left: 0;\n      width: 20px;\n      height: 20px;\n      border: 2px solid yellow;\n      opacity: 0.7;\n      cursor: default;\n    }\n    .scmpItemCheckbox:hover {\n      opacity: 1;\n    }\n    #scmpExch {\n      width: 5em;\n    }";
-        this._D.querySelector('body').appendChild(elmStyle);
+        this._D.body.appendChild(elmStyle);
         // 插入快速出售按钮
         var elmDivInventoryPageRight = this._D.querySelector('.inventory_page_right');
         var elmDiv = this._D.createElement('div');
@@ -346,10 +353,10 @@ var SteamCardMaximumProfit = (function () {
                 var cbRandom_1 = Math.floor(Math.random() * 1e15);
                 var elmScript_1 = _this._D.createElement('script');
                 _this._D.body.appendChild(elmScript_1);
-                _this._W[("cb" + cbRandom_1)] = function (json) {
+                _this._W["cb" + cbRandom_1] = function (json) {
                     clearTimeout(timeout);
                     _this._D.body.removeChild(elmScript_1);
-                    _this._W[("cb" + cbRandom_1)] = undefined;
+                    _this._W["cb" + cbRandom_1] = undefined;
                     resolve(json);
                 };
                 elmScript_1.src = path + "&callback=cb" + cbRandom_1 + "&_=" + Date.now() + " ";

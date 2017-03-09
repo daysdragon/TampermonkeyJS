@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.16
+// @version     0.2.17
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -40,20 +40,26 @@ class SteamCardMaximumProfit {
     let observer = new MutationObserver((rec) => {
       if (location.hash.match(/^#753|^$/)) {
         // 有点丑的复选框
-        for (let i = 0; i < rec.length; i++) {
-          let rgItem = this._GetRgItem(<HTMLDivElement>rec[i].target)
-          if (rgItem != null && this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
-            this._divItems.push(rgItem.element)
-            // 选择框
-            let elmDiv = this._D.createElement('div')
-            elmDiv.classList.add('scmpItemCheckbox')
-            rgItem.element.appendChild(elmDiv)
+        for (let r of rec) {
+          let rt = <HTMLDivElement>r.target
+          if (rt.classList.contains('inventory_page')) {
+            let itemHolders = <NodeListOf<HTMLDivElement>>rt.querySelectorAll('.itemHolder')
+            for (let i = 0; i < itemHolders.length; i++) {
+              let rgItem = this._GetRgItem(itemHolders[i])
+              if (rgItem != null && this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+                this._divItems.push(rgItem.element)
+                // 选择框
+                let elmDiv = this._D.createElement('div')
+                elmDiv.classList.add('scmpItemCheckbox')
+                rgItem.element.appendChild(elmDiv)
+              }
+            }
           }
         }
       }
     })
     // 传入目标节点和观察选项
-    observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true })
+    observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributeFilter: ['style'] })
   }
   /**
    * 添加样式, 复选框和汇率输入框
@@ -97,7 +103,7 @@ class SteamCardMaximumProfit {
     #scmpExch {
       width: 5em;
     }`
-    this._D.querySelector('body').appendChild(elmStyle)
+    this._D.body.appendChild(elmStyle)
     // 插入快速出售按钮
     let elmDivInventoryPageRight = <HTMLDivElement>this._D.querySelector('.inventory_page_right')
     let elmDiv = this._D.createElement('div')
