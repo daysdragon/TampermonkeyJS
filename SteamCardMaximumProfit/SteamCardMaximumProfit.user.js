@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.17
+// @version     0.2.18
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -142,12 +142,8 @@ var SteamCardMaximumProfit = (function () {
             var itemInfos = _this._D.querySelectorAll('.scmpItemSelect');
             for (var i = 0; i < itemInfos.length; i++) {
                 var rgItem = _this._GetRgItem(itemInfos[i].parentNode);
-                if (rgItem.description.marketable === 1) {
-                    _this._GetPriceOverview({ rgItem: rgItem })
-                        .then(function (resolve) {
-                        _this._quickSells.push(resolve);
-                    });
-                }
+                if (rgItem.description.marketable === 1)
+                    _this._quickSells.push({ rgItem: rgItem });
             }
         });
         // 改变汇率
@@ -305,7 +301,10 @@ var SteamCardMaximumProfit = (function () {
         var _this = this;
         var itemInfo = this._quickSells.shift();
         if (itemInfo !== undefined) {
-            this._QuickSellItem(itemInfo)
+            this._GetPriceOverview(itemInfo)
+                .then(function (resolve) {
+                return _this._QuickSellItem(resolve);
+            })
                 .then(function () {
                 _this._DoLoop();
             });
@@ -313,7 +312,7 @@ var SteamCardMaximumProfit = (function () {
         else {
             setTimeout(function () {
                 _this._DoLoop();
-            }, 1000);
+            }, 500);
         }
     };
     /**

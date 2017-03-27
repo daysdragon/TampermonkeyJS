@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.17
+// @version     0.2.18
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -175,12 +175,7 @@ class SteamCardMaximumProfit {
       let itemInfos = this._D.querySelectorAll('.scmpItemSelect')
       for (let i = 0; i < itemInfos.length; i++) {
         let rgItem = this._GetRgItem(<HTMLDivElement>itemInfos[i].parentNode)
-        if (rgItem.description.marketable === 1) {
-          this._GetPriceOverview({ rgItem })
-            .then((resolve) => {
-              this._quickSells.push(resolve)
-            })
-        }
+        if (rgItem.description.marketable === 1) this._quickSells.push({ rgItem })
       }
     })
     // 改变汇率
@@ -334,7 +329,10 @@ class SteamCardMaximumProfit {
   private _DoLoop() {
     let itemInfo = this._quickSells.shift()
     if (itemInfo !== undefined) {
-      this._QuickSellItem(itemInfo)
+      this._GetPriceOverview(itemInfo)
+        .then((resolve) => {
+          return this._QuickSellItem(resolve)
+        })
         .then(() => {
           this._DoLoop()
         })
@@ -342,7 +340,7 @@ class SteamCardMaximumProfit {
     else {
       setTimeout(() => {
         this._DoLoop()
-      }, 1000)
+      }, 500)
     }
   }
   /**
