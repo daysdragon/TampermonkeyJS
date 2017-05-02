@@ -65,10 +65,10 @@ interface configMenu {
   noSystemMsg: configMenuData
   noGiftMsg: configMenuData
   fixTreasure: configMenuData
-  replaceDanmaku: configMenuData
-  popularWords: configMenuData
-  beatStorm: configMenuData
-  closeDanmaku: configMenuData
+  replaceDanmaku?: configMenuData
+  popularWords?: configMenuData
+  beatStorm?: configMenuData
+  closeDanmaku?: configMenuData
 }
 interface configMenuData {
   name: string
@@ -105,6 +105,9 @@ interface SPECIAL_GIFT_Data_BeatStorm {
   content: string
   hadJoin: number
   action: string
+}
+interface playerType {
+  type: string
 }
 // 监听聊天窗口
 // let chatObserver = new MutationObserver((res) => {
