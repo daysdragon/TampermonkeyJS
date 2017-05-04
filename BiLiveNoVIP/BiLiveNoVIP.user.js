@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.24
+// @version     2.0.25
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -21,7 +21,7 @@ var BiLiveNoVIP = (function () {
     function BiLiveNoVIP() {
         this._D = document;
         this._defaultConfig = {
-            version: 1493723825508,
+            version: 1493875833607,
             menu: {
                 noKanBanMusume: {
                     name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -118,7 +118,7 @@ var BiLiveNoVIP = (function () {
         if (this._config.menu.noVIPIcon.enable)
             cssText += "\n    #chat-msg-list .vip-icon, #chat-msg-list .system-msg:not(.guard-sys) .v-middle {\n      display: none !important;\n    }\n    #chat-msg-list .system-msg {\n      padding:0 5px;\n    }";
         if (this._config.menu.noMedalIcon.enable)
-            cssText += "\n    #chat-msg-list .medal-icon {\n      display: none !important;\n    }";
+            cssText += "\n    #chat-msg-list .fans-medal-item {\n      display: none !important;\n    }";
         if (this._config.menu.noUserLevelIcon.enable)
             cssText += "\n    #chat-msg-list .user-level-icon {\n      display: none !important;\n    }";
         if (this._config.menu.noLiveTitleIcon.enable)
