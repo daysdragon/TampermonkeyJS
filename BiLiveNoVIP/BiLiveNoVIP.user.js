@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.25
+// @version     2.0.26
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -21,7 +21,7 @@ var BiLiveNoVIP = (function () {
     function BiLiveNoVIP() {
         this._D = document;
         this._defaultConfig = {
-            version: 1493875833607,
+            version: 1494084016822,
             menu: {
                 noKanBanMusume: {
                     name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -124,9 +124,9 @@ var BiLiveNoVIP = (function () {
         if (this._config.menu.noLiveTitleIcon.enable)
             cssText += "\n    #chat-msg-list .check-my-title {\n      display: none !important;\n    }";
         if (this._config.menu.noSystemMsg.enable)
-            cssText += "\n    #chat-msg-list .announcement-container {\n      display: none !important;\n    }";
+            cssText += "\n    #chat-msg-list .announcement-container, .bilibili-live-player-video-gift {\n      display: none !important;\n    }";
         if (this._config.menu.noGiftMsg.enable)
-            cssText += "\n    #chat-msg-list .gift-msg, #chat-list-ctnr > .super-gift-ctnr, #chat-list-ctnr > #gift-msg-1000, #super-gift-ctnr-haruna, .bilibili-live-player-video-gift {\n      display: none !important;\n    }\n    #chat-list-ctnr > #chat-msg-list {\n      height: 100% !important;\n    }";
+            cssText += "\n    #chat-msg-list .gift-msg, #chat-list-ctnr > .super-gift-ctnr, #chat-list-ctnr > #gift-msg-1000, #super-gift-ctnr-haruna, .bilibili-live-player-danmaku-gift {\n      display: none !important;\n    }\n    #chat-list-ctnr > #chat-msg-list {\n      height: 100% !important;\n    }";
         if (this._config.menu.fixTreasure.enable)
             cssText += "\n    #player-container > .treasure-box-ctnr {\n      margin: -160px 0 !important;\n    }";
         elmStyle.innerHTML = cssText;
@@ -150,11 +150,10 @@ var BiLiveNoVIP = (function () {
                 rankObserver_1.observe(elmRankList, { attributes: true });
             }
         }
-        var bodyObserver = new MutationObserver(function (ev) {
-            var evt = ev[0];
+        var bodyObserver = new MutationObserver(function () {
             var elmDivRand = _this._D.querySelector('#rank-list-ctnr');
             var elmDivChat = _this._D.querySelector('#chat-list-ctnr');
-            if (evt.oldValue && evt.oldValue.indexOf('player-full-win') === -1) {
+            if (_this._D.body.classList.contains('player-full-win')) {
                 elmDivRand.style.cssText = 'display: none';
                 elmDivChat.style.cssText = 'height: calc(100% - 150px)';
             }
@@ -163,7 +162,7 @@ var BiLiveNoVIP = (function () {
                 elmDivChat.style.cssText = '';
             }
         });
-        bodyObserver.observe(this._D.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class'] });
+        bodyObserver.observe(this._D.body, { attributes: true, attributeFilter: ['class'] });
     };
     /**
      * 添加按钮
