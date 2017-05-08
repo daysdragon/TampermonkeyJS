@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.18
+// @version     0.2.19
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -59,7 +59,7 @@ class SteamCardMaximumProfit {
       }
     })
     // 传入目标节点和观察选项
-    observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributeFilter: ['style'] })
+    observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] })
   }
   /**
    * 添加样式, 复选框和汇率输入框
