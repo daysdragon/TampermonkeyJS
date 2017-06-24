@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.26
+// @version     2.0.27
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -21,7 +21,7 @@ var BiLiveNoVIP = (function () {
     function BiLiveNoVIP() {
         this._D = document;
         this._defaultConfig = {
-            version: 1494084016822,
+            version: 1498307392622,
             menu: {
                 noKanBanMusume: {
                     name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -112,7 +112,7 @@ var BiLiveNoVIP = (function () {
         if (this._config.menu.noKanBanMusume.enable)
             cssText += "\n    .live-haruna-ctnr {\n      display: none !important;\n    }";
         if (this._config.menu.noGuardIcon.enable)
-            cssText += "\n    .tab-switcher[data-type=\"guard\"], .guard-rank, #chat-msg-list .guard-icon-small, #chat-msg-list .guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {\n      display: none !important;\n    }\n    #chat-msg-list .guard-msg {\n      margin: auto !important;\n      padding: 4px 5px !important;\n    }\n    #chat-msg-list .user-name.color {\n      color: #4fc1e9 !important;\n    }\n    #chat-msg-list .msg-content {\n      color: #646c7a !important;\n    }";
+            cssText += "\n    .guard-rank, #chat-msg-list .guard-icon-small, #chat-msg-list .guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {\n      display: none !important;\n    }\n    .has-guard-rank {\n      max-height: 100px !important;\n      min-height: 100px !important;\n    }\n    #chat-msg-list .guard-msg {\n      margin: auto !important;\n      padding: 4px 5px !important;\n    }\n    #chat-msg-list .user-name.color {\n      color: #4fc1e9 !important;\n    }\n    #chat-msg-list .msg-content {\n      color: #646c7a !important;\n    }";
         if (this._config.menu.noHDIcon.enable)
             cssText += "\n    #chat-msg-list a[href^=\"/hd/\"], #santa-hint-ctnr {\n      display: none !important;\n    }";
         if (this._config.menu.noVIPIcon.enable)
@@ -140,14 +140,25 @@ var BiLiveNoVIP = (function () {
     BiLiveNoVIP.prototype._ChangeRankList = function () {
         var _this = this;
         if (this._config.menu.noGuardIcon.enable) {
-            var elmRankList = this._D.querySelector('.rank-list-ctnr');
-            if (elmRankList != null) {
+            var elmRankList_1 = this._D.querySelector('.rank-list-tab');
+            if (elmRankList_1 != null) {
                 var rankObserver_1 = new MutationObserver(function () {
-                    var elmDivSevenRank = _this._D.querySelector('.tab-switcher[data-type="seven-rank"]');
-                    elmDivSevenRank.click();
-                    rankObserver_1.disconnect();
+                    // .tab-switcher[data-type="guard"], 
+                    var elmTabSwitchers = elmRankList_1.querySelectorAll('.tab-switcher');
+                    if (elmTabSwitchers.length !== 0) {
+                        for (var i = 0; i < elmTabSwitchers.length; i++) {
+                            var elmTabSwitcher = elmTabSwitchers[i];
+                            if (elmTabSwitcher.innerText === '七日榜') {
+                                elmTabSwitcher.click();
+                            }
+                            else if (elmTabSwitcher.innerText === '舰队') {
+                                elmTabSwitcher.remove();
+                            }
+                        }
+                        rankObserver_1.disconnect();
+                    }
                 });
-                rankObserver_1.observe(elmRankList, { attributes: true });
+                rankObserver_1.observe(elmRankList_1, { childList: true, attributes: true });
             }
         }
         var bodyObserver = new MutationObserver(function () {

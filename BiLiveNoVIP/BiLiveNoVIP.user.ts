@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.26
+// @version     2.0.27
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -40,7 +40,7 @@ class BiLiveNoVIP {
   private _D = document
   private _config: config
   private _defaultConfig: config = {
-    version: 1494084016822,
+    version: 1498307392622,
     menu: {
       noKanBanMusume: {
         name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -115,8 +115,12 @@ class BiLiveNoVIP {
       display: none !important;
     }`
     if (this._config.menu.noGuardIcon.enable) cssText += `
-    .tab-switcher[data-type="guard"], .guard-rank, #chat-msg-list .guard-icon-small, #chat-msg-list .guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
+    .guard-rank, #chat-msg-list .guard-icon-small, #chat-msg-list .guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
       display: none !important;
+    }
+    .has-guard-rank {
+      max-height: 100px !important;
+      min-height: 100px !important;
     }
     #chat-msg-list .guard-msg {
       margin: auto !important;
@@ -176,14 +180,25 @@ class BiLiveNoVIP {
    */
   private _ChangeRankList() {
     if (this._config.menu.noGuardIcon.enable) {
-      let elmRankList = this._D.querySelector('.rank-list-ctnr')
+      let elmRankList = <HTMLUListElement>this._D.querySelector('.rank-list-tab')
       if (elmRankList != null) {
         let rankObserver = new MutationObserver(() => {
-          let elmDivSevenRank = <HTMLDivElement>this._D.querySelector('.tab-switcher[data-type="seven-rank"]')
-          elmDivSevenRank.click()
-          rankObserver.disconnect()
+          // .tab-switcher[data-type="guard"], 
+          let elmTabSwitchers = <NodeListOf<HTMLLIElement>>elmRankList.querySelectorAll('.tab-switcher')
+          if (elmTabSwitchers.length !== 0) {
+            for (let i = 0; i < elmTabSwitchers.length; i++) {
+              let elmTabSwitcher = elmTabSwitchers[i]
+              if (elmTabSwitcher.innerText === '七日榜') {
+                elmTabSwitcher.click()
+              }
+              else if (elmTabSwitcher.innerText === '舰队') {
+                elmTabSwitcher.remove()
+              }
+            }
+            rankObserver.disconnect()
+          }
         })
-        rankObserver.observe(elmRankList, { attributes: true })
+        rankObserver.observe(elmRankList, { childList: true, attributes: true })
       }
     }
     let bodyObserver = new MutationObserver(() => {
