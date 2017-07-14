@@ -63,6 +63,10 @@ top: ${this._top}px;`
 left: ${this._left}px;
 top: ${this._top}px;`
           elmDivRedeem.innerHTML = res.responseText
+          let resText = elmDivRedeem.innerText
+          resText = resText.replace('\n', '')
+          resText = resText.replace(/\n/g, '<br />')
+          elmDivRedeem.innerHTML = `<div>${resText}</div>`
           this._D.body.appendChild(elmDivRedeem)
         }
       }
@@ -87,12 +91,24 @@ top: ${this._top}px;`
   width: 24px;
 }
 .SRK_redeem {
+  background: #57CBDE;
+  border-radius: 50%;
+  height: 24px;
+  position: absolute;
+  width: 24px;
+  z-index: 999;
+}
+.SRK_redeem > div {
+  display:none;
+}
+.SRK_redeem:hover > div {
   background: #FFF;
   color: #000;
+  display: block;
   font-size: 15px;
   position: absolute;
-  z-index: 999;
-}`
+  white-space: nowrap;
+  z-index: 999;`
     let elmStyle = this._D.createElement('style')
     elmStyle.innerHTML = cssText
     this._D.body.appendChild(elmStyle)
