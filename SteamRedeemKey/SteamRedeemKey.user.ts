@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        SteamRedeemKey
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.2
+// @version     0.0.3
 // @author      lzghzr
 // @description 划Key激活
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -16,6 +16,7 @@ class SteamRedeemKey {
   }
   private _elmDivSRK: HTMLDivElement
   private _D = document
+  private _W = unsafeWindow || window
   private _redeemKey: string
   private _left: number
   private _top: number
@@ -25,20 +26,32 @@ class SteamRedeemKey {
   }
   private _ShowUI(event) {
     setTimeout(() => {
-      let selection = this._D.getSelection()
-      let str = selection.toString()
-      let keys = str.match(/[A-Za-z0-9]{5}-[A-Za-z0-9]{5}-[A-Za-z0-9]{5}/g)
-      if (keys !== null) {
-        this._redeemKey = keys.join(',')
-        this._top = document.body.scrollTop + event.clientY - 30
-        this._left = document.body.scrollLeft + event.clientX
-        this._elmDivSRK.style.cssText = `
+      let selection = this._W.getSelection()
+        , str = selection.toString()
+      if (str.length < 17) {
+        this._elmDivSRK.style.cssText = 'display: none;'
+      }
+      else {
+        let inputKeys: string[] = []
+          , elmInputKeys = selection.getRangeAt(0).cloneContents().querySelectorAll('input')
+        for (let i = 0; i < elmInputKeys.length; i++) {
+          let key = elmInputKeys[i].value
+          if (inputKeys.indexOf(key) === -1) inputKeys.push(key)
+        }
+        str = str + inputKeys.join(',')
+        let keys = str.match(/[A-Za-z0-9]{5}-[A-Za-z0-9]{5}-[A-Za-z0-9]{5}/g)
+        if (keys !== null) {
+          this._redeemKey = keys.join(',')
+          this._top = document.body.scrollTop + event.clientY - 30
+          this._left = document.body.scrollLeft + event.clientX
+          this._elmDivSRK.style.cssText = `
 display: block;
 left: ${this._left}px;
 top: ${this._top}px;`
-      }
-      else {
-        this._elmDivSRK.style.cssText = 'display: none;'
+        }
+        else {
+          this._elmDivSRK.style.cssText = 'display: none;'
+        }
       }
     }, 0)
   }
@@ -64,9 +77,8 @@ left: ${this._left}px;
 top: ${this._top}px;`
           elmDivRedeem.innerHTML = res.responseText
           let resText = elmDivRedeem.innerText
-          resText = resText.replace('\n', '')
-          resText = resText.replace(/\n/g, '<br />')
-          elmDivRedeem.innerHTML = `<div>${resText}</div>`
+          resText = resText.slice(1).replace(/\n/g, '<br />')
+          elmDivRedeem.innerHTML = `<span>${resText}</span>`
           this._D.body.appendChild(elmDivRedeem)
         }
       }
@@ -98,17 +110,19 @@ top: ${this._top}px;`
   width: 24px;
   z-index: 999;
 }
-.SRK_redeem > div {
+.SRK_redeem > span {
   display:none;
 }
-.SRK_redeem:hover > div {
+.SRK_redeem:hover > span {
   background: #FFF;
   color: #000;
   display: block;
   font-size: 15px;
+  margin: 12px 12px;
   position: absolute;
   white-space: nowrap;
-  z-index: 999;`
+  z-index: 999;
+}`
     let elmStyle = this._D.createElement('style')
     elmStyle.innerHTML = cssText
     this._D.body.appendChild(elmStyle)
