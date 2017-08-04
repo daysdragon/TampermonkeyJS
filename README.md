@@ -8,3 +8,4 @@
 2. [steam卡牌利润最大化](https://github.com/lzghzr/GreasemonkeyJS/raw/master/SteamCardMaximumProfit/SteamCardMaximumProfit.user.js) 按照美元区出价，最大化steam卡牌卖出的利润
 3. [惠惠购物助手](https://github.com/lzghzr/GreasemonkeyJS/raw/master/youdaoGWZS/youdaoGWZS.user.js) 官方迟迟不肯更新，恐怕……
 4. [Steam划Key激活](https://github.com/lzghzr/GreasemonkeyJS/raw/master/SteamRedeemKey/SteamRedeemKey.user.js) 依赖[ASF](https://github.com/JustArchi/ArchiSteamFarm)3.0及以上版本
+4. [Bilibili直播绘板](https://github.com/lzghzr/GreasemonkeyJS/raw/master/BiliDraw/BiliDraw.user.js) 画画真的太有趣了
