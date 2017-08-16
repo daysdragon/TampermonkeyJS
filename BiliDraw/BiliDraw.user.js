@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili夏日绘板
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.3
+// @version     0.0.4
 // @author      lzghzr
 // @description 组队一起画呀
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -49,7 +49,29 @@ var BiliDraw = (function () {
         this.apiKey = apiKey;
     }
     BiliDraw.prototype.Start = function () {
+        var _this = this;
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/activity/v1/SummerDraw/status');
+        xhr.onload = function (ev) {
+            var res = JSON.parse(ev.target.responseText);
+            if (res.code === 0 && res.data.user_valid) {
+                if (res.data.time === 0)
+                    _this._Connet();
+                else {
+                    console.log("CD\u4E2D, " + res.data.time + "\u79D2\u540E\u8FDE\u63A5");
+                    setTimeout(function () {
+                        _this._Connet();
+                    }, res.data.time * 1000);
+                }
+            }
+            else
+                console.log('无效用户');
+        };
+        xhr.send();
+    };
+    BiliDraw.prototype._Connet = function () {
         this.wsc = new WebSocket('wss://bilive.halaal.win/drawapi', this.apiKey);
+        this.wsc.onopen = function () { console.log('连接成功'); };
         this.wsc.onmessage = this._Draw.bind(this);
         this.wsc.onclose = this._Close.bind(this);
     };
