@@ -8,6 +8,8 @@
 // @match       *://*/*
 // @license     MIT
 // @grant       GM_xmlhttpRequest
+// @grant       GM_getValue
+// @grant       GM_setValue
 // @run-at      document-end
 // ==/UserScript==
 /// <reference path="SteamRedeemKey.d.ts" />
@@ -22,6 +24,8 @@ class SteamRedeemKey {
   private _left: number
   private _top: number
   public Start() {
+    if (GM_getValue('server') == null) GM_setValue('server', 'http://127.0.0.1:1242')
+    if (location.href === 'https://steamcn.com/t289320-1-1') setTimeout(() => { this._Options() }, 0);
     this._AddUI()
     this._D.addEventListener('mouseup', this._ShowUI.bind(this))
   }
@@ -71,7 +75,7 @@ top: ${this._top}px;`
     this._elmDivSRK.appendChild(elmDivRedeem)
     GM_xmlhttpRequest({
       method: 'GET',
-      url: `http://127.0.0.1:1242/IPC?command=redeem%20${this._redeemKey}`,
+      url: `${GM_getValue('server')}/IPC?command=redeem%20${this._redeemKey}`,
       onload: (res) => {
         if (res.status === 200) {
           let elmSpanRedeem = this._D.createElement('span')
@@ -83,6 +87,18 @@ top: ${this._top}px;`
         }
       }
     })
+  }
+  private _Options() {
+    let elmDivOptions = <HTMLDivElement>this._D.querySelector('.showhide')
+      , elmInputServer = this._D.createElement('input')
+    elmInputServer.type = 'text'
+    elmInputServer.value = GM_getValue('server')
+    elmInputServer.addEventListener('input', () => {
+      if (elmInputServer.value === '') elmInputServer.value = 'http://127.0.0.1:1242'
+      GM_setValue('server', elmInputServer.value)
+    })
+    elmDivOptions.innerText = '服务器地址: '
+    elmDivOptions.appendChild(elmInputServer)
   }
   private _AddCSS() {
     let cssText = `
