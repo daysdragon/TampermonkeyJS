@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        SteamRedeemKey
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.4
+// @version     0.0.5
 // @author      lzghzr
 // @description 划Key激活
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -13,23 +13,72 @@
 // @run-at      document-end
 // ==/UserScript==
 /// <reference path="SteamRedeemKey.d.ts" />
+/**
+ * ASF划Key激活
+ * 
+ * @class SteamRedeemKey
+ */
 class SteamRedeemKey {
   constructor() {
   }
+  /**
+   * 主要显示区域
+   * 
+   * @private
+   * @type {HTMLDivElement}
+   * @memberof SteamRedeemKey
+   */
   private _elmDivSRK: HTMLDivElement
+  /**
+   * Steam按钮图标
+   * 
+   * @private
+   * @type {HTMLDivElement}
+   * @memberof SteamRedeemKey
+   */
   private _elmDivSRKButton: HTMLDivElement
   private _D = document
   private _W = unsafeWindow || window
+  /**
+   * key列表, 不支持连续激活
+   * 
+   * @private
+   * @type {string}
+   * @memberof SteamRedeemKey
+   */
   private _redeemKey: string
+  /**
+   * 图标坐标, 不支持连续激活
+   * 
+   * @private
+   * @type {number}
+   * @memberof SteamRedeemKey
+   */
   private _left: number
   private _top: number
+  /**
+   * 处理数据以及加载图标
+   * 
+   * @memberof SteamRedeemKey
+   */
   public Start() {
     if (GM_getValue('server') == null) GM_setValue('server', 'http://127.0.0.1:1242')
-    if (location.href === 'https://steamcn.com/t289320-1-1') setTimeout(() => { this._Options() }, 0);
+    if (location.href.match(/^https:\/\/steamcn\.com\/.*289320/)) {
+      let elmDivShowhid = <HTMLLinkElement>this._D.querySelector('.showhide > p > a')
+      this._W['test'] = this._Options.bind(this)
+      elmDivShowhid.setAttribute('onclick', 'test()')
+    }
     this._AddUI()
     this._D.addEventListener('mouseup', this._ShowUI.bind(this))
   }
-  private _ShowUI(event) {
+  /**
+   * 显示图标, 由于冒泡机制, 使用setTimeout 0
+   * 
+   * @private
+   * @param {MouseEvent} event 
+   * @memberof SteamRedeemKey
+   */
+  private _ShowUI(event: MouseEvent) {
     setTimeout(() => {
       let selection = this._W.getSelection()
         , str = selection.toString()
@@ -57,6 +106,12 @@ top: ${this._top}px;`
       }
     }, 0)
   }
+  /**
+   * 把图标添加到body
+   * 
+   * @private
+   * @memberof SteamRedeemKey
+   */
   private _AddUI() {
     this._AddCSS()
     this._elmDivSRK = this._D.createElement('div')
@@ -66,6 +121,12 @@ top: ${this._top}px;`
     this._D.body.appendChild(this._elmDivSRK)
     this._elmDivSRKButton.addEventListener('click', this._ClickButton.bind(this))
   }
+  /**
+   * 图标点击事件处理
+   * 
+   * @private
+   * @memberof SteamRedeemKey
+   */
   private _ClickButton() {
     let elmDivRedeem = this._D.createElement('div')
     elmDivRedeem.classList.add('SRK_redeem')
@@ -88,6 +149,12 @@ top: ${this._top}px;`
       }
     })
   }
+  /**
+   * 加载设置界面
+   * 
+   * @private
+   * @memberof SteamRedeemKey
+   */
   private _Options() {
     let elmDivOptions = <HTMLDivElement>this._D.querySelector('.showhide')
       , elmInputServer = this._D.createElement('input')
@@ -99,7 +166,27 @@ top: ${this._top}px;`
     })
     elmDivOptions.innerText = '服务器地址: '
     elmDivOptions.appendChild(elmInputServer)
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: `${GM_getValue('server')}/IPC?command=api`,
+      onload: (res) => {
+        if (res.status === 200) {
+          let Bots = JSON.parse(res.responseText)
+            , bots: string[] = []
+          for (let bot in Bots.Bots) {
+            bots.push(bot)
+          }
+          console.log(bots)
+        }
+      }
+    })
   }
+  /**
+   * 插入CSS规则
+   * 
+   * @private
+   * @memberof SteamRedeemKey
+   */
   private _AddCSS() {
     let cssText = `
 .SRK_button {
