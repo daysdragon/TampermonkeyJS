@@ -12,22 +12,9 @@ interface Node {
   rgItem: rgItem
   wrappedJSObject: wrappedJSObject
 }
-declare var unsafeWindow: Window
-declare function GM_xmlhttpRequest(xhrdata: Object): void
 // 兼容火狐
 interface wrappedJSObject {
   rgItem: rgItem
-}
-// 价格
-interface itemInfo {
-  rgItem: rgItem
-  price?: number
-  status?: string
-  lowestPrice?: string
-  firstPrice?: number
-  firstFormatPrice?: string
-  secondPrice?: number
-  secondFormatPrice?: string
 }
 // 物品信息
 interface rgItem {
@@ -105,4 +92,10 @@ interface sellitem {
   needs_mobile_confirmation: boolean
   needs_email_confirmation: boolean
   email_domain: string
+}
+// xhr设置
+interface XHROptions extends GMXMLHttpRequestOptions {
+  responseType?: XMLHttpRequestResponseType
+  cookie?: boolean
+  GM_xmlhttpRequest?: boolean
 }
