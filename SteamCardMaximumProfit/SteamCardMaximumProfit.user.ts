@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.20
+// @version     0.2.21
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -343,6 +343,7 @@ class ItemInfo {
   public set status(valve: string) {
     this._status = valve
     let elmCheckbox = <HTMLDivElement>this.rgItem.element.querySelector('.scmpItemCheckbox')
+    if (elmCheckbox == null) return
     switch (valve) {
       case 'run':
         elmCheckbox.classList.remove('scmpItemError')
