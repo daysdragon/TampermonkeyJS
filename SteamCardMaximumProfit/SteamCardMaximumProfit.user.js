@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.21
+// @version     0.2.22
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -10,7 +10,7 @@
 // @grant       GM_xmlhttpRequest
 // @run-at      document-end
 // ==/UserScript==
-/// <reference path="SteamCardMaximumProfit.d.ts" />
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -46,11 +46,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-/**
- * 最大化steam卡牌卖出的利润
- *
- * @class SteamCardMaximumProfit
- */
 var SteamCardMaximumProfit = (function () {
     function SteamCardMaximumProfit() {
         this._D = document;
@@ -58,20 +53,13 @@ var SteamCardMaximumProfit = (function () {
         this._divItems = [];
         this.quickSells = [];
     }
-    /**
-     * 加载程序
-     *
-     * @memberof SteamCardMaximumProfit
-     */
     SteamCardMaximumProfit.prototype.Start = function () {
         var _this = this;
         this._AddUI();
         this._DoLoop();
         var elmDivActiveInventoryPage = this._D.querySelector('#inventories');
-        // 创建观察者对象
         var observer = new MutationObserver(function (rec) {
             if (location.hash.match(/^#753|^$/)) {
-                // 有点丑的复选框
                 for (var _i = 0, rec_1 = rec; _i < rec_1.length; _i++) {
                     var r = rec_1[_i];
                     var rt = r.target;
@@ -81,7 +69,6 @@ var SteamCardMaximumProfit = (function () {
                             var rgItem = _this._GetRgItem(itemHolders[i]);
                             if (rgItem != null && _this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
                                 _this._divItems.push(rgItem.element);
-                                // 选择框
                                 var elmDiv = _this._D.createElement('div');
                                 elmDiv.classList.add('scmpItemCheckbox');
                                 rgItem.element.appendChild(elmDiv);
@@ -91,15 +78,8 @@ var SteamCardMaximumProfit = (function () {
                 }
             }
         });
-        // 传入目标节点和观察选项
         observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
     };
-    /**
-     * 添加样式, 复选框和汇率输入框
-     *
-     * @private
-     * @memberof SteamCardMaximumProfit
-     */
     SteamCardMaximumProfit.prototype._AddUI = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
@@ -116,25 +96,24 @@ var SteamCardMaximumProfit = (function () {
                         elmSpanQuickSellItems = elmDiv.querySelectorAll('.scmpQuickSellItem');
                         this.spanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
                         this.spanQuickError = elmDiv.querySelector('#scmpQuickError');
-                        // 监听事件
                         this._D.addEventListener('click', function (ev) { return __awaiter(_this, void 0, void 0, function () {
                             var evt, rgItem, itemInfo, priceOverview, rgItem, select_1, ChangeClass, start, end, someDivItems, _i, someDivItems_1, y;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         evt = ev.target;
-                                        if (!(evt.className === 'inventory_item_link')) return [3 /*break*/, 2];
+                                        if (!(evt.className === 'inventory_item_link')) return [3, 2];
                                         elmSpanQuickSellItems[0].innerText = 'null';
                                         elmSpanQuickSellItems[1].innerText = 'null';
                                         rgItem = this._GetRgItem(evt.parentNode), itemInfo = new ItemInfo(rgItem);
-                                        return [4 /*yield*/, this._GetPriceOverview(itemInfo)];
+                                        return [4, this._GetPriceOverview(itemInfo)];
                                     case 1:
                                         priceOverview = _a.sent();
                                         if (priceOverview != null) {
                                             elmSpanQuickSellItems[0].innerText = priceOverview.firstFormatPrice;
                                             elmSpanQuickSellItems[1].innerText = priceOverview.secondFormatPrice;
                                         }
-                                        return [3 /*break*/, 3];
+                                        return [3, 3];
                                     case 2:
                                         if (evt.classList.contains('scmpItemCheckbox')) {
                                             rgItem = this._GetRgItem(evt.parentNode), select_1 = evt.classList.contains('scmpItemSelect'), ChangeClass = function (elmDiv) {
@@ -144,7 +123,6 @@ var SteamCardMaximumProfit = (function () {
                                                     elmCheckbox.classList.toggle('scmpItemSelect', !select_1);
                                                 }
                                             };
-                                            // shift多选
                                             if (this._divLastChecked != null && ev.shiftKey) {
                                                 start = this._divItems.indexOf(this._divLastChecked), end = this._divItems.indexOf(rgItem.element), someDivItems = this._divItems.slice(Math.min(start, end), Math.max(start, end) + 1);
                                                 for (_i = 0, someDivItems_1 = someDivItems; _i < someDivItems_1.length; _i++) {
@@ -157,7 +135,7 @@ var SteamCardMaximumProfit = (function () {
                                             this._divLastChecked = rgItem.element;
                                         }
                                         _a.label = 3;
-                                    case 3: return [2 /*return*/];
+                                    case 3: return [2];
                                 }
                             });
                         }); });
@@ -171,7 +149,6 @@ var SteamCardMaximumProfit = (function () {
                                 }
                             });
                         }
-                        // 点击全部出售
                         this._D.querySelector('#scmpQuickAllItem').addEventListener('click', function () {
                             var itemInfos = _this._D.querySelectorAll('.scmpItemSelect');
                             for (var i = 0; i < itemInfos.length; i++) {
@@ -180,10 +157,9 @@ var SteamCardMaximumProfit = (function () {
                                     _this.quickSells.push(itemInfo);
                             }
                         });
-                        // 改变汇率
                         this._inputUSDCNY = elmDiv.querySelector('#scmpExch');
                         this._inputUSDCNY.value = '6.50';
-                        return [4 /*yield*/, tools.XHR({
+                        return [4, tools.XHR({
                                 method: 'GET',
                                 url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
                                 responseType: 'json',
@@ -193,25 +169,17 @@ var SteamCardMaximumProfit = (function () {
                         baiduExch = _a.sent();
                         if (baiduExch != null)
                             this._inputUSDCNY.value = baiduExch.data[0].number2;
-                        return [2 /*return*/];
+                        return [2];
                 }
             });
         });
     };
-    /**
-     * 获取美元区价格
-     *
-     * @private
-     * @param {ItemInfo} itemInfo
-     * @returns {(Promise<void | ItemInfo>)}
-     * @memberof SteamCardMaximumProfit
-     */
     SteamCardMaximumProfit.prototype._GetPriceOverview = function (itemInfo) {
         return __awaiter(this, void 0, void 0, function () {
             var priceoverview, stop, marketListings, marketLoadOrderSpread, itemordershistogram;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, tools.XHR({
+                    case 0: return [4, tools.XHR({
                             method: 'GET',
                             url: "/market/priceoverview/?country=US&currency=1&appid=" + itemInfo.rgItem.description.appid + "&market_hash_name=" + encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem.description)),
                             responseType: 'json'
@@ -221,13 +189,10 @@ var SteamCardMaximumProfit = (function () {
                             itemInfo.status = 'error';
                             return;
                         };
-                        if (priceoverview == null)
-                            return [2 /*return*/, stop()];
-                        if (!(priceoverview.success && priceoverview.lowest_price !== '')) return [3 /*break*/, 2];
-                        // 对$进行处理, 否则会报错
+                        if (!(priceoverview != null && priceoverview.success && priceoverview.lowest_price !== '')) return [3, 2];
                         itemInfo.lowestPrice = priceoverview.lowest_price.replace('$', '');
-                        return [2 /*return*/, this._CalculatePrice(itemInfo)];
-                    case 2: return [4 /*yield*/, tools.XHR({
+                        return [2, this._CalculatePrice(itemInfo)];
+                    case 2: return [4, tools.XHR({
                             method: 'GET',
                             url: "/market/listings/" + itemInfo.rgItem.description.appid + "/" + encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem.description)),
                             responseType: 'text'
@@ -235,11 +200,11 @@ var SteamCardMaximumProfit = (function () {
                     case 3:
                         marketListings = _a.sent();
                         if (marketListings == null)
-                            return [2 /*return*/, stop()];
+                            return [2, stop()];
                         marketLoadOrderSpread = marketListings.toString().match(/Market_LoadOrderSpread\( (\d+)/);
                         if (marketLoadOrderSpread == null)
-                            return [2 /*return*/, stop()];
-                        return [4 /*yield*/, tools.XHR({
+                            return [2, stop()];
+                        return [4, tools.XHR({
                                 method: 'GET',
                                 url: "/market/itemordershistogram/?country=US&language=english&currency=1&item_nameid=" + marketLoadOrderSpread[1] + "&two_factor=0",
                                 responseType: 'json'
@@ -247,50 +212,28 @@ var SteamCardMaximumProfit = (function () {
                     case 4:
                         itemordershistogram = _a.sent();
                         if (itemordershistogram == null)
-                            return [2 /*return*/, stop()];
+                            return [2, stop()];
                         if (itemordershistogram.success) {
                             itemInfo.lowestPrice = ' ' + itemordershistogram.sell_order_graph[0][0];
-                            return [2 /*return*/, this._CalculatePrice(itemInfo)];
+                            return [2, this._CalculatePrice(itemInfo)];
                         }
                         else
-                            return [2 /*return*/, stop()];
+                            return [2, stop()];
                         _a.label = 5;
-                    case 5: return [2 /*return*/];
+                    case 5: return [2];
                 }
             });
         });
     };
-    /**
-     * 计算价格
-     *
-     * @private
-     * @param {ItemInfo} itemInfo
-     * @returns {ItemInfo}
-     * @memberof SteamCardMaximumProfit
-     */
     SteamCardMaximumProfit.prototype._CalculatePrice = function (itemInfo) {
-        // 格式化取整
-        var firstPrice = this._W.GetPriceValueAsInt(itemInfo.lowestPrice)
-        // 手续费
-        , publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default, feeInfo = this._W.CalculateFeeAmount(firstPrice, publisherFee);
+        var firstPrice = this._W.GetPriceValueAsInt(itemInfo.lowestPrice), publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default, feeInfo = this._W.CalculateFeeAmount(firstPrice, publisherFee);
         firstPrice = firstPrice - feeInfo.fees;
-        // 换算成人民币
         itemInfo.firstPrice = Math.floor(firstPrice * parseFloat(this._inputUSDCNY.value));
-        // 美元区+1美分
         itemInfo.secondPrice = Math.floor((firstPrice + 1) * parseFloat(this._inputUSDCNY.value));
-        // 格式化
         itemInfo.firstFormatPrice = this._W.v_currencyformat(itemInfo.firstPrice, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency));
         itemInfo.secondFormatPrice = this._W.v_currencyformat(itemInfo.secondPrice, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency));
         return itemInfo;
     };
-    /**
-     * 快速出售
-     *
-     * @private
-     * @param {ItemInfo} itemInfo
-     * @returns {Promise<void>}
-     * @memberof SteamCardMaximumProfit
-     */
     SteamCardMaximumProfit.prototype._QuickSellItem = function (itemInfo) {
         return __awaiter(this, void 0, void 0, function () {
             var price, sellitem;
@@ -299,7 +242,7 @@ var SteamCardMaximumProfit = (function () {
                     case 0:
                         itemInfo.status = 'run';
                         price = itemInfo.price || itemInfo.firstPrice;
-                        return [4 /*yield*/, tools.XHR({
+                        return [4, tools.XHR({
                                 method: 'POST',
                                 url: 'https://steamcommunity.com/market/sellitem/',
                                 data: "sessionid=" + this._W.g_sessionID + "&appid=" + itemInfo.rgItem.description.appid + "&contextid=" + itemInfo.rgItem.contextid + "&assetid=" + itemInfo.rgItem.assetid + "&amount=1&price=" + price,
@@ -312,17 +255,11 @@ var SteamCardMaximumProfit = (function () {
                             itemInfo.status = 'error';
                         else
                             itemInfo.status = 'success';
-                        return [2 /*return*/];
+                        return [2];
                 }
             });
         });
     };
-    /**
-     * 批量出售采用轮询
-     *
-     * @private
-     * @memberof SteamCardMaximumProfit
-     */
     SteamCardMaximumProfit.prototype._DoLoop = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
@@ -335,46 +272,33 @@ var SteamCardMaximumProfit = (function () {
                                 _this._DoLoop();
                             }, 500);
                         };
-                        if (!(itemInfo != null)) return [3 /*break*/, 5];
-                        return [4 /*yield*/, this._GetPriceOverview(itemInfo)];
+                        if (!(itemInfo != null)) return [3, 5];
+                        return [4, this._GetPriceOverview(itemInfo)];
                     case 1:
                         priceOverview = _a.sent();
-                        if (!(priceOverview != null)) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this._QuickSellItem(priceOverview)];
+                        if (!(priceOverview != null)) return [3, 3];
+                        return [4, this._QuickSellItem(priceOverview)];
                     case 2:
                         _a.sent();
                         this._DoLoop();
-                        return [3 /*break*/, 4];
+                        return [3, 4];
                     case 3:
                         loop();
                         _a.label = 4;
-                    case 4: return [3 /*break*/, 6];
+                    case 4: return [3, 6];
                     case 5:
                         loop();
                         _a.label = 6;
-                    case 6: return [2 /*return*/];
+                    case 6: return [2];
                 }
             });
         });
     };
-    /**
-     * 为了兼容火狐sandbox的wrappedJSObject
-     *
-     * @private
-     * @param {HTMLDivElement} elmDiv
-     * @returns {rgItem}
-     * @memberof SteamCardMaximumProfit
-     */
     SteamCardMaximumProfit.prototype._GetRgItem = function (elmDiv) {
         return ('wrappedJSObject' in elmDiv) ? elmDiv.wrappedJSObject.rgItem : elmDiv.rgItem;
     };
     return SteamCardMaximumProfit;
 }());
-/**
- * 物品信息
- *
- * @class ItemInfo
- */
 var ItemInfo = (function () {
     function ItemInfo(rgItem, price) {
         this.rgItem = rgItem;
@@ -418,23 +342,9 @@ var ItemInfo = (function () {
     });
     return ItemInfo;
 }());
-/**
- * 一些通用工具
- *
- * @class tools
- */
 var tools = (function () {
     function tools() {
     }
-    /**
-     * 使用Promise封装xhr
-     *
-     * @static
-     * @template T
-     * @param {XHROptions} XHROptions
-     * @returns {Promise<T>}
-     * @memberof tools
-     */
     tools.XHR = function (XHROptions) {
         return new Promise(function (resolve, reject) {
             if (XHROptions.GM_xmlhttpRequest) {

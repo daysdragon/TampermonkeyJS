@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.21
+// @version     0.2.22
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -216,8 +216,7 @@ class SteamCardMaximumProfit {
         itemInfo.status = 'error'
         return
       }
-    if (priceoverview == null) return stop()
-    if (priceoverview.success && priceoverview.lowest_price !== '') {
+    if (priceoverview != null && priceoverview.success && priceoverview.lowest_price !== '') {
       // 对$进行处理, 否则会报错
       itemInfo.lowestPrice = priceoverview.lowest_price.replace('$', '')
       return this._CalculatePrice(itemInfo)
