@@ -2,7 +2,7 @@ interface Window {
   iActiveSelectView: number
   g_rgWalletInfo: rgWalletInfo
   g_sessionID: string
-  CalculateFeeAmount(amount: number, publisherFee: string): FeeAmount
+  CalculateFeeAmount(amount: number, publisherFee: string): feeAmount
   GetCurrencyCode(currencyId: number): string
   GetMarketHashName(rgDescriptionData: description): string
   GetPriceValueAsInt(strAmount: string): number
@@ -31,7 +31,7 @@ interface description {
   marketable: number
 }
 // 手续费
-interface FeeAmount {
+interface feeAmount {
   steam_fee: number
   publisher_fee: number
   fees: number

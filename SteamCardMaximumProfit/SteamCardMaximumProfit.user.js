@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.22
+// @version     0.2.23
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -83,17 +83,18 @@ var SteamCardMaximumProfit = (function () {
     SteamCardMaximumProfit.prototype._AddUI = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var elmStyle, elmDivInventoryPageRight, elmDiv, elmSpanQuickSellItems, elmDivQuickSellItem, i, baiduExch;
+            var elmStyle, elmDivInventoryPageRight, elmDiv, elmSpanQuickSellItem, elmSpanQuickAllItem, baiduExch;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         elmStyle = this._D.createElement('style');
-                        elmStyle.innerHTML = "\n.scmpItemSelect {\n  background: yellow;\n}\n.scmpItemRun {\n  background: blue;\n}\n.scmpItemSuccess {\n  background: green;\n}\n.scmpItemError {\n  background: red;\n}\n.scmpQuickSell {\n  margin: 0 0 1em;\n}\n.scmpItemCheckbox {\n  position: absolute;\n  z-index: 100;\n  top: 0;\n  left: 0;\n  width: 20px;\n  height: 20px;\n  border: 2px solid yellow;\n  opacity: 0.7;\n  cursor: default;\n}\n.scmpItemCheckbox:hover {\n  opacity: 1;\n}\n#scmpExch {\n  width: 5em;\n}";
+                        elmStyle.innerHTML = "\n.scmpItemSelect {\n  background: yellow;\n}\n.scmpItemRun {\n  background: blue;\n}\n.scmpItemSuccess {\n  background: green;\n}\n.scmpItemError {\n  background: red;\n}\n.scmpItemCheckbox {\n  position: absolute;\n  z-index: 100;\n  top: 0;\n  left: 0;\n  width: 20px;\n  height: 20px;\n  border: 2px solid yellow;\n  opacity: 0.7;\n  cursor: default;\n}\n.scmpItemCheckbox:hover {\n  opacity: 1;\n}\n#scmpExch {\n  width: 3.3em;\n  -moz-appearance: textfield;\n}\n#scmpExch::-webkit-inner-spin-button {\n  -webkit-appearance: none;\n}\n#scmpAddCent {\n  width: 3.9em;\n}";
                         this._D.body.appendChild(elmStyle);
                         elmDivInventoryPageRight = this._D.querySelector('.inventory_page_right'), elmDiv = this._D.createElement('div');
-                        elmDiv.innerHTML = "\n<div class=\"scmpQuickSell\">\u5EFA\u8BAE\u6700\u4F4E\u552E\u4EF7:\n  <span class=\"btn_green_white_innerfade scmpQuickSellItem\">null</span>\n  <span class=\"btn_green_white_innerfade scmpQuickSellItem\">null</span>\n</div>\n<div>\n  \u6C47\u7387:\n  <input class=\"filter_search_box\" id=\"scmpExch\" type=\"text\">\n  <span class=\"btn_green_white_innerfade\" id=\"scmpQuickAllItem\">\u5FEB\u901F\u51FA\u552E</span>\n  \u5269\u4F59:\n  <span id=\"scmpQuickSurplus\">0</span>\n  \u5931\u8D25:\n  <span id=\"scmpQuickError\">0</span>\n</div>";
+                        elmDiv.innerHTML = "\n<div class=\"scmpQuickSell\">\u5FEB\u901F\u4EE5\u6B64\u4EF7\u683C\u51FA\u552E:\n  <span class=\"btn_green_white_innerfade\" id=\"scmpQuickSellItem\">null</span>\n  <span>\n    \u52A0\u4EF7: $\n    <input class=\"filter_search_box\" id=\"scmpAddCent\" type=\"number\" value=\"0.00\" step=\"0.01\">\n  </span>\n</div>\n<div>\n  \u6C47\u7387:\n  <input class=\"filter_search_box\" id=\"scmpExch\" type=\"number\" value=\"6.50\">\n  <span class=\"btn_green_white_innerfade\" id=\"scmpQuickAllItem\">\u5FEB\u901F\u51FA\u552E</span>\n  \u5269\u4F59:\n  <span id=\"scmpQuickSurplus\">0</span>\n  \u5931\u8D25:\n  <span id=\"scmpQuickError\">0</span>\n</div>";
                         elmDivInventoryPageRight.appendChild(elmDiv);
-                        elmSpanQuickSellItems = elmDiv.querySelectorAll('.scmpQuickSellItem');
+                        elmSpanQuickSellItem = elmDiv.querySelector('#scmpQuickSellItem'), elmSpanQuickAllItem = this._D.querySelector('#scmpQuickAllItem');
+                        this._inputAddCent = elmDiv.querySelector('#scmpAddCent');
                         this.spanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
                         this.spanQuickError = elmDiv.querySelector('#scmpQuickError');
                         this._D.addEventListener('click', function (ev) { return __awaiter(_this, void 0, void 0, function () {
@@ -103,16 +104,13 @@ var SteamCardMaximumProfit = (function () {
                                     case 0:
                                         evt = ev.target;
                                         if (!(evt.className === 'inventory_item_link')) return [3, 2];
-                                        elmSpanQuickSellItems[0].innerText = 'null';
-                                        elmSpanQuickSellItems[1].innerText = 'null';
+                                        elmSpanQuickSellItem.innerText = 'null';
                                         rgItem = this._GetRgItem(evt.parentNode), itemInfo = new ItemInfo(rgItem);
                                         return [4, this._GetPriceOverview(itemInfo)];
                                     case 1:
                                         priceOverview = _a.sent();
-                                        if (priceOverview != null) {
-                                            elmSpanQuickSellItems[0].innerText = priceOverview.firstFormatPrice;
-                                            elmSpanQuickSellItems[1].innerText = priceOverview.secondFormatPrice;
-                                        }
+                                        if (priceOverview != null)
+                                            elmSpanQuickSellItem.innerText = priceOverview.formatPrice;
                                         return [3, 3];
                                     case 2:
                                         if (evt.classList.contains('scmpItemCheckbox')) {
@@ -139,17 +137,14 @@ var SteamCardMaximumProfit = (function () {
                                 }
                             });
                         }); });
-                        elmDivQuickSellItem = this._D.querySelectorAll('.scmpQuickSellItem');
-                        for (i = 0; i < elmDivQuickSellItem.length; i++) {
-                            elmDivQuickSellItem[i].addEventListener('click', function (ev) {
-                                var evt = ev.target, rgItem = _this._GetRgItem(_this._D.querySelector('.activeInfo'));
-                                if (!rgItem.element.querySelector('.scmpItemCheckbox').classList.contains('scmpItemSuccess') && evt.innerText != 'null') {
-                                    var price = _this._W.GetPriceValueAsInt(evt.innerText), itemInfo = new ItemInfo(rgItem, price);
-                                    _this._QuickSellItem(itemInfo);
-                                }
-                            });
-                        }
-                        this._D.querySelector('#scmpQuickAllItem').addEventListener('click', function () {
+                        elmSpanQuickSellItem.addEventListener('click', function (ev) {
+                            var evt = ev.target, activeInfo = _this._D.querySelector('.activeInfo'), rgItem = _this._GetRgItem(activeInfo), emlDivitemCheck = rgItem.element.querySelector('.scmpItemCheckbox');
+                            if (!emlDivitemCheck.classList.contains('scmpItemSuccess') && evt.innerText !== 'null') {
+                                var price = _this._W.GetPriceValueAsInt(evt.innerText), itemInfo = new ItemInfo(rgItem, price);
+                                _this._QuickSellItem(itemInfo);
+                            }
+                        });
+                        elmSpanQuickAllItem.addEventListener('click', function () {
                             var itemInfos = _this._D.querySelectorAll('.scmpItemSelect');
                             for (var i = 0; i < itemInfos.length; i++) {
                                 var rgItem = _this._GetRgItem(itemInfos[i].parentNode), itemInfo = new ItemInfo(rgItem);
@@ -157,8 +152,15 @@ var SteamCardMaximumProfit = (function () {
                                     _this.quickSells.push(itemInfo);
                             }
                         });
+                        this._inputAddCent.addEventListener('input', function () { return __awaiter(_this, void 0, void 0, function () {
+                            var activeInfo;
+                            return __generator(this, function (_a) {
+                                activeInfo = this._D.querySelector('.activeInfo > .inventory_item_link');
+                                activeInfo.click();
+                                return [2];
+                            });
+                        }); });
                         this._inputUSDCNY = elmDiv.querySelector('#scmpExch');
-                        this._inputUSDCNY.value = '6.50';
                         return [4, tools.XHR({
                                 method: 'GET',
                                 url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
@@ -226,26 +228,23 @@ var SteamCardMaximumProfit = (function () {
         });
     };
     SteamCardMaximumProfit.prototype._CalculatePrice = function (itemInfo) {
-        var firstPrice = this._W.GetPriceValueAsInt(itemInfo.lowestPrice), publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default, feeInfo = this._W.CalculateFeeAmount(firstPrice, publisherFee);
-        firstPrice = firstPrice - feeInfo.fees;
-        itemInfo.firstPrice = Math.floor(firstPrice * parseFloat(this._inputUSDCNY.value));
-        itemInfo.secondPrice = Math.floor((firstPrice + 1) * parseFloat(this._inputUSDCNY.value));
-        itemInfo.firstFormatPrice = this._W.v_currencyformat(itemInfo.firstPrice, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency));
-        itemInfo.secondFormatPrice = this._W.v_currencyformat(itemInfo.secondPrice, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency));
+        var price = this._W.GetPriceValueAsInt(itemInfo.lowestPrice), addCent = parseFloat(this._inputAddCent.value) * 100, exchangeRate = parseFloat(this._inputUSDCNY.value), publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default, feeInfo = this._W.CalculateFeeAmount(price, publisherFee);
+        price = price - feeInfo.fees;
+        itemInfo.price = Math.floor((price + addCent) * exchangeRate);
+        itemInfo.formatPrice = this._W.v_currencyformat(itemInfo.price, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency));
         return itemInfo;
     };
     SteamCardMaximumProfit.prototype._QuickSellItem = function (itemInfo) {
         return __awaiter(this, void 0, void 0, function () {
-            var price, sellitem;
+            var sellitem;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         itemInfo.status = 'run';
-                        price = itemInfo.price || itemInfo.firstPrice;
                         return [4, tools.XHR({
                                 method: 'POST',
                                 url: 'https://steamcommunity.com/market/sellitem/',
-                                data: "sessionid=" + this._W.g_sessionID + "&appid=" + itemInfo.rgItem.description.appid + "&contextid=" + itemInfo.rgItem.contextid + "&assetid=" + itemInfo.rgItem.assetid + "&amount=1&price=" + price,
+                                data: "sessionid=" + this._W.g_sessionID + "&appid=" + itemInfo.rgItem.description.appid + "&contextid=" + itemInfo.rgItem.contextid + "&assetid=" + itemInfo.rgItem.assetid + "&amount=1&price=" + itemInfo.price,
                                 responseType: 'json',
                                 cookie: true
                             }).catch(console.log)];

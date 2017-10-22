@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.22
+// @version     0.2.23
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -24,6 +24,7 @@ class SteamCardMaximumProfit {
   private _inputUSDCNY: HTMLInputElement
   private _divItems: HTMLDivElement[] = []
   private _divLastChecked: HTMLDivElement
+  private _inputAddCent: HTMLInputElement
   public quickSells: ItemInfo[] = []
   public spanQuickSurplus: HTMLSpanElement
   public spanQuickError: HTMLSpanElement
@@ -83,9 +84,6 @@ class SteamCardMaximumProfit {
 .scmpItemError {
   background: red;
 }
-.scmpQuickSell {
-  margin: 0 0 1em;
-}
 .scmpItemCheckbox {
   position: absolute;
   z-index: 100;
@@ -101,20 +99,30 @@ class SteamCardMaximumProfit {
   opacity: 1;
 }
 #scmpExch {
-  width: 5em;
+  width: 3.3em;
+  -moz-appearance: textfield;
+}
+#scmpExch::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+#scmpAddCent {
+  width: 3.9em;
 }`
     this._D.body.appendChild(elmStyle)
     // 插入快速出售按钮
     let elmDivInventoryPageRight = <HTMLDivElement>this._D.querySelector('.inventory_page_right')
       , elmDiv = this._D.createElement('div')
     elmDiv.innerHTML = `
-<div class="scmpQuickSell">建议最低售价:
-  <span class="btn_green_white_innerfade scmpQuickSellItem">null</span>
-  <span class="btn_green_white_innerfade scmpQuickSellItem">null</span>
+<div class="scmpQuickSell">快速以此价格出售:
+  <span class="btn_green_white_innerfade" id="scmpQuickSellItem">null</span>
+  <span>
+    加价: $
+    <input class="filter_search_box" id="scmpAddCent" type="number" value="0.00" step="0.01">
+  </span>
 </div>
 <div>
   汇率:
-  <input class="filter_search_box" id="scmpExch" type="text">
+  <input class="filter_search_box" id="scmpExch" type="number" value="6.50">
   <span class="btn_green_white_innerfade" id="scmpQuickAllItem">快速出售</span>
   剩余:
   <span id="scmpQuickSurplus">0</span>
@@ -123,23 +131,21 @@ class SteamCardMaximumProfit {
 </div>`
     elmDivInventoryPageRight.appendChild(elmDiv)
     // 获取快速出售按钮
-    let elmSpanQuickSellItems = <NodeListOf<HTMLSpanElement>>elmDiv.querySelectorAll('.scmpQuickSellItem')
+    let elmSpanQuickSellItem = <HTMLSpanElement>elmDiv.querySelector('#scmpQuickSellItem')
+      , elmSpanQuickAllItem = <HTMLSpanElement>this._D.querySelector('#scmpQuickAllItem')
+    this._inputAddCent = <HTMLInputElement>elmDiv.querySelector('#scmpAddCent')
     this.spanQuickSurplus = <HTMLSpanElement>elmDiv.querySelector('#scmpQuickSurplus')
     this.spanQuickError = <HTMLSpanElement>elmDiv.querySelector('#scmpQuickError')
-    // 监听事件
+    // 监听全局点击事件
     this._D.addEventListener('click', async (ev: MouseEvent) => {
       let evt = <HTMLElement>ev.target
       // 点击物品
       if (evt.className === 'inventory_item_link') {
-        elmSpanQuickSellItems[0].innerText = 'null'
-        elmSpanQuickSellItems[1].innerText = 'null'
+        elmSpanQuickSellItem.innerText = 'null'
         let rgItem = this._GetRgItem(<HTMLDivElement>evt.parentNode)
           , itemInfo = new ItemInfo(rgItem)
           , priceOverview = await this._GetPriceOverview(itemInfo)
-        if (priceOverview != null) {
-          elmSpanQuickSellItems[0].innerText = <string>priceOverview.firstFormatPrice
-          elmSpanQuickSellItems[1].innerText = <string>priceOverview.secondFormatPrice
-        }
+        if (priceOverview != null) elmSpanQuickSellItem.innerText = <string>priceOverview.formatPrice
       }
       // 选择逻辑
       else if (evt.classList.contains('scmpItemCheckbox')) {
@@ -165,20 +171,19 @@ class SteamCardMaximumProfit {
       }
     })
     // 点击快速出售
-    let elmDivQuickSellItem = this._D.querySelectorAll('.scmpQuickSellItem')
-    for (let i = 0; i < elmDivQuickSellItem.length; i++) {
-      elmDivQuickSellItem[i].addEventListener('click', (ev) => {
-        let evt = <HTMLSpanElement>ev.target
-          , rgItem = this._GetRgItem(<HTMLDivElement>this._D.querySelector('.activeInfo'))
-        if (!(<HTMLDivElement>rgItem.element.querySelector('.scmpItemCheckbox')).classList.contains('scmpItemSuccess') && evt.innerText != 'null') {
-          let price = this._W.GetPriceValueAsInt(evt.innerText)
-            , itemInfo = new ItemInfo(rgItem, price)
-          this._QuickSellItem(itemInfo)
-        }
-      })
-    }
+    elmSpanQuickSellItem.addEventListener('click', (ev: Event) => {
+      let evt = <HTMLSpanElement>ev.target
+        , activeInfo = <HTMLDivElement>this._D.querySelector('.activeInfo')
+        , rgItem = this._GetRgItem(activeInfo)
+        , emlDivitemCheck = <HTMLDivElement>rgItem.element.querySelector('.scmpItemCheckbox')
+      if (!emlDivitemCheck.classList.contains('scmpItemSuccess') && evt.innerText !== 'null') {
+        let price = this._W.GetPriceValueAsInt(evt.innerText)
+          , itemInfo = new ItemInfo(rgItem, price)
+        this._QuickSellItem(itemInfo)
+      }
+    })
     // 点击全部出售
-    (<HTMLSpanElement>this._D.querySelector('#scmpQuickAllItem')).addEventListener('click', () => {
+    elmSpanQuickAllItem.addEventListener('click', () => {
       let itemInfos = this._D.querySelectorAll('.scmpItemSelect')
       for (let i = 0; i < itemInfos.length; i++) {
         let rgItem = this._GetRgItem(<HTMLDivElement>itemInfos[i].parentNode)
@@ -186,9 +191,13 @@ class SteamCardMaximumProfit {
         if (rgItem.description.marketable === 1) this.quickSells.push(itemInfo)
       }
     })
+    // 点击加价
+    this._inputAddCent.addEventListener('input', async () => {
+      let activeInfo = <HTMLLinkElement>this._D.querySelector('.activeInfo > .inventory_item_link')
+      activeInfo.click()
+    })
     // 改变汇率
     this._inputUSDCNY = <HTMLInputElement>elmDiv.querySelector('#scmpExch')
-    this._inputUSDCNY.value = '6.50'
     // 在线获取实时汇率
     let baiduExch = await tools.XHR<baiduExch>({
       method: 'GET',
@@ -253,18 +262,18 @@ class SteamCardMaximumProfit {
    */
   private _CalculatePrice(itemInfo: ItemInfo): ItemInfo {
     // 格式化取整
-    let firstPrice = this._W.GetPriceValueAsInt(<string>itemInfo.lowestPrice)
+    let price = this._W.GetPriceValueAsInt(<string>itemInfo.lowestPrice)
+      , addCent = parseFloat(this._inputAddCent.value) * 100
+      // 汇率
+      , exchangeRate = parseFloat(this._inputUSDCNY.value)
       // 手续费
       , publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default
-      , feeInfo = this._W.CalculateFeeAmount(firstPrice, publisherFee)
-    firstPrice = firstPrice - feeInfo.fees
+      , feeInfo = this._W.CalculateFeeAmount(price, publisherFee)
+    price = price - feeInfo.fees
     // 换算成人民币
-    itemInfo.firstPrice = Math.floor(firstPrice * parseFloat(this._inputUSDCNY.value))
-    // 美元区+1美分
-    itemInfo.secondPrice = Math.floor((firstPrice + 1) * parseFloat(this._inputUSDCNY.value))
+    itemInfo.price = Math.floor((price + addCent) * exchangeRate)
     // 格式化
-    itemInfo.firstFormatPrice = this._W.v_currencyformat(itemInfo.firstPrice, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency))
-    itemInfo.secondFormatPrice = this._W.v_currencyformat(itemInfo.secondPrice, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency))
+    itemInfo.formatPrice = this._W.v_currencyformat(itemInfo.price, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency))
     return itemInfo
   }
   /**
@@ -277,14 +286,13 @@ class SteamCardMaximumProfit {
    */
   private async _QuickSellItem(itemInfo: ItemInfo): Promise<void> {
     itemInfo.status = 'run'
-    let price = itemInfo.price || itemInfo.firstPrice
-      , sellitem = await tools.XHR<sellitem>({
-        method: 'POST',
-        url: 'https://steamcommunity.com/market/sellitem/',
-        data: `sessionid=${this._W.g_sessionID}&appid=${itemInfo.rgItem.description.appid}&contextid=${itemInfo.rgItem.contextid}&assetid=${itemInfo.rgItem.assetid}&amount=1&price=${price}`,
-        responseType: 'json',
-        cookie: true
-      }).catch(console.log)
+    let sellitem = await tools.XHR<sellitem>({
+      method: 'POST',
+      url: 'https://steamcommunity.com/market/sellitem/',
+      data: `sessionid=${this._W.g_sessionID}&appid=${itemInfo.rgItem.description.appid}&contextid=${itemInfo.rgItem.contextid}&assetid=${itemInfo.rgItem.assetid}&amount=1&price=${itemInfo.price}`,
+      responseType: 'json',
+      cookie: true
+    }).catch(console.log)
     if (sellitem == null || !sellitem.success) itemInfo.status = 'error'
     else itemInfo.status = 'success'
   }
@@ -335,13 +343,14 @@ class ItemInfo {
   }
   public rgItem: rgItem
   public price?: number
+  public formatPrice?: string
   private _status: string
   public get status(): string {
     return this._status || ''
   }
   public set status(valve: string) {
     this._status = valve
-    let elmCheckbox = <HTMLDivElement>this.rgItem.element.querySelector('.scmpItemCheckbox')
+    let elmCheckbox = <HTMLDivElement | null>this.rgItem.element.querySelector('.scmpItemCheckbox')
     if (elmCheckbox == null) return
     switch (valve) {
       case 'run':
@@ -367,10 +376,6 @@ class ItemInfo {
     }
   }
   public lowestPrice?: string
-  public firstPrice?: number
-  public firstFormatPrice?: string
-  public secondPrice?: number
-  public secondFormatPrice?: string
 }
 /**
  * 一些通用工具
