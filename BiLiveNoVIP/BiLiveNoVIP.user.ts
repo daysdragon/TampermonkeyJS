@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     2.0.27
+// @version     3.0.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?:\/\/live\.bilibili\.com\/\d.*$/
+// @include     /^https?:\/\/live\.bilibili\.com\/neptune\/\d.*$/
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
@@ -37,17 +37,17 @@ class BiLiveNoVIP {
       this._config = config
     }
   }
-  private _D = document
+  private _counter = 0
   private _config: config
   private _defaultConfig: config = {
-    version: 1498307392622,
+    version: 1509593795879,
     menu: {
       noKanBanMusume: {
         name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
         enable: false
       },
       noGuardIcon: {
-        name: '舰队相关',
+        name: '舰队标识',
         enable: false
       },
       noHDIcon: {
@@ -77,159 +77,160 @@ class BiLiveNoVIP {
       noGiftMsg: {
         name: '礼物信息',
         enable: false
-      },
-      fixTreasure: {
-        name: '下移宝箱',
-        enable: false
       }
     }
   }
   /**
    * 开始
    * 
-   * @memberOf BiLiveNoVIP
-   */
-  public Start() {
-    this._AddUI()
-    this._ChangeCSS()
-    this._ChangeRankList()
-  }
-  /**
-   * 模拟实时屏蔽
-   * 
-   * @private
-   * @memberOf BiLiveNoVIP
-   */
-  private _ChangeCSS() {
-    // 获取或者插入style
-    let elmStyle = <HTMLStyleElement>this._D.querySelector('#gunCSS')
-    if (elmStyle === null) {
-      elmStyle = this._D.createElement('style')
-      elmStyle.id = 'gunCSS'
-      this._D.body.appendChild(elmStyle)
-    }
-    //css内容
-    let cssText = ''
-    if (this._config.menu.noKanBanMusume.enable) cssText += `
-    .live-haruna-ctnr {
-      display: none !important;
-    }`
-    if (this._config.menu.noGuardIcon.enable) cssText += `
-    .guard-rank, #chat-msg-list .guard-icon-small, #chat-msg-list .guard-sys, .guard-buy-sys, #chat-msg-list .guard-msg:after, .guard-lv1:before, .guard-lv2:before {
-      display: none !important;
-    }
-    .has-guard-rank {
-      max-height: 100px !important;
-      min-height: 100px !important;
-    }
-    #chat-msg-list .guard-msg {
-      margin: auto !important;
-      padding: 4px 5px !important;
-    }
-    #chat-msg-list .user-name.color {
-      color: #4fc1e9 !important;
-    }
-    #chat-msg-list .msg-content {
-      color: #646c7a !important;
-    }`
-    if (this._config.menu.noHDIcon.enable) cssText += `
-    #chat-msg-list a[href^="/hd/"], #santa-hint-ctnr {
-      display: none !important;
-    }`
-    if (this._config.menu.noVIPIcon.enable) cssText += `
-    #chat-msg-list .vip-icon, #chat-msg-list .system-msg:not(.guard-sys) .v-middle {
-      display: none !important;
-    }
-    #chat-msg-list .system-msg {
-      padding:0 5px;
-    }`
-    if (this._config.menu.noMedalIcon.enable) cssText += `
-    #chat-msg-list .fans-medal-item {
-      display: none !important;
-    }`
-    if (this._config.menu.noUserLevelIcon.enable) cssText += `
-    #chat-msg-list .user-level-icon {
-      display: none !important;
-    }`
-    if (this._config.menu.noLiveTitleIcon.enable) cssText += `
-    #chat-msg-list .check-my-title {
-      display: none !important;
-    }`
-    if (this._config.menu.noSystemMsg.enable) cssText += `
-    #chat-msg-list .announcement-container, .bilibili-live-player-video-gift {
-      display: none !important;
-    }`
-    if (this._config.menu.noGiftMsg.enable) cssText += `
-    #chat-msg-list .gift-msg, #chat-list-ctnr > .super-gift-ctnr, #chat-list-ctnr > #gift-msg-1000, #super-gift-ctnr-haruna, .bilibili-live-player-danmaku-gift {
-      display: none !important;
-    }
-    #chat-list-ctnr > #chat-msg-list {
-      height: 100% !important;
-    }`
-    if (this._config.menu.fixTreasure.enable) cssText += `
-    #player-container > .treasure-box-ctnr {
-      margin: -160px 0 !important;
-    }`
-    elmStyle.innerHTML = cssText
-  }
-  /**
-   * 改良排行榜
-   * 
-   * @private
    * @memberof BiLiveNoVIP
    */
-  private _ChangeRankList() {
-    if (this._config.menu.noGuardIcon.enable) {
-      let elmRankList = <HTMLUListElement>this._D.querySelector('.rank-list-tab')
-      if (elmRankList != null) {
-        let rankObserver = new MutationObserver(() => {
-          // .tab-switcher[data-type="guard"], 
-          let elmTabSwitchers = <NodeListOf<HTMLLIElement>>elmRankList.querySelectorAll('.tab-switcher')
-          if (elmTabSwitchers.length !== 0) {
-            for (let i = 0; i < elmTabSwitchers.length; i++) {
-              let elmTabSwitcher = elmTabSwitchers[i]
-              if (elmTabSwitcher.innerText === '七日榜') {
-                elmTabSwitcher.click()
+  public Start() {
+    // 添加相关css
+    this._AddCSS()
+    this._ChangeCSS()
+    let elmDivAside = <HTMLDivElement>document.querySelector('.right-part.chat-ctnr, .aside-area')
+    if (elmDivAside != null) {
+      let asideObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          if (mutation.type === 'childList' && mutation.addedNodes != null) {
+            for (let i = 0; i < mutation.addedNodes.length; i++) {
+              let elm = <HTMLElement>mutation.addedNodes[i]
+              if (elm.nodeName === 'LI' && elm.innerText === '七日榜') {
+                this._counter += 1
+                elm.click()
               }
-              else if (elmTabSwitcher.innerText === '舰队') {
-                elmTabSwitcher.remove()
+              if (elm.nodeName === 'DIV' && elm.id === 'chat-control-panel-vm') {
+                this._counter += 1
+                this._AddUI()
               }
             }
-            rankObserver.disconnect()
           }
         })
-        rankObserver.observe(elmRankList, { childList: true, attributes: true })
-      }
+        if (this._counter >= 2) asideObserver.disconnect()
+      })
+      asideObserver.observe(elmDivAside, { childList: true, subtree: true })
     }
+    // 网页全屏
     let bodyObserver = new MutationObserver(() => {
-      let elmDivRand = <HTMLDivElement>this._D.querySelector('#rank-list-ctnr')
-      let elmDivChat = <HTMLDivElement>this._D.querySelector('#chat-list-ctnr')
-      if (this._D.body.classList.contains('player-full-win')) {
+      let elmDivRand = <HTMLDivElement>document.querySelector('#rank-list-vm')
+        , elmDivChat = <HTMLDivElement>document.querySelector('.chat-history-panel')
+      if (document.body.classList.contains('player-full-win')) {
         elmDivRand.style.cssText = 'display: none'
-        elmDivChat.style.cssText = 'height: calc(100% - 150px)'
+        elmDivChat.style.cssText = 'height: calc(100% - 135px)'
       }
       else {
         elmDivRand.style.cssText = ''
         elmDivChat.style.cssText = ''
       }
     })
-    bodyObserver.observe(this._D.body, { attributes: true, attributeFilter: ['class'] })
+    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+  }
+  /**
+   * 模拟实时屏蔽
+   * 
+   * @private
+   * @memberof BiLiveNoVIP
+   */
+  private _ChangeCSS() {
+    // 获取或者插入style
+    let elmStyle = <HTMLStyleElement>document.querySelector('#gunCSS')
+    if (elmStyle === null) {
+      elmStyle = document.createElement('style')
+      elmStyle.id = 'gunCSS'
+      document.body.appendChild(elmStyle)
+    }
+    //css内容
+    let cssText = ''
+    if (this._config.menu.noKanBanMusume.enable) cssText += `
+    .haruna-sekai-de-ichiban-kawaii {
+      display: none !important;
+    }`
+    if (this._config.menu.noGuardIcon.enable) cssText += `
+    .chat-history-list .guard-icon,
+    .chat-history-list .welcome-guard,
+    .chat-history-list .danmaku-item.guard-level-1:before,
+    .chat-history-list .danmaku-item.guard-level-2:before,
+    .chat-history-list .danmaku-item.guard-level-1:after,
+    .chat-history-list .danmaku-item.guard-level-2:after {
+      display: none !important;
+    }
+    .chat-history-list .danmaku-item.guard-danmaku .vip-icon {
+      margin-right: 5px !important;
+    }
+    .chat-history-list .danmaku-item.guard-danmaku .admin-icon,
+    .chat-history-list .danmaku-item.guard-danmaku .anchor-icon,
+    .chat-history-list .danmaku-item.guard-danmaku .fans-medal-item-ctnr,
+    .chat-history-list .danmaku-item.guard-danmaku .title-label,
+    .chat-history-list .danmaku-item.guard-danmaku .user-level-icon {
+      margin-right: 5px !important;
+    }
+    .chat-history-list .danmaku-item.guard-level-1,
+    .chat-history-list .danmaku-item.guard-level-2 {
+      padding: 4px 5px !important;
+      margin: 0 !important;
+    }
+    .chat-history-list .danmaku-item.guard-danmaku .user-name {
+      color: #23ade5 !important;
+    }
+    .chat-history-list .danmaku-item.guard-danmaku .danmaku-content {
+      color: #646c7a !important;
+    }`
+    if (this._config.menu.noHDIcon.enable) cssText += `
+    .chat-msg-list a[href^="/hd/"],
+    #santa-hint-ctnr {
+      display: none !important;
+    }`
+    if (this._config.menu.noVIPIcon.enable) cssText += `
+    .chat-history-list .vip-icon,
+    .chat-history-list .welcome-msg {
+      display: none !important;
+    }`
+    if (this._config.menu.noMedalIcon.enable) cssText += `
+    .chat-history-list .fans-medal-item-ctnr {
+      display: none !important;
+    }`
+    if (this._config.menu.noUserLevelIcon.enable) cssText += `
+    .chat-history-list .user-level-icon {
+      display: none !important;
+    }`
+    if (this._config.menu.noLiveTitleIcon.enable) cssText += `
+    .chat-history-list .title-label {
+      display: none !important;
+    }`
+    if (this._config.menu.noSystemMsg.enable) cssText += `
+    .bilibili-live-player-video-gift,
+    .chat-history-list .system-msg {
+      display: none !important;
+    }`
+    if (this._config.menu.noGiftMsg.enable) cssText += `
+    .bilibili-live-player-danmaku-gift,
+    .haruna-sekai-de-ichiban-kawaii .super-gift-bubbles,
+    .chat-history-panel .penury-gift-msg,
+    .chat-history-list .gift-item {
+      display: none !important;
+    }
+    .chat-history-list.with-penury-gift {
+      height: 100% !important;
+    }`
+    elmStyle.innerHTML = cssText
   }
   /**
    * 添加按钮
    * 
    * @private
-   * @memberOf BiLiveNoVIP
+   * @memberof BiLiveNoVIP
    */
   private _AddUI() {
-    // 添加按钮相关的css
-    this._AddCSS()
     // 获取按钮插入的位置
-    let elmDivBtns = this._D.querySelector('.btns')
-    // 传说中的UI, 真的很丑
-    let elmDivGun = this._D.createElement('div')
+    let elmDivBtns = document.querySelector('.btns, .icon-left-part')
+      // 传说中的UI, 真的很丑
+      , elmDivGun = document.createElement('div')
+      , elmDivMenu = document.createElement('div')
+      , html = ''
     elmDivGun.id = 'gunBut'
-    let html = '滚<div id="gunMenu" class="gunHide">'
+    elmDivMenu.id = 'gunMenu'
+    elmDivMenu.className = 'gunHide'
     // 循环插入内容
     for (let x in this._config.menu) {
       html += `
@@ -239,25 +240,29 @@ class BiLiveNoVIP {
         <span>${this._config.menu[x].name}</span>
       </div>`
     }
-    html += '</div>'
-    elmDivGun.innerHTML = html
+    elmDivMenu.innerHTML = html
     // 插入菜单按钮
-    if (elmDivBtns != null) elmDivBtns.appendChild(elmDivGun)
-    // 获取刚刚插入的DOM
-    let elmDivMenu = this._D.querySelector('#gunMenu')
+    if (elmDivBtns != null) {
+      elmDivGun.appendChild(elmDivMenu)
+      elmDivBtns.appendChild(elmDivGun)
+    }
     // 为了和b站更搭, 所以监听body的click
-    this._D.body.addEventListener('click', (ev) => {
+    document.body.addEventListener('click', (ev) => {
       let evt = <HTMLElement>ev.target
       if (elmDivGun.contains(evt)) {
-        if (elmDivMenu != null && elmDivGun === evt) elmDivMenu.classList.toggle('gunHide')
+        if (elmDivGun === evt) {
+          elmDivMenu.classList.toggle('gunHide')
+          elmDivGun.classList.toggle('gunActive')
+        }
       }
       else {
-        if (elmDivMenu != null) elmDivMenu.classList.add('gunHide')
+        elmDivMenu.classList.add('gunHide')
+        elmDivGun.classList.remove('gunActive')
       }
     })
     // 循环设置监听插入的DOM
     for (let x in this._config.menu) {
-      let checkbox = <HTMLInputElement>this._D.getElementById(x)
+      let checkbox = <HTMLInputElement>document.getElementById(x)
       checkbox.checked = this._config.menu[x].enable
       checkbox.addEventListener('change', (ev) => {
         let evt = <HTMLInputElement>ev.target
@@ -271,43 +276,53 @@ class BiLiveNoVIP {
    * 添加样式
    * 
    * @private
-   * @memberOf BiLiveNoVIP
+   * @memberof BiLiveNoVIP
    */
   private _AddCSS() {
     let cssText = `
-    #chat-ctrl-panel .chat-ctrl-btns .btn {
-      margin: 0 3px;
-    }
     .gunHide {
       display: none;
     }
     #gunBut {
-      border: 1px solid #999;
+      border: 1.5px solid #c8c8c8;
       border-radius: 50%;
-      cursor: pointer;
-      display: inline-block;
-      font-size: 13px;
-      height: 18px;
-      margin: -3px 3px;
-      text-align: center;
-      width: 18px;
-      vertical-align: text-top;
-    }
-    #gunBut > #gunMenu {
-      animation:move-in-right cubic-bezier(.22,.58,.12,.98) .4s;
-      background-color: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 2em .1em rgba(0,0,0,0.15);
+      color: #c8c8c8;
       cursor: default;
+      display: inline-block;
+      height: 18px;
+      margin: 0 5px;
+      vertical-align: middle;
+      width: 18px;
+    }
+    #gunBut.gunActive,
+    #gunBut:hover {
+      border: 1.5px solid #23ade5;
+      color: #23ade5;
+    }
+    #gunBut:after {
+      content: '滚';
+      font-size: 13px;
+      margin: 2px 2.5px;
+      float: left;
+    }
+    #gunBut #gunMenu {
+      animation: gunMenu .4s;
+      background-color: #fff;
+      border: 1px solid #e9eaec;
+      border-radius: 8px;
+      box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);
       font-size: 12px;
-      height: 210px;
-      margin: -250px -125px;
+      height: 185px;
+      left: 0px;
       padding: 10px;
       position: absolute;
-      width: 100px;
-      z-index: 101;
+      text-align: center;
+      top: -215px;
+      transform-origin: 100px bottom 0px;
+      width: 85px;
+      z-index: 2;
     }
-    #gunBut > #gunMenu > div {
+    #gunBut #gunMenu > div {
     	background: darkgray;
     	border-radius: 5px;
     	height: 10px;
@@ -315,7 +330,7 @@ class BiLiveNoVIP {
     	position: relative;
     	width: 20px;
     }
-    #gunBut > #gunMenu > div > label {
+    #gunBut #gunMenu > div > label {
     	background: dimgray;
     	border-radius: 50%;
     	cursor: pointer;
@@ -327,20 +342,34 @@ class BiLiveNoVIP {
     	transition: all .5s ease;
     	width: 16px;
     }
-    #gunBut > #gunMenu > div > input[type=checkbox]:checked + label {
+    #gunBut #gunMenu > div > input[type=checkbox]:checked + label {
       background: #4fc1e9;
     	left: 7px;
     }
     #gunBut > #gunMenu > div > span {
+      color: #666;
       left: 0;
       margin: -3px 0 0 20px;
       position: absolute;
       width: 80px;
-    }`
+    }
+    @keyframes gunMenu {
+      0% {
+        opacity: 0;
+        transform: scale(0);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+  }`
     // 插入css
-    let elmStyle = this._D.createElement('style')
+    let elmStyle = document.createElement('style')
     elmStyle.innerHTML = cssText
-    this._D.body.appendChild(elmStyle)
+    document.body.appendChild(elmStyle)
   }
 }
 const gun = new BiLiveNoVIP()

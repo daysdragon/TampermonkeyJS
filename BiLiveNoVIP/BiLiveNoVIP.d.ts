@@ -9,10 +9,6 @@ interface Protocol {
   DANMU_MSG(danmu: danmuObject): void
   SPECIAL_GIFT(beat: SPECIAL_GIFT): void
 }
-declare function exportFunction(func: Function, targetScope: Object, options?: Object): void
-// GM_Api
-declare function GM_getValue(name: string): string
-declare function GM_setValue(name: string, value: string): void
 // CommentCoreLibrary
 declare class CommentManager {
   constructor(HTMLElement: HTMLElement)
@@ -55,6 +51,7 @@ interface config {
   menu: configMenu
 }
 interface configMenu {
+  [index: string]: configMenuData
   noKanBanMusume: configMenuData
   noGuardIcon: configMenuData
   noHDIcon: configMenuData
@@ -64,11 +61,11 @@ interface configMenu {
   noLiveTitleIcon: configMenuData
   noSystemMsg: configMenuData
   noGiftMsg: configMenuData
-  fixTreasure: configMenuData
-  replaceDanmaku?: configMenuData
-  popularWords?: configMenuData
-  beatStorm?: configMenuData
-  closeDanmaku?: configMenuData
+  // fixTreasure: configMenuData
+  // replaceDanmaku: configMenuData
+  // popularWords: configMenuData
+  // beatStorm: configMenuData
+  // closeDanmaku: configMenuData
 }
 interface configMenuData {
   name: string
