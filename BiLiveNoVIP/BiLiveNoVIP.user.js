@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.0
+// @version     3.0.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?:\/\/live\.bilibili\.com\/neptune\/\d.*$/
+// @include     /^https?:\/\/live\.bilibili\.com\/(neptune\/)?\d.*$/
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
@@ -16,7 +16,7 @@ var BiLiveNoVIP = (function () {
     function BiLiveNoVIP() {
         this._counter = 0;
         this._defaultConfig = {
-            version: 1509593795879,
+            version: 1509943778469,
             menu: {
                 noKanBanMusume: {
                     name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -122,23 +122,23 @@ var BiLiveNoVIP = (function () {
         }
         var cssText = '';
         if (this._config.menu.noKanBanMusume.enable)
-            cssText += "\n    .haruna-sekai-de-ichiban-kawaii {\n      display: none !important;\n    }";
+            cssText += "\n.haruna-sekai-de-ichiban-kawaii {\n  display: none !important;\n}";
         if (this._config.menu.noGuardIcon.enable)
-            cssText += "\n    .chat-history-list .guard-icon,\n    .chat-history-list .welcome-guard,\n    .chat-history-list .danmaku-item.guard-level-1:before,\n    .chat-history-list .danmaku-item.guard-level-2:before,\n    .chat-history-list .danmaku-item.guard-level-1:after,\n    .chat-history-list .danmaku-item.guard-level-2:after {\n      display: none !important;\n    }\n    .chat-history-list .danmaku-item.guard-danmaku .vip-icon {\n      margin-right: 5px !important;\n    }\n    .chat-history-list .danmaku-item.guard-danmaku .admin-icon,\n    .chat-history-list .danmaku-item.guard-danmaku .anchor-icon,\n    .chat-history-list .danmaku-item.guard-danmaku .fans-medal-item-ctnr,\n    .chat-history-list .danmaku-item.guard-danmaku .title-label,\n    .chat-history-list .danmaku-item.guard-danmaku .user-level-icon {\n      margin-right: 5px !important;\n    }\n    .chat-history-list .danmaku-item.guard-level-1,\n    .chat-history-list .danmaku-item.guard-level-2 {\n      padding: 4px 5px !important;\n      margin: 0 !important;\n    }\n    .chat-history-list .danmaku-item.guard-danmaku .user-name {\n      color: #23ade5 !important;\n    }\n    .chat-history-list .danmaku-item.guard-danmaku .danmaku-content {\n      color: #646c7a !important;\n    }";
+            cssText += "\n.chat-history-list .guard-buy,\n.chat-history-list .guard-icon,\n.chat-history-list .welcome-guard,\n.chat-history-list .danmaku-item.guard-level-1:after,\n.chat-history-list .danmaku-item.guard-level-2:after,\n.chat-history-list .danmaku-item.guard-level-1:before,\n.chat-history-list .danmaku-item.guard-level-2:before {\n  display: none !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .vip-icon {\n  margin-right: 5px !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .admin-icon,\n.chat-history-list .danmaku-item.guard-danmaku .title-label,\n.chat-history-list .danmaku-item.guard-danmaku .anchor-icon,\n.chat-history-list .danmaku-item.guard-danmaku .user-level-icon,\n.chat-history-list .danmaku-item.guard-danmaku .fans-medal-item-ctnr {\n  margin-right: 5px !important;\n}\n.chat-history-list .danmaku-item.guard-level-1,\n.chat-history-list .danmaku-item.guard-level-2 {\n  padding: 4px 5px !important;\n  margin: 0 !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .user-name {\n  color: #23ade5 !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .danmaku-content {\n  color: #646c7a !important;\n}";
         if (this._config.menu.noHDIcon.enable)
-            cssText += "\n    .chat-msg-list a[href^=\"/hd/\"],\n    #santa-hint-ctnr {\n      display: none !important;\n    }";
+            cssText += "\n.chat-history-list a[href^=\"/hd/\"],\n#santa-hint-ctnr {\n  display: none !important;\n}";
         if (this._config.menu.noVIPIcon.enable)
-            cssText += "\n    .chat-history-list .vip-icon,\n    .chat-history-list .welcome-msg {\n      display: none !important;\n    }";
+            cssText += "\n.chat-history-list .vip-icon,\n.chat-history-list .welcome-msg {\n  display: none !important;\n}";
         if (this._config.menu.noMedalIcon.enable)
-            cssText += "\n    .chat-history-list .fans-medal-item-ctnr {\n      display: none !important;\n    }";
+            cssText += "\n.chat-history-list .fans-medal-item-ctnr {\n  display: none !important;\n}";
         if (this._config.menu.noUserLevelIcon.enable)
-            cssText += "\n    .chat-history-list .user-level-icon {\n      display: none !important;\n    }";
+            cssText += "\n.chat-history-list .user-level-icon {\n  display: none !important;\n}";
         if (this._config.menu.noLiveTitleIcon.enable)
-            cssText += "\n    .chat-history-list .title-label {\n      display: none !important;\n    }";
+            cssText += "\n.chat-history-list .title-label {\n  display: none !important;\n}";
         if (this._config.menu.noSystemMsg.enable)
-            cssText += "\n    .bilibili-live-player-video-gift,\n    .chat-history-list .system-msg {\n      display: none !important;\n    }";
+            cssText += "\n.bilibili-live-player-video-gift,\n.chat-history-list .system-msg {\n  display: none !important;\n}";
         if (this._config.menu.noGiftMsg.enable)
-            cssText += "\n    .bilibili-live-player-danmaku-gift,\n    .haruna-sekai-de-ichiban-kawaii .super-gift-bubbles,\n    .chat-history-panel .penury-gift-msg,\n    .chat-history-list .gift-item {\n      display: none !important;\n    }\n    .chat-history-list.with-penury-gift {\n      height: 100% !important;\n    }";
+            cssText += "\n.chat-history-list .gift-item,\n.bilibili-live-player-danmaku-gift,\n.chat-history-panel .penury-gift-msg,\n.haruna-sekai-de-ichiban-kawaii .super-gift-bubbles {\n  display: none !important;\n}\n.chat-history-list.with-penury-gift {\n  height: 100% !important;\n}";
         elmStyle.innerHTML = cssText;
     };
     BiLiveNoVIP.prototype._AddUI = function () {
@@ -148,7 +148,7 @@ var BiLiveNoVIP = (function () {
         elmDivMenu.id = 'gunMenu';
         elmDivMenu.className = 'gunHide';
         for (var x in this._config.menu) {
-            html += "\n      <div>\n        <input type=\"checkbox\" id=\"" + x + "\" class=\"gunHide\" />\n      \t<label for=\"" + x + "\"></label>\n        <span>" + this._config.menu[x].name + "</span>\n      </div>";
+            html += "\n<div>\n  <input type=\"checkbox\" id=\"" + x + "\" class=\"gunHide\" />\n\t<label for=\"" + x + "\"></label>\n  <span>" + this._config.menu[x].name + "</span>\n</div>";
         }
         elmDivMenu.innerHTML = html;
         if (elmDivBtns != null) {
@@ -180,7 +180,7 @@ var BiLiveNoVIP = (function () {
         }
     };
     BiLiveNoVIP.prototype._AddCSS = function () {
-        var cssText = "\n    .gunHide {\n      display: none;\n    }\n    #gunBut {\n      border: 1.5px solid #c8c8c8;\n      border-radius: 50%;\n      color: #c8c8c8;\n      cursor: default;\n      display: inline-block;\n      height: 18px;\n      margin: 0 5px;\n      vertical-align: middle;\n      width: 18px;\n    }\n    #gunBut.gunActive,\n    #gunBut:hover {\n      border: 1.5px solid #23ade5;\n      color: #23ade5;\n    }\n    #gunBut:after {\n      content: '\u6EDA';\n      font-size: 13px;\n      margin: 2px 2.5px;\n      float: left;\n    }\n    #gunBut #gunMenu {\n      animation: gunMenu .4s;\n      background-color: #fff;\n      border: 1px solid #e9eaec;\n      border-radius: 8px;\n      box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);\n      font-size: 12px;\n      height: 185px;\n      left: 0px;\n      padding: 10px;\n      position: absolute;\n      text-align: center;\n      top: -215px;\n      transform-origin: 100px bottom 0px;\n      width: 85px;\n      z-index: 2;\n    }\n    #gunBut #gunMenu > div {\n    \tbackground: darkgray;\n    \tborder-radius: 5px;\n    \theight: 10px;\n    \tmargin: 0 0 12px 0;\n    \tposition: relative;\n    \twidth: 20px;\n    }\n    #gunBut #gunMenu > div > label {\n    \tbackground: dimgray;\n    \tborder-radius: 50%;\n    \tcursor: pointer;\n    \tdisplay: block;\n    \theight: 16px;\n    \tleft: -3px;\n    \tposition: absolute;\n    \ttop: -3px;\n    \ttransition: all .5s ease;\n    \twidth: 16px;\n    }\n    #gunBut #gunMenu > div > input[type=checkbox]:checked + label {\n      background: #4fc1e9;\n    \tleft: 7px;\n    }\n    #gunBut > #gunMenu > div > span {\n      color: #666;\n      left: 0;\n      margin: -3px 0 0 20px;\n      position: absolute;\n      width: 80px;\n    }\n    @keyframes gunMenu {\n      0% {\n        opacity: 0;\n        transform: scale(0);\n      }\n      50% {\n        transform: scale(1.1);\n      }\n      to {\n        opacity: 1;\n        transform: scale(1);\n      }\n  }";
+        var cssText = "\n.gunHide {\n  display: none;\n}\n#gunBut {\n  border: 1.5px solid #c8c8c8;\n  border-radius: 50%;\n  color: #c8c8c8;\n  cursor: default;\n  display: inline-block;\n  height: 18px;\n  margin: 0 5px;\n  vertical-align: middle;\n  width: 18px;\n}\n#gunBut.gunActive,\n#gunBut:hover {\n  border: 1.5px solid #23ade5;\n  color: #23ade5;\n}\n#gunBut:after {\n  content: '\u6EDA';\n  font-size: 13px;\n  margin: 2px 2.5px;\n  float: left;\n}\n#gunBut #gunMenu {\n  animation: gunMenu .4s;\n  background-color: #fff;\n  border: 1px solid #e9eaec;\n  border-radius: 8px;\n  box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);\n  font-size: 12px;\n  height: 185px;\n  left: 0px;\n  padding: 10px;\n  position: absolute;\n  text-align: center;\n  top: -215px;\n  transform-origin: 100px bottom 0px;\n  width: 85px;\n  z-index: 2;\n}\n#gunBut #gunMenu > div {\n\tbackground: darkgray;\n\tborder-radius: 5px;\n\theight: 10px;\n\tmargin: 0 0 12px 0;\n\tposition: relative;\n\twidth: 20px;\n}\n#gunBut #gunMenu > div > label {\n\tbackground: #e3ebec;\n\tborder-radius: 50%;\n\tcursor: pointer;\n\tdisplay: block;\n\theight: 16px;\n\tleft: -3px;\n\tposition: absolute;\n\ttop: -3px;\n\ttransition: all .5s ease;\n\twidth: 16px;\n}\n#gunBut #gunMenu > div > input[type=checkbox]:checked + label {\n  background: #4fc1e9;\n\tleft: 7px;\n}\n#gunBut > #gunMenu > div > span {\n  color: #666;\n  left: 0;\n  margin: -3px 0 0 20px;\n  position: absolute;\n  width: 80px;\n}\n@keyframes gunMenu {\n  0% {\n    opacity: 0;\n    transform: scale(0);\n  }\n  50% {\n    transform: scale(1.1);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}";
         var elmStyle = document.createElement('style');
         elmStyle.innerHTML = cssText;
         document.body.appendChild(elmStyle);
