@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.1
+// @version     3.0.2
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -89,7 +89,7 @@ class BiLiveNoVIP {
     // 添加相关css
     this._AddCSS()
     this._ChangeCSS()
-    let elmDivAside = <HTMLDivElement>document.querySelector('.right-part.chat-ctnr, .aside-area')
+    let elmDivAside = <HTMLDivElement>document.querySelector('.aside-area')
     if (elmDivAside != null) {
       let asideObserver = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
@@ -237,8 +237,9 @@ class BiLiveNoVIP {
       html += `
 <div>
   <input type="checkbox" id="${x}" class="gunHide" />
-	<label for="${x}"></label>
-  <span>${this._config.menu[x].name}</span>
+  <label for="${x}">
+    <span>${this._config.menu[x].name}</span>
+  </label>
 </div>`
     }
     elmDivMenu.innerHTML = html
@@ -303,7 +304,7 @@ class BiLiveNoVIP {
 #gunBut:after {
   content: '滚';
   font-size: 13px;
-  margin: 2px 2.5px;
+  margin: 2.5px 2.5px;
   float: left;
 }
 #gunBut #gunMenu {
@@ -313,46 +314,68 @@ class BiLiveNoVIP {
   border-radius: 8px;
   box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);
   font-size: 12px;
-  height: 185px;
+  height: 190px;
   left: 0px;
   padding: 10px;
   position: absolute;
   text-align: center;
-  top: -215px;
+  top: -220px;
   transform-origin: 100px bottom 0px;
-  width: 85px;
+  width: 90px;
   z-index: 2;
 }
-#gunBut #gunMenu > div {
-	background: darkgray;
-	border-radius: 5px;
-	height: 10px;
-	margin: 0 0 12px 0;
-	position: relative;
-	width: 20px;
+#gunBut #gunMenu:before {
+  background: #fff;
+  content: "";
+  height: 10px;
+  left: 86px;
+  position: absolute;
+  top: 204px;
+  transform: skew(30deg,30deg);
+  width: 15px;
 }
-#gunBut #gunMenu > div > label {
-	background: #e3ebec;
-	border-radius: 50%;
+#gunBut #gunMenu > div {
+	height: 22px;
+	position: relative;
+}
+#gunBut #gunMenu > div > label:after {
+	background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 3px 0 rgba(105,115,133,.2);
+  content: "";
 	cursor: pointer;
 	display: block;
-	height: 16px;
-	left: -3px;
+	height: 20px;
+	left: -8px;
 	position: absolute;
 	top: -3px;
-	transition: all .5s ease;
-	width: 16px;
+  transition: all .3s;
+  width: 20px;
 }
-#gunBut #gunMenu > div > input[type=checkbox]:checked + label {
-  background: #4fc1e9;
-	left: 7px;
-}
-#gunBut > #gunMenu > div > span {
-  color: #666;
+#gunBut #gunMenu > div > label:before {
+	background: #e3ebec;
+  border-radius: 7px;
+  content: "";
+  cursor: pointer;
+  height: 14px;
   left: 0;
-  margin: -3px 0 0 20px;
   position: absolute;
-  width: 80px;
+  transition: all .3s;
+	width: 26px;
+}
+#gunBut #gunMenu > div > input[type=checkbox]:checked + label:after {
+	left: 14px;
+}
+#gunBut #gunMenu > div > input[type=checkbox]:checked + label:before {
+	background: #23ade5;
+}
+#gunBut > #gunMenu > div > label > span {
+  color: #646c7a;
+  cursor: pointer;
+  left: 40px;
+  position: absolute;
+  top: 1px;
+  user-select: none;
 }
 @keyframes gunMenu {
   0% {

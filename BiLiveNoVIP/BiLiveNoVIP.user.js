@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.1
+// @version     3.0.2
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -77,7 +77,7 @@ var BiLiveNoVIP = (function () {
         var _this = this;
         this._AddCSS();
         this._ChangeCSS();
-        var elmDivAside = document.querySelector('.right-part.chat-ctnr, .aside-area');
+        var elmDivAside = document.querySelector('.aside-area');
         if (elmDivAside != null) {
             var asideObserver_1 = new MutationObserver(function (mutations) {
                 mutations.forEach(function (mutation) {
@@ -148,7 +148,7 @@ var BiLiveNoVIP = (function () {
         elmDivMenu.id = 'gunMenu';
         elmDivMenu.className = 'gunHide';
         for (var x in this._config.menu) {
-            html += "\n<div>\n  <input type=\"checkbox\" id=\"" + x + "\" class=\"gunHide\" />\n\t<label for=\"" + x + "\"></label>\n  <span>" + this._config.menu[x].name + "</span>\n</div>";
+            html += "\n<div>\n  <input type=\"checkbox\" id=\"" + x + "\" class=\"gunHide\" />\n  <label for=\"" + x + "\">\n    <span>" + this._config.menu[x].name + "</span>\n  </label>\n</div>";
         }
         elmDivMenu.innerHTML = html;
         if (elmDivBtns != null) {
@@ -180,7 +180,7 @@ var BiLiveNoVIP = (function () {
         }
     };
     BiLiveNoVIP.prototype._AddCSS = function () {
-        var cssText = "\n.gunHide {\n  display: none;\n}\n#gunBut {\n  border: 1.5px solid #c8c8c8;\n  border-radius: 50%;\n  color: #c8c8c8;\n  cursor: default;\n  display: inline-block;\n  height: 18px;\n  margin: 0 5px;\n  vertical-align: middle;\n  width: 18px;\n}\n#gunBut.gunActive,\n#gunBut:hover {\n  border: 1.5px solid #23ade5;\n  color: #23ade5;\n}\n#gunBut:after {\n  content: '\u6EDA';\n  font-size: 13px;\n  margin: 2px 2.5px;\n  float: left;\n}\n#gunBut #gunMenu {\n  animation: gunMenu .4s;\n  background-color: #fff;\n  border: 1px solid #e9eaec;\n  border-radius: 8px;\n  box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);\n  font-size: 12px;\n  height: 185px;\n  left: 0px;\n  padding: 10px;\n  position: absolute;\n  text-align: center;\n  top: -215px;\n  transform-origin: 100px bottom 0px;\n  width: 85px;\n  z-index: 2;\n}\n#gunBut #gunMenu > div {\n\tbackground: darkgray;\n\tborder-radius: 5px;\n\theight: 10px;\n\tmargin: 0 0 12px 0;\n\tposition: relative;\n\twidth: 20px;\n}\n#gunBut #gunMenu > div > label {\n\tbackground: #e3ebec;\n\tborder-radius: 50%;\n\tcursor: pointer;\n\tdisplay: block;\n\theight: 16px;\n\tleft: -3px;\n\tposition: absolute;\n\ttop: -3px;\n\ttransition: all .5s ease;\n\twidth: 16px;\n}\n#gunBut #gunMenu > div > input[type=checkbox]:checked + label {\n  background: #4fc1e9;\n\tleft: 7px;\n}\n#gunBut > #gunMenu > div > span {\n  color: #666;\n  left: 0;\n  margin: -3px 0 0 20px;\n  position: absolute;\n  width: 80px;\n}\n@keyframes gunMenu {\n  0% {\n    opacity: 0;\n    transform: scale(0);\n  }\n  50% {\n    transform: scale(1.1);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}";
+        var cssText = "\n.gunHide {\n  display: none;\n}\n#gunBut {\n  border: 1.5px solid #c8c8c8;\n  border-radius: 50%;\n  color: #c8c8c8;\n  cursor: default;\n  display: inline-block;\n  height: 18px;\n  margin: 0 5px;\n  vertical-align: middle;\n  width: 18px;\n}\n#gunBut.gunActive,\n#gunBut:hover {\n  border: 1.5px solid #23ade5;\n  color: #23ade5;\n}\n#gunBut:after {\n  content: '\u6EDA';\n  font-size: 13px;\n  margin: 2.5px 2.5px;\n  float: left;\n}\n#gunBut #gunMenu {\n  animation: gunMenu .4s;\n  background-color: #fff;\n  border: 1px solid #e9eaec;\n  border-radius: 8px;\n  box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);\n  font-size: 12px;\n  height: 190px;\n  left: 0px;\n  padding: 10px;\n  position: absolute;\n  text-align: center;\n  top: -220px;\n  transform-origin: 100px bottom 0px;\n  width: 90px;\n  z-index: 2;\n}\n#gunBut #gunMenu:before {\n  background: #fff;\n  content: \"\";\n  height: 10px;\n  left: 86px;\n  position: absolute;\n  top: 204px;\n  transform: skew(30deg,30deg);\n  width: 15px;\n}\n#gunBut #gunMenu > div {\n\theight: 22px;\n\tposition: relative;\n}\n#gunBut #gunMenu > div > label:after {\n\tbackground: #fff;\n  border-radius: 50%;\n  box-shadow: 0 0 3px 0 rgba(105,115,133,.2);\n  content: \"\";\n\tcursor: pointer;\n\tdisplay: block;\n\theight: 20px;\n\tleft: -8px;\n\tposition: absolute;\n\ttop: -3px;\n  transition: all .3s;\n  width: 20px;\n}\n#gunBut #gunMenu > div > label:before {\n\tbackground: #e3ebec;\n  border-radius: 7px;\n  content: \"\";\n  cursor: pointer;\n  height: 14px;\n  left: 0;\n  position: absolute;\n  transition: all .3s;\n\twidth: 26px;\n}\n#gunBut #gunMenu > div > input[type=checkbox]:checked + label:after {\n\tleft: 14px;\n}\n#gunBut #gunMenu > div > input[type=checkbox]:checked + label:before {\n\tbackground: #23ade5;\n}\n#gunBut > #gunMenu > div > label > span {\n  color: #646c7a;\n  cursor: pointer;\n  left: 40px;\n  position: absolute;\n  top: 1px;\n  user-select: none;\n}\n@keyframes gunMenu {\n  0% {\n    opacity: 0;\n    transform: scale(0);\n  }\n  50% {\n    transform: scale(1.1);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}";
         var elmStyle = document.createElement('style');
         elmStyle.innerHTML = cssText;
         document.body.appendChild(elmStyle);
