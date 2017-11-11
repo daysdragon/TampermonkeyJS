@@ -99,3 +99,8 @@ interface XHROptions extends GMXMLHttpRequestOptions {
   cookie?: boolean
   GM_xmlhttpRequest?: boolean
 }
+// XHR返回
+interface response<T> {
+  response: XMLHttpRequest | GMXMLHttpRequestResponse
+  body: T
+}

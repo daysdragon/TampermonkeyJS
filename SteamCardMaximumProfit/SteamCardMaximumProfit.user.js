@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.23
+// @version     0.2.24
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -48,7 +48,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var SteamCardMaximumProfit = (function () {
     function SteamCardMaximumProfit() {
-        this._D = document;
         this._W = unsafeWindow || window;
         this._divItems = [];
         this.quickSells = [];
@@ -57,7 +56,7 @@ var SteamCardMaximumProfit = (function () {
         var _this = this;
         this._AddUI();
         this._DoLoop();
-        var elmDivActiveInventoryPage = this._D.querySelector('#inventories');
+        var elmDivActiveInventoryPage = document.querySelector('#inventories');
         var observer = new MutationObserver(function (rec) {
             if (location.hash.match(/^#753|^$/)) {
                 for (var _i = 0, rec_1 = rec; _i < rec_1.length; _i++) {
@@ -69,7 +68,7 @@ var SteamCardMaximumProfit = (function () {
                             var rgItem = _this._GetRgItem(itemHolders[i]);
                             if (rgItem != null && _this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
                                 _this._divItems.push(rgItem.element);
-                                var elmDiv = _this._D.createElement('div');
+                                var elmDiv = document.createElement('div');
                                 elmDiv.classList.add('scmpItemCheckbox');
                                 rgItem.element.appendChild(elmDiv);
                             }
@@ -87,17 +86,17 @@ var SteamCardMaximumProfit = (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        elmStyle = this._D.createElement('style');
+                        elmStyle = document.createElement('style');
                         elmStyle.innerHTML = "\n.scmpItemSelect {\n  background: yellow;\n}\n.scmpItemRun {\n  background: blue;\n}\n.scmpItemSuccess {\n  background: green;\n}\n.scmpItemError {\n  background: red;\n}\n.scmpItemCheckbox {\n  position: absolute;\n  z-index: 100;\n  top: 0;\n  left: 0;\n  width: 20px;\n  height: 20px;\n  border: 2px solid yellow;\n  opacity: 0.7;\n  cursor: default;\n}\n.scmpItemCheckbox:hover {\n  opacity: 1;\n}\n#scmpExch {\n  width: 3.3em;\n  -moz-appearance: textfield;\n}\n#scmpExch::-webkit-inner-spin-button {\n  -webkit-appearance: none;\n}\n#scmpAddCent {\n  width: 3.9em;\n}";
-                        this._D.body.appendChild(elmStyle);
-                        elmDivInventoryPageRight = this._D.querySelector('.inventory_page_right'), elmDiv = this._D.createElement('div');
+                        document.body.appendChild(elmStyle);
+                        elmDivInventoryPageRight = document.querySelector('.inventory_page_right'), elmDiv = document.createElement('div');
                         elmDiv.innerHTML = "\n<div class=\"scmpQuickSell\">\u5FEB\u901F\u4EE5\u6B64\u4EF7\u683C\u51FA\u552E:\n  <span class=\"btn_green_white_innerfade\" id=\"scmpQuickSellItem\">null</span>\n  <span>\n    \u52A0\u4EF7: $\n    <input class=\"filter_search_box\" id=\"scmpAddCent\" type=\"number\" value=\"0.00\" step=\"0.01\">\n  </span>\n</div>\n<div>\n  \u6C47\u7387:\n  <input class=\"filter_search_box\" id=\"scmpExch\" type=\"number\" value=\"6.50\">\n  <span class=\"btn_green_white_innerfade\" id=\"scmpQuickAllItem\">\u5FEB\u901F\u51FA\u552E</span>\n  \u5269\u4F59:\n  <span id=\"scmpQuickSurplus\">0</span>\n  \u5931\u8D25:\n  <span id=\"scmpQuickError\">0</span>\n</div>";
                         elmDivInventoryPageRight.appendChild(elmDiv);
-                        elmSpanQuickSellItem = elmDiv.querySelector('#scmpQuickSellItem'), elmSpanQuickAllItem = this._D.querySelector('#scmpQuickAllItem');
+                        elmSpanQuickSellItem = elmDiv.querySelector('#scmpQuickSellItem'), elmSpanQuickAllItem = document.querySelector('#scmpQuickAllItem');
                         this._inputAddCent = elmDiv.querySelector('#scmpAddCent');
                         this.spanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
                         this.spanQuickError = elmDiv.querySelector('#scmpQuickError');
-                        this._D.addEventListener('click', function (ev) { return __awaiter(_this, void 0, void 0, function () {
+                        document.addEventListener('click', function (ev) { return __awaiter(_this, void 0, void 0, function () {
                             var evt, rgItem, itemInfo, priceOverview, rgItem, select_1, ChangeClass, start, end, someDivItems, _i, someDivItems_1, y;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
@@ -138,14 +137,14 @@ var SteamCardMaximumProfit = (function () {
                             });
                         }); });
                         elmSpanQuickSellItem.addEventListener('click', function (ev) {
-                            var evt = ev.target, activeInfo = _this._D.querySelector('.activeInfo'), rgItem = _this._GetRgItem(activeInfo), emlDivitemCheck = rgItem.element.querySelector('.scmpItemCheckbox');
+                            var evt = ev.target, activeInfo = document.querySelector('.activeInfo'), rgItem = _this._GetRgItem(activeInfo), emlDivitemCheck = rgItem.element.querySelector('.scmpItemCheckbox');
                             if (!emlDivitemCheck.classList.contains('scmpItemSuccess') && evt.innerText !== 'null') {
                                 var price = _this._W.GetPriceValueAsInt(evt.innerText), itemInfo = new ItemInfo(rgItem, price);
                                 _this._QuickSellItem(itemInfo);
                             }
                         });
                         elmSpanQuickAllItem.addEventListener('click', function () {
-                            var itemInfos = _this._D.querySelectorAll('.scmpItemSelect');
+                            var itemInfos = document.querySelectorAll('.scmpItemSelect');
                             for (var i = 0; i < itemInfos.length; i++) {
                                 var rgItem = _this._GetRgItem(itemInfos[i].parentNode), itemInfo = new ItemInfo(rgItem);
                                 if (rgItem.description.marketable === 1)
@@ -155,7 +154,7 @@ var SteamCardMaximumProfit = (function () {
                         this._inputAddCent.addEventListener('input', function () { return __awaiter(_this, void 0, void 0, function () {
                             var activeInfo;
                             return __generator(this, function (_a) {
-                                activeInfo = this._D.querySelector('.activeInfo > .inventory_item_link');
+                                activeInfo = document.querySelector('.activeInfo > .inventory_item_link');
                                 activeInfo.click();
                                 return [2];
                             });
@@ -169,8 +168,8 @@ var SteamCardMaximumProfit = (function () {
                             }).catch(console.log)];
                     case 1:
                         baiduExch = _a.sent();
-                        if (baiduExch != null)
-                            this._inputUSDCNY.value = baiduExch.data[0].number2;
+                        if (baiduExch != null && baiduExch.response.status === 200)
+                            this._inputUSDCNY.value = baiduExch.body.data[0].number2;
                         return [2];
                 }
             });
@@ -191,8 +190,8 @@ var SteamCardMaximumProfit = (function () {
                             itemInfo.status = 'error';
                             return;
                         };
-                        if (!(priceoverview != null && priceoverview.success && priceoverview.lowest_price !== '')) return [3, 2];
-                        itemInfo.lowestPrice = priceoverview.lowest_price.replace('$', '');
+                        if (!(priceoverview != null && priceoverview.response.status === 200 && priceoverview.body.success && priceoverview.body.lowest_price)) return [3, 2];
+                        itemInfo.lowestPrice = priceoverview.body.lowest_price.replace('$', '');
                         return [2, this._CalculatePrice(itemInfo)];
                     case 2: return [4, tools.XHR({
                             method: 'GET',
@@ -201,9 +200,9 @@ var SteamCardMaximumProfit = (function () {
                         }).catch(console.log)];
                     case 3:
                         marketListings = _a.sent();
-                        if (marketListings == null)
+                        if (marketListings == null || marketListings.response.status !== 200)
                             return [2, stop()];
-                        marketLoadOrderSpread = marketListings.toString().match(/Market_LoadOrderSpread\( (\d+)/);
+                        marketLoadOrderSpread = marketListings.body.toString().match(/Market_LoadOrderSpread\( (\d+)/);
                         if (marketLoadOrderSpread == null)
                             return [2, stop()];
                         return [4, tools.XHR({
@@ -213,10 +212,10 @@ var SteamCardMaximumProfit = (function () {
                             }).catch(console.log)];
                     case 4:
                         itemordershistogram = _a.sent();
-                        if (itemordershistogram == null)
+                        if (itemordershistogram == null || itemordershistogram.response.status !== 200)
                             return [2, stop()];
-                        if (itemordershistogram.success) {
-                            itemInfo.lowestPrice = ' ' + itemordershistogram.sell_order_graph[0][0];
+                        if (itemordershistogram.body.success) {
+                            itemInfo.lowestPrice = ' ' + itemordershistogram.body.sell_order_graph[0][0];
                             return [2, this._CalculatePrice(itemInfo)];
                         }
                         else
@@ -250,7 +249,7 @@ var SteamCardMaximumProfit = (function () {
                             }).catch(console.log)];
                     case 1:
                         sellitem = _a.sent();
-                        if (sellitem == null || !sellitem.success)
+                        if (sellitem == null || sellitem.response.status !== 200 || !sellitem.body.success)
                             itemInfo.status = 'error';
                         else
                             itemInfo.status = 'success';
@@ -354,12 +353,7 @@ var tools = (function () {
                     password: XHROptions.password,
                     responseType: XHROptions.responseType || '',
                     timeout: 3e4,
-                    onload: function (res) {
-                        if (res.status === 200)
-                            resolve(res.response);
-                        else
-                            reject(res);
-                    },
+                    onload: function (res) { return resolve({ response: res, body: res.response }); },
                     onerror: reject,
                     ontimeout: reject
                 });
@@ -375,10 +369,7 @@ var tools = (function () {
                 xhr.timeout = 3e4;
                 xhr.onload = function (ev) {
                     var evt = ev.target;
-                    if (evt.status === 200)
-                        resolve(evt.response);
-                    else
-                        reject(evt);
+                    resolve({ response: evt, body: evt.response });
                 };
                 xhr.onerror = reject;
                 xhr.ontimeout = reject;
