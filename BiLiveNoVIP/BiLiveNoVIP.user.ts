@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.2
+// @version     3.0.3
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -286,26 +286,25 @@ class BiLiveNoVIP {
   display: none;
 }
 #gunBut {
-  border: 1.5px solid #c8c8c8;
+  border: 2px solid #c8c8c8;
   border-radius: 50%;
   color: #c8c8c8;
   cursor: default;
   display: inline-block;
-  height: 18px;
+  height: 17px;
+  line-height: 15px;
   margin: 0 5px;
-  vertical-align: middle;
-  width: 18px;
+  text-align: center;
+  width: 17px;
 }
 #gunBut.gunActive,
 #gunBut:hover {
-  border: 1.5px solid #23ade5;
+  border-color: #23ade5;
   color: #23ade5;
 }
 #gunBut:after {
   content: '滚';
   font-size: 13px;
-  margin: 2.5px 2.5px;
-  float: left;
 }
 #gunBut #gunMenu {
   animation: gunMenu .4s;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.2
+// @version     3.0.3
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -12,8 +12,8 @@
 // @run-at      document-end
 // ==/UserScript==
 "use strict";
-var BiLiveNoVIP = (function () {
-    function BiLiveNoVIP() {
+class BiLiveNoVIP {
+    constructor() {
         this._counter = 0;
         this._defaultConfig = {
             version: 1509943778469,
@@ -56,10 +56,10 @@ var BiLiveNoVIP = (function () {
                 }
             }
         };
-        var config = JSON.parse(GM_getValue('blnvConfig') || '{}');
-        var defaultConfig = this._defaultConfig;
+        let config = JSON.parse(GM_getValue('blnvConfig') || '{}');
+        let defaultConfig = this._defaultConfig;
         if (config.version === undefined || config.version < defaultConfig.version) {
-            for (var x in defaultConfig.menu) {
+            for (let x in defaultConfig.menu) {
                 try {
                     defaultConfig.menu[x].enable = config.menu[x].enable;
                 }
@@ -73,35 +73,34 @@ var BiLiveNoVIP = (function () {
             this._config = config;
         }
     }
-    BiLiveNoVIP.prototype.Start = function () {
-        var _this = this;
+    Start() {
         this._AddCSS();
         this._ChangeCSS();
-        var elmDivAside = document.querySelector('.aside-area');
+        let elmDivAside = document.querySelector('.aside-area');
         if (elmDivAside != null) {
-            var asideObserver_1 = new MutationObserver(function (mutations) {
-                mutations.forEach(function (mutation) {
+            let asideObserver = new MutationObserver(mutations => {
+                mutations.forEach(mutation => {
                     if (mutation.type === 'childList' && mutation.addedNodes != null) {
-                        for (var i = 0; i < mutation.addedNodes.length; i++) {
-                            var elm = mutation.addedNodes[i];
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            let elm = mutation.addedNodes[i];
                             if (elm.nodeName === 'LI' && elm.innerText === '七日榜') {
-                                _this._counter += 1;
+                                this._counter += 1;
                                 elm.click();
                             }
                             if (elm.nodeName === 'DIV' && elm.id === 'chat-control-panel-vm') {
-                                _this._counter += 1;
-                                _this._AddUI();
+                                this._counter += 1;
+                                this._AddUI();
                             }
                         }
                     }
                 });
-                if (_this._counter >= 2)
-                    asideObserver_1.disconnect();
+                if (this._counter >= 2)
+                    asideObserver.disconnect();
             });
-            asideObserver_1.observe(elmDivAside, { childList: true, subtree: true });
+            asideObserver.observe(elmDivAside, { childList: true, subtree: true });
         }
-        var bodyObserver = new MutationObserver(function () {
-            var elmDivRand = document.querySelector('#rank-list-vm'), elmDivChat = document.querySelector('.chat-history-panel');
+        let bodyObserver = new MutationObserver(() => {
+            let elmDivRand = document.querySelector('#rank-list-vm'), elmDivChat = document.querySelector('.chat-history-panel');
             if (document.body.classList.contains('player-full-win')) {
                 elmDivRand.style.cssText = 'display: none';
                 elmDivChat.style.cssText = 'height: calc(100% - 135px)';
@@ -112,51 +111,119 @@ var BiLiveNoVIP = (function () {
             }
         });
         bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-    };
-    BiLiveNoVIP.prototype._ChangeCSS = function () {
-        var elmStyle = document.querySelector('#gunCSS');
+    }
+    _ChangeCSS() {
+        let elmStyle = document.querySelector('#gunCSS');
         if (elmStyle === null) {
             elmStyle = document.createElement('style');
             elmStyle.id = 'gunCSS';
             document.body.appendChild(elmStyle);
         }
-        var cssText = '';
+        let cssText = '';
         if (this._config.menu.noKanBanMusume.enable)
-            cssText += "\n.haruna-sekai-de-ichiban-kawaii {\n  display: none !important;\n}";
+            cssText += `
+.haruna-sekai-de-ichiban-kawaii {
+  display: none !important;
+}`;
         if (this._config.menu.noGuardIcon.enable)
-            cssText += "\n.chat-history-list .guard-buy,\n.chat-history-list .guard-icon,\n.chat-history-list .welcome-guard,\n.chat-history-list .danmaku-item.guard-level-1:after,\n.chat-history-list .danmaku-item.guard-level-2:after,\n.chat-history-list .danmaku-item.guard-level-1:before,\n.chat-history-list .danmaku-item.guard-level-2:before {\n  display: none !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .vip-icon {\n  margin-right: 5px !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .admin-icon,\n.chat-history-list .danmaku-item.guard-danmaku .title-label,\n.chat-history-list .danmaku-item.guard-danmaku .anchor-icon,\n.chat-history-list .danmaku-item.guard-danmaku .user-level-icon,\n.chat-history-list .danmaku-item.guard-danmaku .fans-medal-item-ctnr {\n  margin-right: 5px !important;\n}\n.chat-history-list .danmaku-item.guard-level-1,\n.chat-history-list .danmaku-item.guard-level-2 {\n  padding: 4px 5px !important;\n  margin: 0 !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .user-name {\n  color: #23ade5 !important;\n}\n.chat-history-list .danmaku-item.guard-danmaku .danmaku-content {\n  color: #646c7a !important;\n}";
+            cssText += `
+.chat-history-list .guard-buy,
+.chat-history-list .guard-icon,
+.chat-history-list .welcome-guard,
+.chat-history-list .danmaku-item.guard-level-1:after,
+.chat-history-list .danmaku-item.guard-level-2:after,
+.chat-history-list .danmaku-item.guard-level-1:before,
+.chat-history-list .danmaku-item.guard-level-2:before {
+  display: none !important;
+}
+.chat-history-list .danmaku-item.guard-danmaku .vip-icon {
+  margin-right: 5px !important;
+}
+.chat-history-list .danmaku-item.guard-danmaku .admin-icon,
+.chat-history-list .danmaku-item.guard-danmaku .title-label,
+.chat-history-list .danmaku-item.guard-danmaku .anchor-icon,
+.chat-history-list .danmaku-item.guard-danmaku .user-level-icon,
+.chat-history-list .danmaku-item.guard-danmaku .fans-medal-item-ctnr {
+  margin-right: 5px !important;
+}
+.chat-history-list .danmaku-item.guard-level-1,
+.chat-history-list .danmaku-item.guard-level-2 {
+  padding: 4px 5px !important;
+  margin: 0 !important;
+}
+.chat-history-list .danmaku-item.guard-danmaku .user-name {
+  color: #23ade5 !important;
+}
+.chat-history-list .danmaku-item.guard-danmaku .danmaku-content {
+  color: #646c7a !important;
+}`;
         if (this._config.menu.noHDIcon.enable)
-            cssText += "\n.chat-history-list a[href^=\"/hd/\"],\n#santa-hint-ctnr {\n  display: none !important;\n}";
+            cssText += `
+.chat-history-list a[href^="/hd/"],
+#santa-hint-ctnr {
+  display: none !important;
+}`;
         if (this._config.menu.noVIPIcon.enable)
-            cssText += "\n.chat-history-list .vip-icon,\n.chat-history-list .welcome-msg {\n  display: none !important;\n}";
+            cssText += `
+.chat-history-list .vip-icon,
+.chat-history-list .welcome-msg {
+  display: none !important;
+}`;
         if (this._config.menu.noMedalIcon.enable)
-            cssText += "\n.chat-history-list .fans-medal-item-ctnr {\n  display: none !important;\n}";
+            cssText += `
+.chat-history-list .fans-medal-item-ctnr {
+  display: none !important;
+}`;
         if (this._config.menu.noUserLevelIcon.enable)
-            cssText += "\n.chat-history-list .user-level-icon {\n  display: none !important;\n}";
+            cssText += `
+.chat-history-list .user-level-icon {
+  display: none !important;
+}`;
         if (this._config.menu.noLiveTitleIcon.enable)
-            cssText += "\n.chat-history-list .title-label {\n  display: none !important;\n}";
+            cssText += `
+.chat-history-list .title-label {
+  display: none !important;
+}`;
         if (this._config.menu.noSystemMsg.enable)
-            cssText += "\n.bilibili-live-player-video-gift,\n.chat-history-list .system-msg {\n  display: none !important;\n}";
+            cssText += `
+.bilibili-live-player-video-gift,
+.chat-history-list .system-msg {
+  display: none !important;
+}`;
         if (this._config.menu.noGiftMsg.enable)
-            cssText += "\n.chat-history-list .gift-item,\n.bilibili-live-player-danmaku-gift,\n.chat-history-panel .penury-gift-msg,\n.haruna-sekai-de-ichiban-kawaii .super-gift-bubbles {\n  display: none !important;\n}\n.chat-history-list.with-penury-gift {\n  height: 100% !important;\n}";
+            cssText += `
+.chat-history-list .gift-item,
+.bilibili-live-player-danmaku-gift,
+.chat-history-panel .penury-gift-msg,
+.haruna-sekai-de-ichiban-kawaii .super-gift-bubbles {
+  display: none !important;
+}
+.chat-history-list.with-penury-gift {
+  height: 100% !important;
+}`;
         elmStyle.innerHTML = cssText;
-    };
-    BiLiveNoVIP.prototype._AddUI = function () {
-        var _this = this;
-        var elmDivBtns = document.querySelector('.btns, .icon-left-part'), elmDivGun = document.createElement('div'), elmDivMenu = document.createElement('div'), html = '';
+    }
+    _AddUI() {
+        let elmDivBtns = document.querySelector('.btns, .icon-left-part'), elmDivGun = document.createElement('div'), elmDivMenu = document.createElement('div'), html = '';
         elmDivGun.id = 'gunBut';
         elmDivMenu.id = 'gunMenu';
         elmDivMenu.className = 'gunHide';
-        for (var x in this._config.menu) {
-            html += "\n<div>\n  <input type=\"checkbox\" id=\"" + x + "\" class=\"gunHide\" />\n  <label for=\"" + x + "\">\n    <span>" + this._config.menu[x].name + "</span>\n  </label>\n</div>";
+        for (let x in this._config.menu) {
+            html += `
+<div>
+  <input type="checkbox" id="${x}" class="gunHide" />
+  <label for="${x}">
+    <span>${this._config.menu[x].name}</span>
+  </label>
+</div>`;
         }
         elmDivMenu.innerHTML = html;
         if (elmDivBtns != null) {
             elmDivGun.appendChild(elmDivMenu);
             elmDivBtns.appendChild(elmDivGun);
         }
-        document.body.addEventListener('click', function (ev) {
-            var evt = ev.target;
+        document.body.addEventListener('click', (ev) => {
+            let evt = ev.target;
             if (elmDivGun.contains(evt)) {
                 if (elmDivGun === evt) {
                     elmDivMenu.classList.toggle('gunHide');
@@ -168,24 +235,130 @@ var BiLiveNoVIP = (function () {
                 elmDivGun.classList.remove('gunActive');
             }
         });
-        for (var x in this._config.menu) {
-            var checkbox = document.getElementById(x);
+        for (let x in this._config.menu) {
+            let checkbox = document.getElementById(x);
             checkbox.checked = this._config.menu[x].enable;
-            checkbox.addEventListener('change', function (ev) {
-                var evt = ev.target;
-                _this._config.menu[evt.id].enable = evt.checked;
-                GM_setValue('blnvConfig', JSON.stringify(_this._config));
-                _this._ChangeCSS();
+            checkbox.addEventListener('change', (ev) => {
+                let evt = ev.target;
+                this._config.menu[evt.id].enable = evt.checked;
+                GM_setValue('blnvConfig', JSON.stringify(this._config));
+                this._ChangeCSS();
             });
         }
-    };
-    BiLiveNoVIP.prototype._AddCSS = function () {
-        var cssText = "\n.gunHide {\n  display: none;\n}\n#gunBut {\n  border: 1.5px solid #c8c8c8;\n  border-radius: 50%;\n  color: #c8c8c8;\n  cursor: default;\n  display: inline-block;\n  height: 18px;\n  margin: 0 5px;\n  vertical-align: middle;\n  width: 18px;\n}\n#gunBut.gunActive,\n#gunBut:hover {\n  border: 1.5px solid #23ade5;\n  color: #23ade5;\n}\n#gunBut:after {\n  content: '\u6EDA';\n  font-size: 13px;\n  margin: 2.5px 2.5px;\n  float: left;\n}\n#gunBut #gunMenu {\n  animation: gunMenu .4s;\n  background-color: #fff;\n  border: 1px solid #e9eaec;\n  border-radius: 8px;\n  box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);\n  font-size: 12px;\n  height: 190px;\n  left: 0px;\n  padding: 10px;\n  position: absolute;\n  text-align: center;\n  top: -220px;\n  transform-origin: 100px bottom 0px;\n  width: 90px;\n  z-index: 2;\n}\n#gunBut #gunMenu:before {\n  background: #fff;\n  content: \"\";\n  height: 10px;\n  left: 86px;\n  position: absolute;\n  top: 204px;\n  transform: skew(30deg,30deg);\n  width: 15px;\n}\n#gunBut #gunMenu > div {\n\theight: 22px;\n\tposition: relative;\n}\n#gunBut #gunMenu > div > label:after {\n\tbackground: #fff;\n  border-radius: 50%;\n  box-shadow: 0 0 3px 0 rgba(105,115,133,.2);\n  content: \"\";\n\tcursor: pointer;\n\tdisplay: block;\n\theight: 20px;\n\tleft: -8px;\n\tposition: absolute;\n\ttop: -3px;\n  transition: all .3s;\n  width: 20px;\n}\n#gunBut #gunMenu > div > label:before {\n\tbackground: #e3ebec;\n  border-radius: 7px;\n  content: \"\";\n  cursor: pointer;\n  height: 14px;\n  left: 0;\n  position: absolute;\n  transition: all .3s;\n\twidth: 26px;\n}\n#gunBut #gunMenu > div > input[type=checkbox]:checked + label:after {\n\tleft: 14px;\n}\n#gunBut #gunMenu > div > input[type=checkbox]:checked + label:before {\n\tbackground: #23ade5;\n}\n#gunBut > #gunMenu > div > label > span {\n  color: #646c7a;\n  cursor: pointer;\n  left: 40px;\n  position: absolute;\n  top: 1px;\n  user-select: none;\n}\n@keyframes gunMenu {\n  0% {\n    opacity: 0;\n    transform: scale(0);\n  }\n  50% {\n    transform: scale(1.1);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}";
-        var elmStyle = document.createElement('style');
+    }
+    _AddCSS() {
+        let cssText = `
+.gunHide {
+  display: none;
+}
+#gunBut {
+  border: 2px solid #c8c8c8;
+  border-radius: 50%;
+  color: #c8c8c8;
+  cursor: default;
+  display: inline-block;
+  height: 17px;
+  line-height: 15px;
+  margin: 0 5px;
+  text-align: center;
+  width: 17px;
+}
+#gunBut.gunActive,
+#gunBut:hover {
+  border-color: #23ade5;
+  color: #23ade5;
+}
+#gunBut:after {
+  content: '滚';
+  font-size: 13px;
+}
+#gunBut #gunMenu {
+  animation: gunMenu .4s;
+  background-color: #fff;
+  border: 1px solid #e9eaec;
+  border-radius: 8px;
+  box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);
+  font-size: 12px;
+  height: 190px;
+  left: 0px;
+  padding: 10px;
+  position: absolute;
+  text-align: center;
+  top: -220px;
+  transform-origin: 100px bottom 0px;
+  width: 90px;
+  z-index: 2;
+}
+#gunBut #gunMenu:before {
+  background: #fff;
+  content: "";
+  height: 10px;
+  left: 86px;
+  position: absolute;
+  top: 204px;
+  transform: skew(30deg,30deg);
+  width: 15px;
+}
+#gunBut #gunMenu > div {
+	height: 22px;
+	position: relative;
+}
+#gunBut #gunMenu > div > label:after {
+	background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 3px 0 rgba(105,115,133,.2);
+  content: "";
+	cursor: pointer;
+	display: block;
+	height: 20px;
+	left: -8px;
+	position: absolute;
+	top: -3px;
+  transition: all .3s;
+  width: 20px;
+}
+#gunBut #gunMenu > div > label:before {
+	background: #e3ebec;
+  border-radius: 7px;
+  content: "";
+  cursor: pointer;
+  height: 14px;
+  left: 0;
+  position: absolute;
+  transition: all .3s;
+	width: 26px;
+}
+#gunBut #gunMenu > div > input[type=checkbox]:checked + label:after {
+	left: 14px;
+}
+#gunBut #gunMenu > div > input[type=checkbox]:checked + label:before {
+	background: #23ade5;
+}
+#gunBut > #gunMenu > div > label > span {
+  color: #646c7a;
+  cursor: pointer;
+  left: 40px;
+  position: absolute;
+  top: 1px;
+  user-select: none;
+}
+@keyframes gunMenu {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}`;
+        let elmStyle = document.createElement('style');
         elmStyle.innerHTML = cssText;
         document.body.appendChild(elmStyle);
-    };
-    return BiLiveNoVIP;
-}());
-var gun = new BiLiveNoVIP();
+    }
+}
+const gun = new BiLiveNoVIP();
 gun.Start();
