@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        SteamRedeemKey
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.0.5
+// @version     0.0.6
 // @author      lzghzr
 // @description 划Key激活
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -12,7 +12,6 @@
 // @grant       GM_setValue
 // @run-at      document-end
 // ==/UserScript==
-/// <reference path="SteamRedeemKey.d.ts" />
 /**
  * ASF划Key激活
  * 
@@ -37,7 +36,6 @@ class SteamRedeemKey {
    * @memberof SteamRedeemKey
    */
   private _elmDivSRKButton: HTMLDivElement
-  private _D = document
   private _W = unsafeWindow || window
   /**
    * key列表, 不支持连续激活
@@ -63,13 +61,14 @@ class SteamRedeemKey {
    */
   public Start() {
     if (GM_getValue('server') == null) GM_setValue('server', 'http://127.0.0.1:1242')
+    if (GM_getValue('password') == null) GM_setValue('password', '')
     if (location.href.match(/^https:\/\/steamcn\.com\/.*289320/)) {
-      let elmDivShowhid = <HTMLLinkElement>this._D.querySelector('.showhide > p > a')
+      let elmDivShowhid = <HTMLLinkElement>document.querySelector('.showhide > p > a')
       this._W['test'] = this._Options.bind(this)
       elmDivShowhid.setAttribute('onclick', 'test()')
     }
     this._AddUI()
-    this._D.addEventListener('mouseup', this._ShowUI.bind(this))
+    document.addEventListener('mouseup', this._ShowUI.bind(this))
   }
   /**
    * 显示图标, 由于冒泡机制, 使用setTimeout 0
@@ -95,8 +94,8 @@ class SteamRedeemKey {
             if (redeemKey.indexOf(key) === -1) redeemKey.push(key)
           })
           this._redeemKey = redeemKey.join(',')
-          this._top = this._D.body.scrollTop + event.clientY - 30
-          this._left = this._D.body.scrollLeft + event.clientX
+          this._top = event.pageY - 30
+          this._left = event.pageX
           this._elmDivSRKButton.style.cssText = `
 display: block;
 left: ${this._left}px;
@@ -114,11 +113,11 @@ top: ${this._top}px;`
    */
   private _AddUI() {
     this._AddCSS()
-    this._elmDivSRK = this._D.createElement('div')
-    this._elmDivSRKButton = this._D.createElement('div')
+    this._elmDivSRK = document.createElement('div')
+    this._elmDivSRKButton = document.createElement('div')
     this._elmDivSRKButton.classList.add('SRK_button')
     this._elmDivSRK.appendChild(this._elmDivSRKButton)
-    this._D.body.appendChild(this._elmDivSRK)
+    document.body.appendChild(this._elmDivSRK)
     this._elmDivSRKButton.addEventListener('click', this._ClickButton.bind(this))
   }
   /**
@@ -128,21 +127,20 @@ top: ${this._top}px;`
    * @memberof SteamRedeemKey
    */
   private _ClickButton() {
-    let elmDivRedeem = this._D.createElement('div')
+    let elmDivRedeem = document.createElement('div')
     elmDivRedeem.classList.add('SRK_redeem')
     elmDivRedeem.style.cssText = `
 left: ${this._left}px;
 top: ${this._top}px;`
     this._elmDivSRK.appendChild(elmDivRedeem)
     GM_xmlhttpRequest({
-      method: 'GET',
-      url: `${GM_getValue('server')}/IPC?command=redeem%20${this._redeemKey}`,
+      method: 'POST',
+      url: `${GM_getValue('server')}/Api/Command/redeem%20${this._redeemKey}`,
+      headers: { 'Authentication': GM_getValue('password') },
       onload: (res) => {
         if (res.status === 200) {
-          let elmSpanRedeem = this._D.createElement('span')
+          let elmSpanRedeem = document.createElement('span')
           elmSpanRedeem.innerHTML = res.responseText
-          let resText = elmSpanRedeem.innerText
-          elmSpanRedeem.innerHTML = resText.slice(1).replace(/\n/g, '<br />')
           elmDivRedeem.appendChild(elmSpanRedeem)
           elmDivRedeem.classList.add('SRK_redeem_green')
         }
@@ -156,30 +154,26 @@ top: ${this._top}px;`
    * @memberof SteamRedeemKey
    */
   private _Options() {
-    let elmDivOptions = <HTMLDivElement>this._D.querySelector('.showhide')
-      , elmInputServer = this._D.createElement('input')
-    elmInputServer.type = 'text'
+    let elmDivOptions = <HTMLDivElement>document.querySelector('.showhide')
+      , elmSpanServer = document.createElement('span')
+      , elmInputServer = document.createElement('input')
+      , elmSpanPassword = document.createElement('span')
+      , elmInputPassword = document.createElement('input')
+    elmSpanServer.innerText = '服务器'
     elmInputServer.value = GM_getValue('server')
     elmInputServer.addEventListener('input', () => {
       if (elmInputServer.value === '') elmInputServer.value = 'http://127.0.0.1:1242'
       GM_setValue('server', elmInputServer.value)
     })
-    elmDivOptions.innerText = '服务器地址: '
-    elmDivOptions.appendChild(elmInputServer)
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url: `${GM_getValue('server')}/IPC?command=api`,
-      onload: (res) => {
-        if (res.status === 200) {
-          let Bots = JSON.parse(res.responseText)
-            , bots: string[] = []
-          for (let bot in Bots.Bots) {
-            bots.push(bot)
-          }
-          console.log(bots)
-        }
-      }
+    elmSpanPassword.innerText = '密码'
+    elmInputPassword.value = GM_getValue('password')
+    elmInputPassword.addEventListener('input', () => {
+      GM_setValue('password', elmInputPassword.value)
     })
+    elmDivOptions.appendChild(elmSpanServer)
+    elmDivOptions.appendChild(elmInputServer)
+    elmDivOptions.appendChild(elmSpanPassword)
+    elmDivOptions.appendChild(elmInputPassword)
   }
   /**
    * 插入CSS规则
@@ -224,9 +218,9 @@ top: ${this._top}px;`
 .SRK_redeem:hover > span {
   display: block;
 }`
-    let elmStyle = this._D.createElement('style')
+    let elmStyle = document.createElement('style')
     elmStyle.innerHTML = cssText
-    this._D.body.appendChild(elmStyle)
+    document.body.appendChild(elmStyle)
   }
 }
 const redeem = new SteamRedeemKey()
