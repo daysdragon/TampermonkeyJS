@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.3
+// @version     3.0.4
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -162,6 +162,9 @@ class BiLiveNoVIP {
 .chat-history-list a[href^="/hd/"],
 #santa-hint-ctnr {
   display: none !important;
+}
+.chat-history-list .chat-item.danmaku-item .user-name {
+  color: #23ade5 !important;
 }`;
         if (this._config.menu.noVIPIcon.enable)
             cssText += `
