@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam物品价值
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.1
+// @version     0.0.2
 // @author      lzghzr
 // @description 在市场物品详情中显示价值
 // @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
@@ -22,9 +22,10 @@
             .then(res => res.json());
     }
     function addGoo(gooValue) {
-        const itemCont = document.querySelector('#largeiteminfo_content');
-        const divGoo = document.createElement('div');
-        divGoo.innerHTML = `该物品价值：<span style="color: #5b9ace">${gooValue} 宝珠</span>`;
-        itemCont.appendChild(divGoo);
+        const elmDivItem = document.querySelector('#largeiteminfo_item_descriptors');
+        if (elmDivItem !== null) {
+            elmDivItem.innerHTML += `<div class="descriptor">&nbsp;</div>
+<div class="descriptor">该物品价值：<span style="color: #5b9ace">${gooValue} 个宝石</span></div>`;
+        }
     }
 }
