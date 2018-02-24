@@ -2,6 +2,10 @@
 
 一些自用的脚本，我用着舒服就行，不保证质量
 
+**最近会把脚本向不兼容greasemonkey发展, 请注意**\
+**最近会把脚本向不兼容greasemonkey发展, 请注意**\
+**最近会把脚本向不兼容greasemonkey发展, 请注意**
+
 ## 目录
 
 1. [bilibili直播净化](https://github.com/lzghzr/TampermonkeyJS/raw/master/BiLiveNoVIP/BiLiveNoVIP.user.js) 屏蔽聊天室礼物以及关键字，净化聊天室环境
