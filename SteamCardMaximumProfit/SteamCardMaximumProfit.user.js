@@ -5,12 +5,15 @@
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?:\/\/steamcommunity\.com\/.*\/inventory/
+// @match       http://steamcommunity.com/*/inventory/
+// @match       https://steamcommunity.com/*/inventory/
+// @connect     sp0.baidu.com
 // @license     MIT
+// @grant       GM_addStyle
 // @grant       GM_xmlhttpRequest
 // @run-at      document-end
+// @noframes
 // ==/UserScript==
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -19,365 +22,333 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
+const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
+let gInputUSDCNY;
+let gDivLastChecked;
+let gInputAddCent;
+let gSpanQuickSurplus;
+let gSpanQuickError;
+const gDivItems = [];
+const gQuickSells = [];
+addCSS();
+addUI();
+doLoop();
+const elmDivActiveInventoryPage = document.querySelector('#inventories');
+const observer = new MutationObserver(mutations => {
+    if (!location.hash.match(/^#753|^$/))
+        return;
+    mutations.forEach(mutation => {
+        const rt = mutation.target;
+        if (rt.classList.contains('inventory_page')) {
+            const itemHolders = rt.querySelectorAll('.itemHolder');
+            itemHolders.forEach(itemHolder => {
+                const rgItem = itemHolder.rgItem;
+                if (rgItem !== undefined && !gDivItems.includes(rgItem.element)
+                    && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+                    gDivItems.push(rgItem.element);
+                    const elmDiv = document.createElement('div');
+                    elmDiv.classList.add('scmpItemCheckbox');
+                    rgItem.element.appendChild(elmDiv);
+                }
+            });
+        }
+    });
+});
+observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+function addUI() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const elmDivInventoryPageRight = document.querySelector('.inventory_page_right');
+        const elmDiv = document.createElement('div');
+        elmDiv.innerHTML = `
+<div class="scmpQuickSell">快速以此价格出售:
+  <span class="btn_green_white_innerfade" id="scmpQuickSellItem">null</span>
+  <span>
+    加价: $
+    <input class="filter_search_box" id="scmpAddCent" type="number" value="0.00" step="0.01">
+  </span>
+</div>
+<div>
+  汇率:
+  <input class="filter_search_box" id="scmpExch" type="number" value="6.50">
+  <span class="btn_green_white_innerfade" id="scmpQuickAllItem">快速出售</span>
+  剩余:
+  <span id="scmpQuickSurplus">0</span>
+  失败:
+  <span id="scmpQuickError">0</span>
+</div>`;
+        elmDivInventoryPageRight.appendChild(elmDiv);
+        const elmSpanQuickSellItem = elmDiv.querySelector('#scmpQuickSellItem');
+        const elmSpanQuickAllItem = document.querySelector('#scmpQuickAllItem');
+        gInputAddCent = elmDiv.querySelector('#scmpAddCent');
+        gSpanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
+        gSpanQuickError = elmDiv.querySelector('#scmpQuickError');
+        document.addEventListener('click', (ev) => __awaiter(this, void 0, void 0, function* () {
+            const evt = ev.target;
+            if (evt.className === 'inventory_item_link') {
+                elmSpanQuickSellItem.innerText = 'null';
+                const rgItem = evt.parentNode.rgItem;
+                const itemInfo = new ItemInfo(rgItem);
+                const priceOverview = yield getPriceOverview(itemInfo);
+                if (priceOverview !== 'error')
+                    elmSpanQuickSellItem.innerText = priceOverview.formatPrice;
             }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var SteamCardMaximumProfit = (function () {
-    function SteamCardMaximumProfit() {
-        this._W = unsafeWindow || window;
-        this._divItems = [];
-        this.quickSells = [];
-    }
-    SteamCardMaximumProfit.prototype.Start = function () {
-        var _this = this;
-        this._AddUI();
-        this._DoLoop();
-        var elmDivActiveInventoryPage = document.querySelector('#inventories');
-        var observer = new MutationObserver(function (rec) {
-            if (location.hash.match(/^#753|^$/)) {
-                for (var _i = 0, rec_1 = rec; _i < rec_1.length; _i++) {
-                    var r = rec_1[_i];
-                    var rt = r.target;
-                    if (rt.classList.contains('inventory_page')) {
-                        var itemHolders = rt.querySelectorAll('.itemHolder');
-                        for (var i = 0; i < itemHolders.length; i++) {
-                            var rgItem = _this._GetRgItem(itemHolders[i]);
-                            if (rgItem != null && _this._divItems.indexOf(rgItem.element) === -1 && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
-                                _this._divItems.push(rgItem.element);
-                                var elmDiv = document.createElement('div');
-                                elmDiv.classList.add('scmpItemCheckbox');
-                                rgItem.element.appendChild(elmDiv);
-                            }
-                        }
+            else if (evt.classList.contains('scmpItemCheckbox')) {
+                const rgItem = evt.parentNode.rgItem;
+                const select = evt.classList.contains('scmpItemSelect');
+                const changeClass = (elmDiv) => {
+                    const elmCheckbox = elmDiv.querySelector('.scmpItemCheckbox');
+                    if (elmDiv.parentNode.style.display !== 'none' && !elmCheckbox.classList.contains('scmpItemSuccess')) {
+                        elmCheckbox.classList.remove('scmpItemError');
+                        elmCheckbox.classList.toggle('scmpItemSelect', !select);
                     }
+                };
+                if (gDivLastChecked !== undefined && ev.shiftKey) {
+                    const start = gDivItems.indexOf(gDivLastChecked);
+                    const end = gDivItems.indexOf(rgItem.element);
+                    const someDivItems = gDivItems.slice(Math.min(start, end), Math.max(start, end) + 1);
+                    for (const y of someDivItems)
+                        changeClass(y);
                 }
+                else
+                    changeClass(rgItem.element);
+                gDivLastChecked = rgItem.element;
+            }
+        }));
+        elmSpanQuickSellItem.addEventListener('click', (ev) => {
+            const evt = ev.target;
+            const elmDivActiveInfo = document.querySelector('.activeInfo');
+            const rgItem = elmDivActiveInfo.rgItem;
+            const elmDivitemCheck = rgItem.element.querySelector('.scmpItemCheckbox');
+            if (!elmDivitemCheck.classList.contains('scmpItemSuccess') && evt.innerText !== 'null') {
+                const price = W.GetPriceValueAsInt(evt.innerText);
+                const itemInfo = new ItemInfo(rgItem, price);
+                quickSellItem(itemInfo);
             }
         });
-        observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
-    };
-    SteamCardMaximumProfit.prototype._AddUI = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            var elmStyle, elmDivInventoryPageRight, elmDiv, elmSpanQuickSellItem, elmSpanQuickAllItem, baiduExch;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        elmStyle = document.createElement('style');
-                        elmStyle.innerHTML = "\n.scmpItemSelect {\n  background: yellow;\n}\n.scmpItemRun {\n  background: blue;\n}\n.scmpItemSuccess {\n  background: green;\n}\n.scmpItemError {\n  background: red;\n}\n.scmpItemCheckbox {\n  position: absolute;\n  z-index: 100;\n  top: 0;\n  left: 0;\n  width: 20px;\n  height: 20px;\n  border: 2px solid yellow;\n  opacity: 0.7;\n  cursor: default;\n}\n.scmpItemCheckbox:hover {\n  opacity: 1;\n}\n#scmpExch {\n  width: 3.3em;\n  -moz-appearance: textfield;\n}\n#scmpExch::-webkit-inner-spin-button {\n  -webkit-appearance: none;\n}\n#scmpAddCent {\n  width: 3.9em;\n}";
-                        document.body.appendChild(elmStyle);
-                        elmDivInventoryPageRight = document.querySelector('.inventory_page_right'), elmDiv = document.createElement('div');
-                        elmDiv.innerHTML = "\n<div class=\"scmpQuickSell\">\u5FEB\u901F\u4EE5\u6B64\u4EF7\u683C\u51FA\u552E:\n  <span class=\"btn_green_white_innerfade\" id=\"scmpQuickSellItem\">null</span>\n  <span>\n    \u52A0\u4EF7: $\n    <input class=\"filter_search_box\" id=\"scmpAddCent\" type=\"number\" value=\"0.00\" step=\"0.01\">\n  </span>\n</div>\n<div>\n  \u6C47\u7387:\n  <input class=\"filter_search_box\" id=\"scmpExch\" type=\"number\" value=\"6.50\">\n  <span class=\"btn_green_white_innerfade\" id=\"scmpQuickAllItem\">\u5FEB\u901F\u51FA\u552E</span>\n  \u5269\u4F59:\n  <span id=\"scmpQuickSurplus\">0</span>\n  \u5931\u8D25:\n  <span id=\"scmpQuickError\">0</span>\n</div>";
-                        elmDivInventoryPageRight.appendChild(elmDiv);
-                        elmSpanQuickSellItem = elmDiv.querySelector('#scmpQuickSellItem'), elmSpanQuickAllItem = document.querySelector('#scmpQuickAllItem');
-                        this._inputAddCent = elmDiv.querySelector('#scmpAddCent');
-                        this.spanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
-                        this.spanQuickError = elmDiv.querySelector('#scmpQuickError');
-                        document.addEventListener('click', function (ev) { return __awaiter(_this, void 0, void 0, function () {
-                            var evt, rgItem, itemInfo, priceOverview, rgItem, select_1, ChangeClass, start, end, someDivItems, _i, someDivItems_1, y;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        evt = ev.target;
-                                        if (!(evt.className === 'inventory_item_link')) return [3, 2];
-                                        elmSpanQuickSellItem.innerText = 'null';
-                                        rgItem = this._GetRgItem(evt.parentNode), itemInfo = new ItemInfo(rgItem);
-                                        return [4, this._GetPriceOverview(itemInfo)];
-                                    case 1:
-                                        priceOverview = _a.sent();
-                                        if (priceOverview != null)
-                                            elmSpanQuickSellItem.innerText = priceOverview.formatPrice;
-                                        return [3, 3];
-                                    case 2:
-                                        if (evt.classList.contains('scmpItemCheckbox')) {
-                                            rgItem = this._GetRgItem(evt.parentNode), select_1 = evt.classList.contains('scmpItemSelect'), ChangeClass = function (elmDiv) {
-                                                var elmCheckbox = elmDiv.querySelector('.scmpItemCheckbox');
-                                                if (elmDiv.parentNode.style.display !== 'none' && !elmCheckbox.classList.contains('scmpItemSuccess')) {
-                                                    elmCheckbox.classList.remove('scmpItemError');
-                                                    elmCheckbox.classList.toggle('scmpItemSelect', !select_1);
-                                                }
-                                            };
-                                            if (this._divLastChecked != null && ev.shiftKey) {
-                                                start = this._divItems.indexOf(this._divLastChecked), end = this._divItems.indexOf(rgItem.element), someDivItems = this._divItems.slice(Math.min(start, end), Math.max(start, end) + 1);
-                                                for (_i = 0, someDivItems_1 = someDivItems; _i < someDivItems_1.length; _i++) {
-                                                    y = someDivItems_1[_i];
-                                                    ChangeClass(y);
-                                                }
-                                            }
-                                            else
-                                                ChangeClass(rgItem.element);
-                                            this._divLastChecked = rgItem.element;
-                                        }
-                                        _a.label = 3;
-                                    case 3: return [2];
-                                }
-                            });
-                        }); });
-                        elmSpanQuickSellItem.addEventListener('click', function (ev) {
-                            var evt = ev.target, activeInfo = document.querySelector('.activeInfo'), rgItem = _this._GetRgItem(activeInfo), emlDivitemCheck = rgItem.element.querySelector('.scmpItemCheckbox');
-                            if (!emlDivitemCheck.classList.contains('scmpItemSuccess') && evt.innerText !== 'null') {
-                                var price = _this._W.GetPriceValueAsInt(evt.innerText), itemInfo = new ItemInfo(rgItem, price);
-                                _this._QuickSellItem(itemInfo);
-                            }
-                        });
-                        elmSpanQuickAllItem.addEventListener('click', function () {
-                            var itemInfos = document.querySelectorAll('.scmpItemSelect');
-                            for (var i = 0; i < itemInfos.length; i++) {
-                                var rgItem = _this._GetRgItem(itemInfos[i].parentNode), itemInfo = new ItemInfo(rgItem);
-                                if (rgItem.description.marketable === 1)
-                                    _this.quickSells.push(itemInfo);
-                            }
-                        });
-                        this._inputAddCent.addEventListener('input', function () { return __awaiter(_this, void 0, void 0, function () {
-                            var activeInfo;
-                            return __generator(this, function (_a) {
-                                activeInfo = document.querySelector('.activeInfo > .inventory_item_link');
-                                activeInfo.click();
-                                return [2];
-                            });
-                        }); });
-                        this._inputUSDCNY = elmDiv.querySelector('#scmpExch');
-                        return [4, tools.XHR({
-                                method: 'GET',
-                                url: "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=" + Date.now() + "&ie=utf8&oe=utf8&format=json&tn=baidu",
-                                responseType: 'json',
-                                GM_xmlhttpRequest: true
-                            }).catch(console.log)];
-                    case 1:
-                        baiduExch = _a.sent();
-                        if (baiduExch != null && baiduExch.response.status === 200)
-                            this._inputUSDCNY.value = baiduExch.body.data[0].number2;
-                        return [2];
-                }
+        elmSpanQuickAllItem.addEventListener('click', () => {
+            const elmDivItemInfos = document.querySelectorAll('.scmpItemSelect');
+            elmDivItemInfos.forEach(elmDivItemInfo => {
+                const rgItem = elmDivItemInfo.parentNode.rgItem;
+                const itemInfo = new ItemInfo(rgItem);
+                if (rgItem.description.marketable === 1)
+                    gQuickSells.push(itemInfo);
             });
         });
-    };
-    SteamCardMaximumProfit.prototype._GetPriceOverview = function (itemInfo) {
-        return __awaiter(this, void 0, void 0, function () {
-            var priceoverview, stop, marketListings, marketLoadOrderSpread, itemordershistogram;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4, tools.XHR({
-                            method: 'GET',
-                            url: "/market/priceoverview/?country=US&currency=1&appid=" + itemInfo.rgItem.description.appid + "&market_hash_name=" + encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem.description)),
-                            responseType: 'json'
-                        }).catch(console.log)];
-                    case 1:
-                        priceoverview = _a.sent(), stop = function () {
-                            itemInfo.status = 'error';
-                            return;
-                        };
-                        if (!(priceoverview != null && priceoverview.response.status === 200 && priceoverview.body.success && priceoverview.body.lowest_price)) return [3, 2];
-                        itemInfo.lowestPrice = priceoverview.body.lowest_price.replace('$', '');
-                        return [2, this._CalculatePrice(itemInfo)];
-                    case 2: return [4, tools.XHR({
-                            method: 'GET',
-                            url: "/market/listings/" + itemInfo.rgItem.description.appid + "/" + encodeURIComponent(this._W.GetMarketHashName(itemInfo.rgItem.description)),
-                            responseType: 'text'
-                        }).catch(console.log)];
-                    case 3:
-                        marketListings = _a.sent();
-                        if (marketListings == null || marketListings.response.status !== 200)
-                            return [2, stop()];
-                        marketLoadOrderSpread = marketListings.body.toString().match(/Market_LoadOrderSpread\( (\d+)/);
-                        if (marketLoadOrderSpread == null)
-                            return [2, stop()];
-                        return [4, tools.XHR({
-                                method: 'GET',
-                                url: "/market/itemordershistogram/?country=US&language=english&currency=1&item_nameid=" + marketLoadOrderSpread[1] + "&two_factor=0",
-                                responseType: 'json'
-                            }).catch(console.log)];
-                    case 4:
-                        itemordershistogram = _a.sent();
-                        if (itemordershistogram == null || itemordershistogram.response.status !== 200)
-                            return [2, stop()];
-                        if (itemordershistogram.body.success) {
-                            itemInfo.lowestPrice = ' ' + itemordershistogram.body.sell_order_graph[0][0];
-                            return [2, this._CalculatePrice(itemInfo)];
-                        }
-                        else
-                            return [2, stop()];
-                        _a.label = 5;
-                    case 5: return [2];
-                }
-            });
+        gInputAddCent.addEventListener('input', () => {
+            const activeInfo = document.querySelector('.activeInfo > .inventory_item_link');
+            activeInfo.click();
         });
-    };
-    SteamCardMaximumProfit.prototype._CalculatePrice = function (itemInfo) {
-        var price = this._W.GetPriceValueAsInt(itemInfo.lowestPrice), addCent = parseFloat(this._inputAddCent.value) * 100, exchangeRate = parseFloat(this._inputUSDCNY.value), publisherFee = itemInfo.rgItem.description.market_fee || this._W.g_rgWalletInfo.wallet_publisher_fee_percent_default, feeInfo = this._W.CalculateFeeAmount(price, publisherFee);
-        price = price - feeInfo.fees;
-        itemInfo.price = Math.floor((price + addCent) * exchangeRate);
-        itemInfo.formatPrice = this._W.v_currencyformat(itemInfo.price, this._W.GetCurrencyCode(this._W.g_rgWalletInfo.wallet_currency));
-        return itemInfo;
-    };
-    SteamCardMaximumProfit.prototype._QuickSellItem = function (itemInfo) {
-        return __awaiter(this, void 0, void 0, function () {
-            var sellitem;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        itemInfo.status = 'run';
-                        return [4, tools.XHR({
-                                method: 'POST',
-                                url: 'https://steamcommunity.com/market/sellitem/',
-                                data: "sessionid=" + this._W.g_sessionID + "&appid=" + itemInfo.rgItem.description.appid + "&contextid=" + itemInfo.rgItem.contextid + "&assetid=" + itemInfo.rgItem.assetid + "&amount=1&price=" + itemInfo.price,
-                                responseType: 'json',
-                                cookie: true
-                            }).catch(console.log)];
-                    case 1:
-                        sellitem = _a.sent();
-                        if (sellitem == null || sellitem.response.status !== 200 || !sellitem.body.success)
-                            itemInfo.status = 'error';
-                        else
-                            itemInfo.status = 'success';
-                        return [2];
-                }
-            });
+        gInputUSDCNY = elmDiv.querySelector('#scmpExch');
+        const baiduExch = yield XHR({
+            GM: true,
+            method: 'GET',
+            url: `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=${Date.now()}&ie=utf8&oe=utf8&format=json&tn=baidu`,
+            responseType: 'json',
         });
-    };
-    SteamCardMaximumProfit.prototype._DoLoop = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            var itemInfo, loop, priceOverview;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        itemInfo = this.quickSells.shift(), loop = function () {
-                            setTimeout(function () {
-                                _this._DoLoop();
-                            }, 500);
-                        };
-                        if (!(itemInfo != null)) return [3, 5];
-                        return [4, this._GetPriceOverview(itemInfo)];
-                    case 1:
-                        priceOverview = _a.sent();
-                        if (!(priceOverview != null)) return [3, 3];
-                        return [4, this._QuickSellItem(priceOverview)];
-                    case 2:
-                        _a.sent();
-                        this._DoLoop();
-                        return [3, 4];
-                    case 3:
-                        loop();
-                        _a.label = 4;
-                    case 4: return [3, 6];
-                    case 5:
-                        loop();
-                        _a.label = 6;
-                    case 6: return [2];
-                }
-            });
+        if (baiduExch !== undefined && baiduExch.response.status === 200)
+            gInputUSDCNY.value = baiduExch.body.data[0].number2;
+    });
+}
+function getPriceOverview(itemInfo) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const priceoverview = yield XHR({
+            method: 'GET',
+            url: `/market/priceoverview/?country=US&currency=1&appid=${itemInfo.rgItem.description.appid}\
+&market_hash_name=${encodeURIComponent(W.GetMarketHashName(itemInfo.rgItem.description))}`,
+            responseType: 'json'
         });
-    };
-    SteamCardMaximumProfit.prototype._GetRgItem = function (elmDiv) {
-        return ('wrappedJSObject' in elmDiv) ? elmDiv.wrappedJSObject.rgItem : elmDiv.rgItem;
-    };
-    return SteamCardMaximumProfit;
-}());
-var ItemInfo = (function () {
-    function ItemInfo(rgItem, price) {
+        const stop = () => itemInfo.status = 'error';
+        if (priceoverview !== undefined && priceoverview.response.status === 200
+            && priceoverview.body.success && priceoverview.body.lowest_price) {
+            itemInfo.lowestPrice = priceoverview.body.lowest_price.replace('$', '');
+            return calculatePrice(itemInfo);
+        }
+        else {
+            const marketListings = yield XHR({
+                method: 'GET',
+                url: `/market/listings/${itemInfo.rgItem.description.appid}\
+/${encodeURIComponent(W.GetMarketHashName(itemInfo.rgItem.description))}`
+            });
+            if (marketListings === undefined || marketListings.response.status !== 200)
+                return stop();
+            const marketLoadOrderSpread = marketListings.body.match(/Market_LoadOrderSpread\( (\d+)/);
+            if (marketLoadOrderSpread === null)
+                return stop();
+            const itemordershistogram = yield XHR({
+                method: 'GET',
+                url: `/market/itemordershistogram/?country=US&language=english&currency=1&item_nameid=${marketLoadOrderSpread[1]}&two_factor=0`,
+                responseType: 'json'
+            });
+            if (itemordershistogram === undefined || itemordershistogram.response.status !== 200
+                || !itemordershistogram.body.success)
+                return stop();
+            itemInfo.lowestPrice = ' ' + itemordershistogram.body.sell_order_graph[0][0];
+            return calculatePrice(itemInfo);
+        }
+    });
+}
+function calculatePrice(itemInfo) {
+    let price = W.GetPriceValueAsInt(itemInfo.lowestPrice);
+    const addCent = parseFloat(gInputAddCent.value) * 100;
+    const exchangeRate = parseFloat(gInputUSDCNY.value);
+    const publisherFee = itemInfo.rgItem.description.market_fee || W.g_rgWalletInfo.wallet_publisher_fee_percent_default;
+    const feeInfo = W.CalculateFeeAmount(price, publisherFee);
+    price = price - feeInfo.fees;
+    itemInfo.price = Math.floor((price + addCent) * exchangeRate);
+    itemInfo.formatPrice = W.v_currencyformat(itemInfo.price, W.GetCurrencyCode(W.g_rgWalletInfo.wallet_currency));
+    return itemInfo;
+}
+function quickSellItem(itemInfo) {
+    return __awaiter(this, void 0, void 0, function* () {
+        itemInfo.status = 'run';
+        const sellitem = yield XHR({
+            method: 'POST',
+            url: 'https://steamcommunity.com/market/sellitem/',
+            data: `sessionid=${W.g_sessionID}&appid=${itemInfo.rgItem.description.appid}\
+&contextid=${itemInfo.rgItem.contextid}&assetid=${itemInfo.rgItem.assetid}&amount=1&price=${itemInfo.price}`,
+            responseType: 'json',
+            cookie: true
+        });
+        if (sellitem === undefined || sellitem.response.status !== 200 || !sellitem.body.success)
+            itemInfo.status = 'error';
+        else
+            itemInfo.status = 'success';
+    });
+}
+function doLoop() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const itemInfo = gQuickSells.shift();
+        const loop = () => {
+            setTimeout(() => {
+                doLoop();
+            }, 500);
+        };
+        if (itemInfo !== undefined) {
+            const priceOverview = yield getPriceOverview(itemInfo);
+            if (priceOverview !== 'error') {
+                yield quickSellItem(priceOverview);
+                doLoop();
+            }
+            else
+                loop();
+        }
+        else
+            loop();
+    });
+}
+function addCSS() {
+    GM_addStyle(`
+.scmpItemSelect {
+  background: yellow;
+}
+.scmpItemRun {
+  background: blue;
+}
+.scmpItemSuccess {
+  background: green;
+}
+.scmpItemError {
+  background: red;
+}
+.scmpItemCheckbox {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid yellow;
+  opacity: 0.7;
+  cursor: default;
+}
+.scmpItemCheckbox:hover {
+  opacity: 1;
+}
+#scmpExch {
+  width: 3.3em;
+  -moz-appearance: textfield;
+}
+#scmpExch::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+#scmpAddCent {
+  width: 3.9em;
+}`);
+}
+function XHR(XHROptions) {
+    return new Promise(resolve => {
+        const onerror = (error) => {
+            console.log(error);
+            resolve(undefined);
+        };
+        if (XHROptions.GM) {
+            if (XHROptions.method === 'POST') {
+                if (XHROptions.headers === undefined)
+                    XHROptions.headers = {};
+                XHROptions.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=utf-8';
+            }
+            XHROptions.timeout = 30 * 1000;
+            XHROptions.onload = res => resolve({ response: res, body: res.response });
+            XHROptions.onerror = onerror;
+            XHROptions.ontimeout = onerror;
+            GM_xmlhttpRequest(XHROptions);
+        }
+        else {
+            const xhr = new XMLHttpRequest();
+            xhr.open(XHROptions.method, XHROptions.url);
+            if (XHROptions.method === 'POST')
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8');
+            if (XHROptions.cookie)
+                xhr.withCredentials = true;
+            if (XHROptions.responseType !== undefined)
+                xhr.responseType = XHROptions.responseType;
+            xhr.timeout = 30 * 1000;
+            xhr.onload = ev => {
+                const res = ev.target;
+                resolve({ response: res, body: res.response });
+            };
+            xhr.onerror = onerror;
+            xhr.ontimeout = onerror;
+            xhr.send(XHROptions.data);
+        }
+    });
+}
+class ItemInfo {
+    constructor(rgItem, price) {
+        this._status = '';
         this.rgItem = rgItem;
-        if (price != null)
+        if (price !== undefined)
             this.price = price;
     }
-    Object.defineProperty(ItemInfo.prototype, "status", {
-        get: function () {
-            return this._status || '';
-        },
-        set: function (valve) {
-            this._status = valve;
-            var elmCheckbox = this.rgItem.element.querySelector('.scmpItemCheckbox');
-            if (elmCheckbox == null)
-                return;
-            switch (valve) {
-                case 'run':
-                    elmCheckbox.classList.remove('scmpItemError');
-                    elmCheckbox.classList.remove('scmpItemSelect');
-                    elmCheckbox.classList.add('scmpItemRun');
-                    break;
-                case 'success':
-                    scmp.spanQuickSurplus.innerText = scmp.quickSells.length.toString();
-                    elmCheckbox.classList.remove('scmpItemError');
-                    elmCheckbox.classList.remove('scmpItemRun');
-                    elmCheckbox.classList.add('scmpItemSuccess');
-                    break;
-                case 'error':
-                    scmp.spanQuickSurplus.innerText = scmp.quickSells.length.toString();
-                    scmp.spanQuickError.innerText = (parseInt(scmp.spanQuickError.innerText) + 1).toString();
-                    elmCheckbox.classList.remove('scmpItemRun');
-                    elmCheckbox.classList.add('scmpItemError');
-                    elmCheckbox.classList.add('scmpItemSelect');
-                    break;
-                default:
-                    break;
-            }
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return ItemInfo;
-}());
-var tools = (function () {
-    function tools() {
+    get status() {
+        return this._status;
     }
-    tools.XHR = function (XHROptions) {
-        return new Promise(function (resolve, reject) {
-            if (XHROptions.GM_xmlhttpRequest) {
-                GM_xmlhttpRequest({
-                    method: XHROptions.method,
-                    url: XHROptions.url,
-                    user: XHROptions.user,
-                    password: XHROptions.password,
-                    responseType: XHROptions.responseType || '',
-                    timeout: 3e4,
-                    onload: function (res) { return resolve({ response: res, body: res.response }); },
-                    onerror: reject,
-                    ontimeout: reject
-                });
-            }
-            else {
-                var xhr = new XMLHttpRequest();
-                xhr.open(XHROptions.method, XHROptions.url, true, XHROptions.user, XHROptions.password);
-                if (XHROptions.method === 'POST')
-                    xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded; charset=utf-8');
-                if (XHROptions.cookie)
-                    xhr.withCredentials = true;
-                xhr.responseType = XHROptions.responseType || '';
-                xhr.timeout = 3e4;
-                xhr.onload = function (ev) {
-                    var evt = ev.target;
-                    resolve({ response: evt, body: evt.response });
-                };
-                xhr.onerror = reject;
-                xhr.ontimeout = reject;
-                xhr.send(XHROptions.data);
-            }
-        });
-    };
-    return tools;
-}());
-var scmp = new SteamCardMaximumProfit();
-scmp.Start();
+    set status(valve) {
+        this._status = valve;
+        const elmCheckbox = this.rgItem.element.querySelector('.scmpItemCheckbox');
+        if (elmCheckbox === null)
+            return;
+        switch (valve) {
+            case 'run':
+                elmCheckbox.classList.remove('scmpItemError');
+                elmCheckbox.classList.remove('scmpItemSelect');
+                elmCheckbox.classList.add('scmpItemRun');
+                break;
+            case 'success':
+                gSpanQuickSurplus.innerText = gQuickSells.length.toString();
+                elmCheckbox.classList.remove('scmpItemError');
+                elmCheckbox.classList.remove('scmpItemRun');
+                elmCheckbox.classList.add('scmpItemSuccess');
+                break;
+            case 'error':
+                gSpanQuickSurplus.innerText = gQuickSells.length.toString();
+                gSpanQuickError.innerText = (parseInt(gSpanQuickError.innerText) + 1).toString();
+                elmCheckbox.classList.remove('scmpItemRun');
+                elmCheckbox.classList.add('scmpItemError');
+                elmCheckbox.classList.add('scmpItemSelect');
+                break;
+            default:
+                break;
+        }
+    }
+}
