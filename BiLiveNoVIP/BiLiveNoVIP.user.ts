@@ -5,148 +5,125 @@
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?:\/\/live\.bilibili\.com\/(neptune\/)?\d.*$/
+// @include     /^https?:\/\/live\.bilibili\.com\/\d/
 // @license     MIT
+// @grant       GM_addStyle
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @run-at      document-end
 // ==/UserScript==
 /// <reference path="BiLiveNoVIP.d.ts" />
-/**
- * 屏蔽B站直播间聊天室内容
- * 
- * @class BiLiveNoVIP
- */
-class BiLiveNoVIP {
-  constructor() {
-    // 加载设置
-    let config = <config>JSON.parse(GM_getValue('blnvConfig') || '{}')
-    let defaultConfig = this._defaultConfig
-    if (config.version === undefined || config.version < defaultConfig.version) {
-      for (let x in defaultConfig.menu) {
-        try {
-          defaultConfig.menu[x].enable = config.menu[x].enable
-        }
-        catch (error) {
-          console.error(error)
-        }
-      }
-      this._config = defaultConfig
-    }
-    else {
-      this._config = config
-    }
-  }
-  private _counter = 0
-  private _config: config
-  private _defaultConfig: config = {
-    version: 1509943778469,
-    menu: {
-      noKanBanMusume: {
-        name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
-        enable: false
-      },
-      noGuardIcon: {
-        name: '舰队标识',
-        enable: false
-      },
-      noHDIcon: {
-        name: '活动标识',
-        enable: false
-      },
-      noVIPIcon: {
-        name: '老爷标识',
-        enable: false
-      },
-      noMedalIcon: {
-        name: '粉丝勋章',
-        enable: false
-      },
-      noUserLevelIcon: {
-        name: '用户等级',
-        enable: false
-      },
-      noLiveTitleIcon: {
-        name: '成就头衔',
-        enable: false
-      },
-      noSystemMsg: {
-        name: '系统公告',
-        enable: false
-      },
-      noGiftMsg: {
-        name: '礼物信息',
-        enable: false
-      }
+import { GM_addStyle, GM_getValue, GM_setValue } from '../@types/tm_f'
+
+// 加载设置
+const defaultConfig: config = {
+  version: 1509943778469,
+  menu: {
+    noKanBanMusume: {
+      name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
+      enable: false
+    },
+    noGuardIcon: {
+      name: '舰队标识',
+      enable: false
+    },
+    noHDIcon: {
+      name: '活动标识',
+      enable: false
+    },
+    noVIPIcon: {
+      name: '老爷标识',
+      enable: false
+    },
+    noMedalIcon: {
+      name: '粉丝勋章',
+      enable: false
+    },
+    noUserLevelIcon: {
+      name: '用户等级',
+      enable: false
+    },
+    noLiveTitleIcon: {
+      name: '成就头衔',
+      enable: false
+    },
+    noSystemMsg: {
+      name: '系统公告',
+      enable: false
+    },
+    noGiftMsg: {
+      name: '礼物信息',
+      enable: false
     }
   }
-  /**
-   * 开始
-   * 
-   * @memberof BiLiveNoVIP
-   */
-  public Start() {
-    // 添加相关css
-    this._AddCSS()
-    this._ChangeCSS()
-    let elmDivAside = <HTMLDivElement>document.querySelector('.aside-area')
-    if (elmDivAside != null) {
-      let asideObserver = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-          if (mutation.type === 'childList' && mutation.addedNodes != null) {
-            for (let i = 0; i < mutation.addedNodes.length; i++) {
-              let elm = <HTMLElement>mutation.addedNodes[i]
-              if (elm.nodeName === 'LI' && elm.innerText === '七日榜') {
-                this._counter += 1
-                elm.click()
-              }
-              if (elm.nodeName === 'DIV' && elm.id === 'chat-control-panel-vm') {
-                this._counter += 1
-                this._AddUI()
-              }
-            }
-          }
-        })
-        if (this._counter >= 2) asideObserver.disconnect()
+}
+const userConfig = <config>JSON.parse(GM_getValue('blnvConfig', JSON.stringify(defaultConfig)))
+let config: config
+if (userConfig.version === undefined || userConfig.version < defaultConfig.version) {
+  for (const x in defaultConfig.menu) {
+    try {
+      defaultConfig.menu[x].enable = userConfig.menu[x].enable
+    }
+    catch (error) {
+      console.error(error)
+    }
+  }
+  config = defaultConfig
+}
+else config = userConfig
+// 计数
+let counter = 0
+// css
+const elmStyleCSS = GM_addStyle('')
+// 添加相关css
+AddCSS()
+ChangeCSS()
+// 监听相关DOM
+const elmDivAside = <HTMLDivElement>document.querySelector('.aside-area')
+if (elmDivAside !== null) {
+  const asideObserver = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(addedNode => {
+        if (addedNode.nodeName === 'LI' && (<HTMLElement>addedNode).innerText === '七日榜') {
+          counter++;
+          (<HTMLElement>addedNode).click()
+        }
+        else if (addedNode.nodeName === 'DIV' && (<HTMLElement>addedNode).id === 'chat-control-panel-vm') {
+          counter++
+          AddUI()
+        }
       })
-      asideObserver.observe(elmDivAside, { childList: true, subtree: true })
-    }
-    // 网页全屏
-    let bodyObserver = new MutationObserver(() => {
-      let elmDivRand = <HTMLDivElement>document.querySelector('#rank-list-vm')
-        , elmDivChat = <HTMLDivElement>document.querySelector('.chat-history-panel')
-      if (document.body.classList.contains('player-full-win')) {
-        elmDivRand.style.cssText = 'display: none'
-        elmDivChat.style.cssText = 'height: calc(100% - 135px)'
-      }
-      else {
-        elmDivRand.style.cssText = ''
-        elmDivChat.style.cssText = ''
-      }
     })
-    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+    if (counter >= 2) asideObserver.disconnect()
+  })
+  asideObserver.observe(elmDivAside, { childList: true, subtree: true })
+}
+// 网页全屏
+const bodyObserver = new MutationObserver(() => {
+  const elmDivRand = <HTMLDivElement>document.querySelector('#rank-list-vm')
+  const elmDivChat = <HTMLDivElement>document.querySelector('.chat-history-panel')
+  if (document.body.classList.contains('player-full-win')) {
+    elmDivRand.style.cssText = 'display: none'
+    elmDivChat.style.cssText = 'height: calc(100% - 135px)'
   }
-  /**
-   * 模拟实时屏蔽
-   * 
-   * @private
-   * @memberof BiLiveNoVIP
-   */
-  private _ChangeCSS() {
-    // 获取或者插入style
-    let elmStyle = <HTMLStyleElement>document.querySelector('#gunCSS')
-    if (elmStyle === null) {
-      elmStyle = document.createElement('style')
-      elmStyle.id = 'gunCSS'
-      document.body.appendChild(elmStyle)
-    }
-    //css内容
-    let cssText = ''
-    if (this._config.menu.noKanBanMusume.enable) cssText += `
+  else {
+    elmDivRand.style.cssText = ''
+    elmDivChat.style.cssText = ''
+  }
+})
+bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+/**
+ * 覆盖原有css
+ * 
+ */
+function ChangeCSS() {
+  //css内容
+  let cssText = ''
+  if (config.menu.noKanBanMusume.enable) cssText += `
 .haruna-sekai-de-ichiban-kawaii {
   display: none !important;
 }`
-    if (this._config.menu.noGuardIcon.enable) cssText += `
+  if (config.menu.noGuardIcon.enable) cssText += `
 .chat-history-list .guard-buy,
 .chat-history-list .guard-icon,
 .chat-history-list .welcome-guard,
@@ -177,37 +154,38 @@ class BiLiveNoVIP {
 .chat-history-list .danmaku-item.guard-danmaku .danmaku-content {
   color: #646c7a !important;
 }`
-    if (this._config.menu.noHDIcon.enable) cssText += `
+  if (config.menu.noHDIcon.enable) cssText += `
 .chat-history-list a[href^="/hd/"],
+.monster-wrapper,
 #santa-hint-ctnr {
   display: none !important;
 }
 .chat-history-list .chat-item.danmaku-item .user-name {
   color: #23ade5 !important;
 }`
-    if (this._config.menu.noVIPIcon.enable) cssText += `
+  if (config.menu.noVIPIcon.enable) cssText += `
 .chat-history-list .vip-icon,
 .chat-history-list .welcome-msg {
   display: none !important;
 }`
-    if (this._config.menu.noMedalIcon.enable) cssText += `
+  if (config.menu.noMedalIcon.enable) cssText += `
 .chat-history-list .fans-medal-item-ctnr {
   display: none !important;
 }`
-    if (this._config.menu.noUserLevelIcon.enable) cssText += `
+  if (config.menu.noUserLevelIcon.enable) cssText += `
 .chat-history-list .user-level-icon {
   display: none !important;
 }`
-    if (this._config.menu.noLiveTitleIcon.enable) cssText += `
+  if (config.menu.noLiveTitleIcon.enable) cssText += `
 .chat-history-list .title-label {
   display: none !important;
 }`
-    if (this._config.menu.noSystemMsg.enable) cssText += `
+  if (config.menu.noSystemMsg.enable) cssText += `
 .bilibili-live-player-video-gift,
 .chat-history-list .system-msg {
   display: none !important;
 }`
-    if (this._config.menu.noGiftMsg.enable) cssText += `
+  if (config.menu.noGiftMsg.enable) cssText += `
 .chat-history-list .gift-item,
 .bilibili-live-player-danmaku-gift,
 .chat-history-panel .penury-gift-msg,
@@ -217,74 +195,70 @@ class BiLiveNoVIP {
 .chat-history-list.with-penury-gift {
   height: 100% !important;
 }`
-    elmStyle.innerHTML = cssText
-  }
-  /**
-   * 添加按钮
-   * 
-   * @private
-   * @memberof BiLiveNoVIP
-   */
-  private _AddUI() {
-    // 获取按钮插入的位置
-    let elmDivBtns = document.querySelector('.btns, .icon-left-part')
-      // 传说中的UI, 真的很丑
-      , elmDivGun = document.createElement('div')
-      , elmDivMenu = document.createElement('div')
-      , html = ''
-    elmDivGun.id = 'gunBut'
-    elmDivMenu.id = 'gunMenu'
-    elmDivMenu.className = 'gunHide'
-    // 循环插入内容
-    for (let x in this._config.menu) {
-      html += `
+  elmStyleCSS.innerHTML = cssText
+}
+/**
+ * 添加设置菜单
+ * 
+ */
+function AddUI() {
+  // 获取按钮插入的位置
+  const elmDivBtns = document.querySelector('.btns, .icon-left-part')
+  // 传说中的UI, 真的很丑
+  const elmDivGun = document.createElement('div')
+  const elmDivMenu = document.createElement('div')
+  let html = ''
+  elmDivGun.id = 'gunBut'
+  elmDivMenu.id = 'gunMenu'
+  elmDivMenu.className = 'gunHide'
+  // 循环插入内容
+  for (const x in config.menu) {
+    html += `
 <div>
   <input type="checkbox" id="${x}" class="gunHide" />
   <label for="${x}">
-    <span>${this._config.menu[x].name}</span>
+    <span>${config.menu[x].name}</span>
   </label>
 </div>`
-    }
-    elmDivMenu.innerHTML = html
-    // 插入菜单按钮
-    if (elmDivBtns != null) {
-      elmDivGun.appendChild(elmDivMenu)
-      elmDivBtns.appendChild(elmDivGun)
-    }
-    // 为了和b站更搭, 所以监听body的click
-    document.body.addEventListener('click', (ev) => {
-      let evt = <HTMLElement>ev.target
-      if (elmDivGun.contains(evt)) {
-        if (elmDivGun === evt) {
-          elmDivMenu.classList.toggle('gunHide')
-          elmDivGun.classList.toggle('gunActive')
-        }
-      }
-      else {
-        elmDivMenu.classList.add('gunHide')
-        elmDivGun.classList.remove('gunActive')
-      }
-    })
-    // 循环设置监听插入的DOM
-    for (let x in this._config.menu) {
-      let checkbox = <HTMLInputElement>document.getElementById(x)
-      checkbox.checked = this._config.menu[x].enable
-      checkbox.addEventListener('change', (ev) => {
-        let evt = <HTMLInputElement>ev.target
-        this._config.menu[evt.id].enable = evt.checked
-        GM_setValue('blnvConfig', JSON.stringify(this._config))
-        this._ChangeCSS()
-      })
-    }
   }
-  /**
-   * 添加样式
-   * 
-   * @private
-   * @memberof BiLiveNoVIP
-   */
-  private _AddCSS() {
-    let cssText = `
+  elmDivMenu.innerHTML = html
+  // 插入菜单按钮
+  if (elmDivBtns !== null) {
+    elmDivGun.appendChild(elmDivMenu)
+    elmDivBtns.appendChild(elmDivGun)
+  }
+  // 为了和b站更搭, 所以监听body的click
+  document.body.addEventListener('click', ev => {
+    const evt = <HTMLElement>ev.target
+    if (elmDivGun.contains(evt)) {
+      if (elmDivGun === evt) {
+        elmDivMenu.classList.toggle('gunHide')
+        elmDivGun.classList.toggle('gunActive')
+      }
+    }
+    else {
+      elmDivMenu.classList.add('gunHide')
+      elmDivGun.classList.remove('gunActive')
+    }
+  })
+  // 循环设置监听插入的DOM
+  for (const x in config.menu) {
+    const checkbox = <HTMLInputElement>document.getElementById(x)
+    checkbox.checked = config.menu[x].enable
+    checkbox.addEventListener('change', (ev) => {
+      const evt = <HTMLInputElement>ev.target
+      config.menu[evt.id].enable = evt.checked
+      GM_setValue('blnvConfig', JSON.stringify(config))
+      ChangeCSS()
+    })
+  }
+}
+/**
+ * 添加菜单所需css
+ * 
+ */
+function AddCSS() {
+  GM_addStyle(`
 .gunHide {
   display: none;
 }
@@ -391,12 +365,5 @@ class BiLiveNoVIP {
     opacity: 1;
     transform: scale(1);
   }
-}`
-    // 插入css
-    let elmStyle = document.createElement('style')
-    elmStyle.innerHTML = cssText
-    document.body.appendChild(elmStyle)
-  }
+}`)
 }
-const gun = new BiLiveNoVIP()
-gun.Start()

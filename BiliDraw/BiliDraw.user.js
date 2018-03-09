@@ -10,8 +10,8 @@
 // @grant       none
 // @run-at      document-end
 // ==/UserScript==
-var BiliDraw = (function () {
-    function BiliDraw(apiKey) {
+class BiliDraw {
+    constructor(apiKey) {
         this.color = {
             '0': 'rgb(0, 0, 0)',
             '1': 'rgb(255, 255, 255)',
@@ -48,19 +48,18 @@ var BiliDraw = (function () {
         };
         this.apiKey = apiKey;
     }
-    BiliDraw.prototype.Start = function () {
-        var _this = this;
-        var xhr = new XMLHttpRequest();
+    Start() {
+        let xhr = new XMLHttpRequest();
         xhr.open('GET', '/activity/v1/SummerDraw/status');
-        xhr.onload = function (ev) {
-            var res = JSON.parse(ev.target.responseText);
+        xhr.onload = ev => {
+            let res = JSON.parse(ev.target.responseText);
             if (res.code === 0 && res.data.user_valid) {
                 if (res.data.time === 0)
-                    _this._Connet();
+                    this._Connet();
                 else {
-                    console.log("CD\u4E2D, " + res.data.time + "\u79D2\u540E\u8FDE\u63A5");
-                    setTimeout(function () {
-                        _this._Connet();
+                    console.log(`CD中, ${res.data.time}秒后连接`);
+                    setTimeout(() => {
+                        this._Connet();
                     }, res.data.time * 1000);
                 }
             }
@@ -68,37 +67,34 @@ var BiliDraw = (function () {
                 console.log('无效用户');
         };
         xhr.send();
-    };
-    BiliDraw.prototype._Connet = function () {
+    }
+    _Connet() {
         this.wsc = new WebSocket('wss://bilive.halaal.win/drawapi', this.apiKey);
-        this.wsc.onopen = function () { console.log('连接成功'); };
+        this.wsc.onopen = () => { console.log('连接成功'); };
         this.wsc.onmessage = this._Draw.bind(this);
         this.wsc.onclose = this._Close.bind(this);
-    };
-    BiliDraw.prototype._Draw = function (data) {
-        var _this = this;
-        var dataInfo = JSON.parse(data.data), x = dataInfo.x, y = dataInfo.y, c = dataInfo.c;
-        var xhr = new XMLHttpRequest();
+    }
+    _Draw(data) {
+        let dataInfo = JSON.parse(data.data), x = dataInfo.x, y = dataInfo.y, c = dataInfo.c;
+        let xhr = new XMLHttpRequest();
         xhr.open('POST', '/activity/v1/SummerDraw/draw');
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-        xhr.onload = function (ev) {
-            var res = JSON.parse(ev.target.responseText);
+        xhr.onload = ev => {
+            let res = JSON.parse(ev.target.responseText);
             if (res.code === 0)
-                console.log("\u5750\u6807 x: " + x + ", y: " + y + ", \u989C\u8272 c: %c\u25A0 %c\u586B\u5145\u5B8C\u6BD5", "color:" + _this.color[c] + ";", '');
+                console.log(`坐标 x: ${x}, y: ${y}, 颜色 c: %c■ %c填充完毕`, `color:${this.color[c]};`, '');
             else
-                console.log("\u5750\u6807 x: " + x + ", y: " + y + ", \u989C\u8272 c: %c\u25A0 %c\u586B\u5145\u5931\u8D25", "color:" + _this.color[c] + ";", '');
+                console.log(`坐标 x: ${x}, y: ${y}, 颜色 c: %c■ %c填充失败`, `color:${this.color[c]};`, '');
         };
-        xhr.send("x_min=" + x + "&y_min=" + y + "&x_max=" + x + "&y_max=" + y + "&color=" + c);
-    };
-    BiliDraw.prototype._Close = function () {
-        var _this = this;
-        setTimeout(function () {
-            _this.Start();
+        xhr.send(`x_min=${x}&y_min=${y}&x_max=${x}&y_max=${y}&color=${c}`);
+    }
+    _Close() {
+        setTimeout(() => {
+            this.Start();
         }, 3000);
-    };
-    return BiliDraw;
-}());
-window['Draw'] = function (apiKey) {
-    var biliDraw = new BiliDraw(apiKey);
+    }
+}
+window['Draw'] = (apiKey) => {
+    const biliDraw = new BiliDraw(apiKey);
     biliDraw.Start();
 };

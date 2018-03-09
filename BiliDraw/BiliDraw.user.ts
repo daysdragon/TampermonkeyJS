@@ -10,14 +10,16 @@
 // @grant       none
 // @run-at      document-end
 // ==/UserScript==
+/// <reference path='BiliDraw.d.ts' />
+export { }
 
 class BiliDraw {
   constructor(apiKey: string) {
     this.apiKey = apiKey
   }
   public apiKey: string
-  public wsc: WebSocket
-  public color = {
+  public wsc!: WebSocket
+  public color: colorInfo = {
     '0': 'rgb(0, 0, 0)',
     '1': 'rgb(255, 255, 255)',
     '2': 'rgb(170, 170, 170)',
@@ -75,7 +77,7 @@ class BiliDraw {
     this.wsc.onmessage = this._Draw.bind(this)
     this.wsc.onclose = this._Close.bind(this)
   }
-  private _Draw(data) {
+  private _Draw(data: MessageEvent) {
     let dataInfo = <dataInfo>JSON.parse(data.data)
       , x = dataInfo.x
       , y = dataInfo.y
@@ -99,9 +101,4 @@ class BiliDraw {
 window['Draw'] = (apiKey: string) => {
   const biliDraw = new BiliDraw(apiKey)
   biliDraw.Start()
-}
-interface dataInfo {
-  x: number
-  y: number
-  c: string
 }

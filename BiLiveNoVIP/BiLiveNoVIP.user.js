@@ -5,128 +5,115 @@
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?:\/\/live\.bilibili\.com\/(neptune\/)?\d.*$/
+// @include     /^https?:\/\/live\.bilibili\.com\/\d/
 // @license     MIT
+// @grant       GM_addStyle
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @run-at      document-end
 // ==/UserScript==
-"use strict";
-class BiLiveNoVIP {
-    constructor() {
-        this._counter = 0;
-        this._defaultConfig = {
-            version: 1509943778469,
-            menu: {
-                noKanBanMusume: {
-                    name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
-                    enable: false
-                },
-                noGuardIcon: {
-                    name: '舰队标识',
-                    enable: false
-                },
-                noHDIcon: {
-                    name: '活动标识',
-                    enable: false
-                },
-                noVIPIcon: {
-                    name: '老爷标识',
-                    enable: false
-                },
-                noMedalIcon: {
-                    name: '粉丝勋章',
-                    enable: false
-                },
-                noUserLevelIcon: {
-                    name: '用户等级',
-                    enable: false
-                },
-                noLiveTitleIcon: {
-                    name: '成就头衔',
-                    enable: false
-                },
-                noSystemMsg: {
-                    name: '系统公告',
-                    enable: false
-                },
-                noGiftMsg: {
-                    name: '礼物信息',
-                    enable: false
-                }
-            }
-        };
-        let config = JSON.parse(GM_getValue('blnvConfig') || '{}');
-        let defaultConfig = this._defaultConfig;
-        if (config.version === undefined || config.version < defaultConfig.version) {
-            for (let x in defaultConfig.menu) {
-                try {
-                    defaultConfig.menu[x].enable = config.menu[x].enable;
-                }
-                catch (error) {
-                    console.error(error);
-                }
-            }
-            this._config = defaultConfig;
-        }
-        else {
-            this._config = config;
+const defaultConfig = {
+    version: 1509943778469,
+    menu: {
+        noKanBanMusume: {
+            name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
+            enable: false
+        },
+        noGuardIcon: {
+            name: '舰队标识',
+            enable: false
+        },
+        noHDIcon: {
+            name: '活动标识',
+            enable: false
+        },
+        noVIPIcon: {
+            name: '老爷标识',
+            enable: false
+        },
+        noMedalIcon: {
+            name: '粉丝勋章',
+            enable: false
+        },
+        noUserLevelIcon: {
+            name: '用户等级',
+            enable: false
+        },
+        noLiveTitleIcon: {
+            name: '成就头衔',
+            enable: false
+        },
+        noSystemMsg: {
+            name: '系统公告',
+            enable: false
+        },
+        noGiftMsg: {
+            name: '礼物信息',
+            enable: false
         }
     }
-    Start() {
-        this._AddCSS();
-        this._ChangeCSS();
-        let elmDivAside = document.querySelector('.aside-area');
-        if (elmDivAside != null) {
-            let asideObserver = new MutationObserver(mutations => {
-                mutations.forEach(mutation => {
-                    if (mutation.type === 'childList' && mutation.addedNodes != null) {
-                        for (let i = 0; i < mutation.addedNodes.length; i++) {
-                            let elm = mutation.addedNodes[i];
-                            if (elm.nodeName === 'LI' && elm.innerText === '七日榜') {
-                                this._counter += 1;
-                                elm.click();
-                            }
-                            if (elm.nodeName === 'DIV' && elm.id === 'chat-control-panel-vm') {
-                                this._counter += 1;
-                                this._AddUI();
-                            }
-                        }
-                    }
-                });
-                if (this._counter >= 2)
-                    asideObserver.disconnect();
+};
+const userConfig = JSON.parse(GM_getValue('blnvConfig', JSON.stringify(defaultConfig)));
+let config;
+if (userConfig.version === undefined || userConfig.version < defaultConfig.version) {
+    for (const x in defaultConfig.menu) {
+        try {
+            defaultConfig.menu[x].enable = userConfig.menu[x].enable;
+        }
+        catch (error) {
+            console.error(error);
+        }
+    }
+    config = defaultConfig;
+}
+else
+    config = userConfig;
+let counter = 0;
+const elmStyleCSS = GM_addStyle('');
+AddCSS();
+ChangeCSS();
+const elmDivAside = document.querySelector('.aside-area');
+if (elmDivAside !== null) {
+    const asideObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(addedNode => {
+                if (addedNode.nodeName === 'LI' && addedNode.innerText === '七日榜') {
+                    counter++;
+                    addedNode.click();
+                }
+                else if (addedNode.nodeName === 'DIV' && addedNode.id === 'chat-control-panel-vm') {
+                    counter++;
+                    AddUI();
+                }
             });
-            asideObserver.observe(elmDivAside, { childList: true, subtree: true });
-        }
-        let bodyObserver = new MutationObserver(() => {
-            let elmDivRand = document.querySelector('#rank-list-vm'), elmDivChat = document.querySelector('.chat-history-panel');
-            if (document.body.classList.contains('player-full-win')) {
-                elmDivRand.style.cssText = 'display: none';
-                elmDivChat.style.cssText = 'height: calc(100% - 135px)';
-            }
-            else {
-                elmDivRand.style.cssText = '';
-                elmDivChat.style.cssText = '';
-            }
         });
-        bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        if (counter >= 2)
+            asideObserver.disconnect();
+    });
+    asideObserver.observe(elmDivAside, { childList: true, subtree: true });
+}
+const bodyObserver = new MutationObserver(() => {
+    const elmDivRand = document.querySelector('#rank-list-vm');
+    const elmDivChat = document.querySelector('.chat-history-panel');
+    if (document.body.classList.contains('player-full-win')) {
+        elmDivRand.style.cssText = 'display: none';
+        elmDivChat.style.cssText = 'height: calc(100% - 135px)';
     }
-    _ChangeCSS() {
-        let elmStyle = document.querySelector('#gunCSS');
-        if (elmStyle === null) {
-            elmStyle = document.createElement('style');
-            elmStyle.id = 'gunCSS';
-            document.body.appendChild(elmStyle);
-        }
-        let cssText = '';
-        if (this._config.menu.noKanBanMusume.enable)
-            cssText += `
+    else {
+        elmDivRand.style.cssText = '';
+        elmDivChat.style.cssText = '';
+    }
+});
+bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+function ChangeCSS() {
+    let cssText = '';
+    if (config.menu.noKanBanMusume.enable)
+        cssText += `
 .haruna-sekai-de-ichiban-kawaii {
   display: none !important;
 }`;
-        if (this._config.menu.noGuardIcon.enable)
-            cssText += `
+    if (config.menu.noGuardIcon.enable)
+        cssText += `
 .chat-history-list .guard-buy,
 .chat-history-list .guard-icon,
 .chat-history-list .welcome-guard,
@@ -157,44 +144,45 @@ class BiLiveNoVIP {
 .chat-history-list .danmaku-item.guard-danmaku .danmaku-content {
   color: #646c7a !important;
 }`;
-        if (this._config.menu.noHDIcon.enable)
-            cssText += `
+    if (config.menu.noHDIcon.enable)
+        cssText += `
 .chat-history-list a[href^="/hd/"],
+.monster-wrapper,
 #santa-hint-ctnr {
   display: none !important;
 }
 .chat-history-list .chat-item.danmaku-item .user-name {
   color: #23ade5 !important;
 }`;
-        if (this._config.menu.noVIPIcon.enable)
-            cssText += `
+    if (config.menu.noVIPIcon.enable)
+        cssText += `
 .chat-history-list .vip-icon,
 .chat-history-list .welcome-msg {
   display: none !important;
 }`;
-        if (this._config.menu.noMedalIcon.enable)
-            cssText += `
+    if (config.menu.noMedalIcon.enable)
+        cssText += `
 .chat-history-list .fans-medal-item-ctnr {
   display: none !important;
 }`;
-        if (this._config.menu.noUserLevelIcon.enable)
-            cssText += `
+    if (config.menu.noUserLevelIcon.enable)
+        cssText += `
 .chat-history-list .user-level-icon {
   display: none !important;
 }`;
-        if (this._config.menu.noLiveTitleIcon.enable)
-            cssText += `
+    if (config.menu.noLiveTitleIcon.enable)
+        cssText += `
 .chat-history-list .title-label {
   display: none !important;
 }`;
-        if (this._config.menu.noSystemMsg.enable)
-            cssText += `
+    if (config.menu.noSystemMsg.enable)
+        cssText += `
 .bilibili-live-player-video-gift,
 .chat-history-list .system-msg {
   display: none !important;
 }`;
-        if (this._config.menu.noGiftMsg.enable)
-            cssText += `
+    if (config.menu.noGiftMsg.enable)
+        cssText += `
 .chat-history-list .gift-item,
 .bilibili-live-player-danmaku-gift,
 .chat-history-panel .penury-gift-msg,
@@ -204,53 +192,56 @@ class BiLiveNoVIP {
 .chat-history-list.with-penury-gift {
   height: 100% !important;
 }`;
-        elmStyle.innerHTML = cssText;
-    }
-    _AddUI() {
-        let elmDivBtns = document.querySelector('.btns, .icon-left-part'), elmDivGun = document.createElement('div'), elmDivMenu = document.createElement('div'), html = '';
-        elmDivGun.id = 'gunBut';
-        elmDivMenu.id = 'gunMenu';
-        elmDivMenu.className = 'gunHide';
-        for (let x in this._config.menu) {
-            html += `
+    elmStyleCSS.innerHTML = cssText;
+}
+function AddUI() {
+    const elmDivBtns = document.querySelector('.btns, .icon-left-part');
+    const elmDivGun = document.createElement('div');
+    const elmDivMenu = document.createElement('div');
+    let html = '';
+    elmDivGun.id = 'gunBut';
+    elmDivMenu.id = 'gunMenu';
+    elmDivMenu.className = 'gunHide';
+    for (const x in config.menu) {
+        html += `
 <div>
   <input type="checkbox" id="${x}" class="gunHide" />
   <label for="${x}">
-    <span>${this._config.menu[x].name}</span>
+    <span>${config.menu[x].name}</span>
   </label>
 </div>`;
-        }
-        elmDivMenu.innerHTML = html;
-        if (elmDivBtns != null) {
-            elmDivGun.appendChild(elmDivMenu);
-            elmDivBtns.appendChild(elmDivGun);
-        }
-        document.body.addEventListener('click', (ev) => {
-            let evt = ev.target;
-            if (elmDivGun.contains(evt)) {
-                if (elmDivGun === evt) {
-                    elmDivMenu.classList.toggle('gunHide');
-                    elmDivGun.classList.toggle('gunActive');
-                }
-            }
-            else {
-                elmDivMenu.classList.add('gunHide');
-                elmDivGun.classList.remove('gunActive');
-            }
-        });
-        for (let x in this._config.menu) {
-            let checkbox = document.getElementById(x);
-            checkbox.checked = this._config.menu[x].enable;
-            checkbox.addEventListener('change', (ev) => {
-                let evt = ev.target;
-                this._config.menu[evt.id].enable = evt.checked;
-                GM_setValue('blnvConfig', JSON.stringify(this._config));
-                this._ChangeCSS();
-            });
-        }
     }
-    _AddCSS() {
-        let cssText = `
+    elmDivMenu.innerHTML = html;
+    if (elmDivBtns !== null) {
+        elmDivGun.appendChild(elmDivMenu);
+        elmDivBtns.appendChild(elmDivGun);
+    }
+    document.body.addEventListener('click', ev => {
+        const evt = ev.target;
+        if (elmDivGun.contains(evt)) {
+            if (elmDivGun === evt) {
+                elmDivMenu.classList.toggle('gunHide');
+                elmDivGun.classList.toggle('gunActive');
+            }
+        }
+        else {
+            elmDivMenu.classList.add('gunHide');
+            elmDivGun.classList.remove('gunActive');
+        }
+    });
+    for (const x in config.menu) {
+        const checkbox = document.getElementById(x);
+        checkbox.checked = config.menu[x].enable;
+        checkbox.addEventListener('change', (ev) => {
+            const evt = ev.target;
+            config.menu[evt.id].enable = evt.checked;
+            GM_setValue('blnvConfig', JSON.stringify(config));
+            ChangeCSS();
+        });
+    }
+}
+function AddCSS() {
+    GM_addStyle(`
 .gunHide {
   display: none;
 }
@@ -357,11 +348,5 @@ class BiLiveNoVIP {
     opacity: 1;
     transform: scale(1);
   }
-}`;
-        let elmStyle = document.createElement('style');
-        elmStyle.innerHTML = cssText;
-        document.body.appendChild(elmStyle);
-    }
+}`);
 }
-const gun = new BiLiveNoVIP();
-gun.Start();
