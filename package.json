@@ -4,7 +4,9 @@
   "description": "一些自用的脚本，我用着舒服就行，不保证质量",
   "main": "index.js",
   "scripts": {
-    "build": "tsc --locale zh-cn -p tsconfig.json || exit 0"
+    "build": "npm run build:tsc && npm run fmt",
+    "build:tsc": "tsc --locale zh-cn -p tsconfig.json || exit 0",
+    "fmt": "node fmt.js"
   },
   "author": "lzghzr",
   "license": "MIT",
