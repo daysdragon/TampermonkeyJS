@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.4
+// @version     3.0.5
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -13,7 +13,7 @@
 // @run-at      document-end
 // ==/UserScript==
 const defaultConfig = {
-    version: 1509943778469,
+    version: 1528362160578,
     menu: {
         noKanBanMusume: {
             name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
@@ -94,13 +94,19 @@ if (elmDivAside !== null) {
 }
 const bodyObserver = new MutationObserver(() => {
     const elmDivRand = document.querySelector('#rank-list-vm');
+    const elmDivGift = document.querySelector('#gift-control-vm');
+    const elmDivPlayer = document.querySelector('.player-section');
     const elmDivChat = document.querySelector('.chat-history-panel');
     if (document.body.classList.contains('player-full-win')) {
-        elmDivRand.style.cssText = 'display: none';
-        elmDivChat.style.cssText = 'height: calc(100% - 135px)';
+        elmDivRand.style.cssText = 'display: none !important';
+        elmDivGift.style.cssText = 'display: none !important';
+        elmDivPlayer.style.cssText = 'height: 100% !important';
+        elmDivChat.style.cssText = 'height: calc(100% - 135px) !important';
     }
     else {
         elmDivRand.style.cssText = '';
+        elmDivGift.style.cssText = '';
+        elmDivPlayer.style.cssText = '';
         elmDivChat.style.cssText = '';
     }
 });
