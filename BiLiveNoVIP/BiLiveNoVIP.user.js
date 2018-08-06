@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.5
+// @version     3.0.6
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -68,7 +68,6 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 }
 else
     config = userConfig;
-let counter = 0;
 const elmStyleCSS = GM_addStyle('');
 AddCSS();
 ChangeCSS();
@@ -77,18 +76,13 @@ if (elmDivAside !== null) {
     const asideObserver = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
             mutation.addedNodes.forEach(addedNode => {
-                if (addedNode.nodeName === 'LI' && addedNode.innerText === '七日榜') {
-                    counter++;
+                if (addedNode instanceof HTMLLIElement && addedNode.innerText === '七日榜') {
                     addedNode.click();
-                }
-                else if (addedNode.nodeName === 'DIV' && addedNode.id === 'chat-control-panel-vm') {
-                    counter++;
                     AddUI();
+                    asideObserver.disconnect();
                 }
             });
         });
-        if (counter >= 2)
-            asideObserver.disconnect();
     });
     asideObserver.observe(elmDivAside, { childList: true, subtree: true });
 }
@@ -183,6 +177,7 @@ function ChangeCSS() {
 }`;
     if (config.menu.noSystemMsg.enable)
         cssText += `
+#pk-vm+div,
 .bilibili-live-player-video-gift,
 .chat-history-list .system-msg {
   display: none !important;
@@ -201,7 +196,7 @@ function ChangeCSS() {
     elmStyleCSS.innerHTML = cssText;
 }
 function AddUI() {
-    const elmDivBtns = document.querySelector('.btns, .icon-left-part');
+    const elmDivBtns = document.querySelector('.icon-left-part');
     const elmDivGun = document.createElement('div');
     const elmDivMenu = document.createElement('div');
     let html = '';
@@ -218,10 +213,9 @@ function AddUI() {
 </div>`;
     }
     elmDivMenu.innerHTML = html;
-    if (elmDivBtns !== null) {
-        elmDivGun.appendChild(elmDivMenu);
+    elmDivGun.appendChild(elmDivMenu);
+    if (elmDivBtns !== null)
         elmDivBtns.appendChild(elmDivGun);
-    }
     document.body.addEventListener('click', ev => {
         const evt = ev.target;
         if (elmDivGun.contains(evt)) {

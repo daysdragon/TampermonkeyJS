@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.5
+// @version     3.0.6
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -71,8 +71,6 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
   config = defaultConfig
 }
 else config = userConfig
-// 计数
-let counter = 0
 // css
 const elmStyleCSS = GM_addStyle('')
 // 添加相关css
@@ -84,17 +82,13 @@ if (elmDivAside !== null) {
   const asideObserver = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(addedNode => {
-        if (addedNode.nodeName === 'LI' && (<HTMLElement>addedNode).innerText === '七日榜') {
-          counter++;
-          (<HTMLElement>addedNode).click()
-        }
-        else if (addedNode.nodeName === 'DIV' && (<HTMLElement>addedNode).id === 'chat-control-panel-vm') {
-          counter++
+        if (addedNode instanceof HTMLLIElement && addedNode.innerText === '七日榜') {
+          addedNode.click()
           AddUI()
+          asideObserver.disconnect()
         }
       })
     })
-    if (counter >= 2) asideObserver.disconnect()
   })
   asideObserver.observe(elmDivAside, { childList: true, subtree: true })
 }
@@ -187,6 +181,7 @@ function ChangeCSS() {
   display: none !important;
 }`
   if (config.menu.noSystemMsg.enable) cssText += `
+#pk-vm+div,
 .bilibili-live-player-video-gift,
 .chat-history-list .system-msg {
   display: none !important;
@@ -204,12 +199,11 @@ function ChangeCSS() {
   elmStyleCSS.innerHTML = cssText
 }
 /**
- * 添加设置菜单
- * 
+ *添加设置菜单
+ *
  */
 function AddUI() {
-  // 获取按钮插入的位置
-  const elmDivBtns = document.querySelector('.btns, .icon-left-part')
+  const elmDivBtns = document.querySelector('.icon-left-part');
   // 传说中的UI, 真的很丑
   const elmDivGun = document.createElement('div')
   const elmDivMenu = document.createElement('div')
@@ -229,10 +223,8 @@ function AddUI() {
   }
   elmDivMenu.innerHTML = html
   // 插入菜单按钮
-  if (elmDivBtns !== null) {
-    elmDivGun.appendChild(elmDivMenu)
-    elmDivBtns.appendChild(elmDivGun)
-  }
+  elmDivGun.appendChild(elmDivMenu)
+  if (elmDivBtns !== null) elmDivBtns.appendChild(elmDivGun)
   // 为了和b站更搭, 所以监听body的click
   document.body.addEventListener('click', ev => {
     const evt = <HTMLElement>ev.target
