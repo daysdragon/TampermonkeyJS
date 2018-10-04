@@ -1,11 +1,12 @@
 // ==UserScript==
-// @name         替换文本
-// @namespace    https://github.com/lzghzr/TampermonkeyJS
-// @version      0.0.1
-// @author       lzghzr
-// @description  替换网页内文本, 达到本地化的目的
-// @grant        none
-// @run-at       document-end
+// @name        libReplaceText
+// @namespace   https://github.com/lzghzr/TampermonkeyJS
+// @version     0.0.1
+// @author      lzghzr
+// @description 替换网页内文本, 达到本地化的目的
+// @license     MIT
+// @grant       none
+// @run-at      document-end
 // ==/UserScript==
 const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
 class ReplaceText {
