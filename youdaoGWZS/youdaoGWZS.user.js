@@ -52,6 +52,7 @@ if (GM_getValue('matched') !== undefined && GM_getValue('src') !== undefined) {
         daogw_s.type = 'application/javascript';
         daogw_s.id = 'youdao_gouwu_assistant';
         daogw_s.src = GM_getValue('src');
-        document.head.appendChild(daogw_s);
+        if (document.head !== null)
+            document.head.appendChild(daogw_s);
     }
 }
