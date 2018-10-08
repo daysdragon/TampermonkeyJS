@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name        libReplaceText
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.2
+// @version     0.0.3
 // @author      lzghzr
 // @description 替换网页内文本, 达到本地化的目的
 // @license     MIT
 // @grant       none
-// @run-at      document-end
+// @run-at      document-start
 // ==/UserScript==
 const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
+const MO = MutationObserver;
 class ReplaceText {
     constructor(i18n, mode = 'equal') {
         this.alert = W.alert.bind(W);
@@ -50,16 +51,18 @@ class ReplaceText {
                 return message;
             };
         }
-        const bodyObserver = new MutationObserver(mutations => {
+        this.replaceAlert();
+        const bodyObserver = new MO(mutations => {
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(addedNode => {
                     this.replaceNode(addedNode);
                 });
             });
         });
-        bodyObserver.observe(document.body, { childList: true, subtree: true });
-        this.replaceAlert();
-        this.replaceNode(document.body);
+        W.addEventListener('load', () => {
+            bodyObserver.observe(document.body, { childList: true, subtree: true });
+            this.replaceNode(document.body);
+        });
     }
     replaceAlert() {
         W.alert = (message) => this.alert(this.textReplace(message));
