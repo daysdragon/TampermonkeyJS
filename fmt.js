@@ -42,7 +42,7 @@ fs.readdir('./', (error, files) => {
               crlfDelay: Infinity
             })
             jsRL.on('line', line => {
-              if (!line.startsWith('import')) script.push(line)
+              if (!line.startsWith('import') && !line.startsWith('export')) script.push(line)
             })
             jsRL.on('close', () => {
               ok++

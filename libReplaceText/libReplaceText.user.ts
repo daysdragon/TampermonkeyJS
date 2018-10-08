@@ -8,10 +8,8 @@
 // @grant       none
 // @run-at      document-end
 // ==/UserScript==
-export { }
 
 const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
-// @ts-ignore
 class ReplaceText {
   /**
    * Creates an instance of ReplaceText.
@@ -136,3 +134,5 @@ class ReplaceText {
     return list
   }
 }
+
+export default ReplaceText 
