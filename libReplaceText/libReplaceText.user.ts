@@ -10,7 +10,6 @@
 // ==/UserScript==
 
 const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
-const MO = MutationObserver
 class ReplaceText {
   /**
    * Creates an instance of ReplaceText.
@@ -61,7 +60,7 @@ class ReplaceText {
     }
     this.replaceAlert()
     // 出于功能不需要太高实时性, 使用 MutationObserver 而不是 MutationEvents
-    const bodyObserver = new MO(mutations => {
+    const bodyObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
         mutation.addedNodes.forEach(addedNode => {
           this.replaceNode(addedNode)

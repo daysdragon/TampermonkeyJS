@@ -9,7 +9,6 @@
 // @run-at      document-start
 // ==/UserScript==
 const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
-const MO = MutationObserver;
 class ReplaceText {
     constructor(i18n, mode = 'equal') {
         this.alert = W.alert.bind(W);
@@ -52,7 +51,7 @@ class ReplaceText {
             };
         }
         this.replaceAlert();
-        const bodyObserver = new MO(mutations => {
+        const bodyObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(addedNode => {
                     this.replaceNode(addedNode);
