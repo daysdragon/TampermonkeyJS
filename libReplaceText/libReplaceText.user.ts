@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        libReplaceText
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.4
+// @version     0.0.5
 // @author      lzghzr
 // @description 替换网页内文本, 达到本地化的目的
 // @license     MIT
@@ -45,31 +45,16 @@ class ReplaceText {
       }
     }
     else {
-      this.textReplace = (message: string) => {
+      this.textReplace = (text: string) => {
         // @ts-ignore Map.has is true
-        if (i18nMap.has(message)) message = i18nMap.get(message)
-        return message
+        if (i18nMap.has(text)) text = i18nMap.get(text)
+        return text
       }
     }
     this.replaceAlert()
-    // 出于功能不需要太高实时性, 使用 MutationObserver 而不是 MutationEvents
-    const bodyObserver = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(addedNode => {
-          this.replaceNode(addedNode)
-        })
-      })
-    })
-    // 使用 document.onreadystatechange 可以更早的替换 body
-    let load = false
-    document.addEventListener('readystatechange', () => {
-      if (!load) {
-        load = true
-        bodyObserver.observe(document.body, { childList: true, subtree: true })
-        this.replaceNode(document.body)
-      }
-    }, { capture: true })
+    this.replaceObserver()
   }
+  public done: Set<string> = new Set()
   /**
    * window.alert
    *
@@ -107,12 +92,67 @@ class ReplaceText {
    */
   public replaceNode(node: Node) {
     this.nodeForEach(node).forEach(textNode => {
-      if (textNode instanceof Text) textNode.data = this.textReplace(textNode.data)
+      if (textNode instanceof Text) {
+        const newText = this.textReplace(textNode.data)
+        if (textNode.data !== newText) {
+          this.done.add(newText)
+          textNode.data = newText
+        }
+      }
       else if (textNode instanceof HTMLInputElement) {
-        if (textNode.type === 'button') textNode.value = this.textReplace(textNode.value)
-        else if (textNode.type === 'text' || textNode.type === 'search') textNode.placeholder = this.textReplace(textNode.placeholder)
+        if (textNode.type === 'button') {
+          const newText = this.textReplace(textNode.value)
+          if (textNode.value !== newText) {
+            this.done.add(newText)
+            textNode.value = newText
+          }
+        }
+        else if (textNode.type === 'text' || textNode.type === 'search') {
+          const newText = this.textReplace(textNode.placeholder)
+          if (textNode.placeholder !== newText) {
+            this.done.add(newText)
+            textNode.placeholder = newText
+          }
+        }
       }
     })
+  }
+  /**
+   * 替换动态内容
+   *
+   * @memberof ReplaceText
+   */
+  public replaceObserver() {
+    // 出于功能不需要太高实时性, 使用 MutationObserver 而不是 MutationEvents
+    const bodyObserver = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        if (mutation.type === 'attributes') {
+          const t = mutation.target
+          if (t instanceof HTMLInputElement) {
+            if (t.type === 'button' && !this.done.has(t.value)) this.replaceNode(t)
+            else if (t.type === 'text' || t.type === 'search' && !this.done.has(t.placeholder)) this.replaceNode(t)
+          }
+        }
+        else if (mutation.type === 'characterData') {
+          const t = mutation.target
+          if (t instanceof Text && !this.done.has(t.data)) this.replaceNode(t)
+        }
+        else if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach(addedNode => {
+            this.replaceNode(addedNode)
+          })
+        }
+      })
+    })
+    // 使用 document.onreadystatechange 可以更早的替换 body
+    let load = false
+    document.addEventListener('readystatechange', () => {
+      if (!load) {
+        load = true
+        bodyObserver.observe(document.body, { attributes: true, characterData: true, childList: true, subtree: true })
+        this.replaceNode(document.body)
+      }
+    }, { capture: true })
   }
   /**
    * 深度遍历节点, 返回文本节点
