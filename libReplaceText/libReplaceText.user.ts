@@ -93,7 +93,7 @@ class ReplaceText {
   public replaceNode(node: Node) {
     this.nodeForEach(node).forEach(textNode => {
       // 排除特殊标签
-      if (textNode.parentNode instanceof HTMLScriptElement || textNode.parentNode instanceof HTMLStyleElement) return
+      if (textNode.parentElement instanceof HTMLScriptElement || textNode.parentElement instanceof HTMLStyleElement) return
       if (textNode instanceof Text) {
         const newText = this.textReplace(textNode.data)
         if (textNode.data !== newText) {

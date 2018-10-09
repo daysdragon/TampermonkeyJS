@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.6
+// @version     3.0.7
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -79,13 +79,15 @@ ChangeCSS()
 // 监听相关DOM
 const elmDivAside = <HTMLDivElement>document.querySelector('.aside-area')
 if (elmDivAside !== null) {
+  let done = false
   const asideObserver = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(addedNode => {
-        if (addedNode instanceof HTMLLIElement && addedNode.innerText === '七日榜') {
-          addedNode.click()
-          AddUI()
+        if (!done && addedNode instanceof HTMLLIElement && addedNode.parentElement !== null && addedNode.parentElement.className === 'tab-list') {
           asideObserver.disconnect()
+          done = true;
+          (<HTMLLIElement>addedNode.parentElement.firstElementChild).click()
+          AddUI()
         }
       })
     })

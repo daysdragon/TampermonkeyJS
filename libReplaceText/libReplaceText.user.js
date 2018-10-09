@@ -54,7 +54,7 @@ class ReplaceText {
     }
     replaceNode(node) {
         this.nodeForEach(node).forEach(textNode => {
-            if (textNode.parentNode instanceof HTMLScriptElement || textNode.parentNode instanceof HTMLStyleElement)
+            if (textNode.parentElement instanceof HTMLScriptElement || textNode.parentElement instanceof HTMLStyleElement)
                 return;
             if (textNode instanceof Text) {
                 const newText = this.textReplace(textNode.data);
