@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        libReplaceText
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.3
+// @version     0.0.4
 // @author      lzghzr
 // @description 替换网页内文本, 达到本地化的目的
 // @license     MIT
@@ -14,39 +14,32 @@ class ReplaceText {
         this.alert = W.alert.bind(W);
         this.confirm = W.confirm.bind(W);
         this.prompt = W.prompt.bind(W);
-        this.i18n = new Map(i18n);
+        const i18nMap = new Map(i18n);
+        const i18nArr = i18n.map(value => value[0]);
         if (mode === 'regexp') {
             this.textReplace = (text) => {
-                if (this.i18n.has(text))
-                    text = this.i18n.get(text);
+                if (i18nMap.has(text))
+                    text = i18nMap.get(text);
                 else {
-                    let done = false;
-                    this.i18n.forEach((value, key) => {
-                        if (!done && key instanceof RegExp && text.match(key) !== null) {
-                            done = true;
-                            text = text.replace(key, value);
-                        }
-                    });
+                    const key = i18nArr.find(key => (key instanceof RegExp && text.match(key) !== null));
+                    if (key !== undefined)
+                        text = text.replace(key, i18nMap.get(key));
                 }
                 return text;
             };
         }
         else if (mode === 'match') {
             this.textReplace = (text) => {
-                let done = false;
-                this.i18n.forEach((value, key) => {
-                    if (!done && text.match(key) !== null) {
-                        done = true;
-                        text = text.replace(key, value);
-                    }
-                });
+                const key = i18nArr.find(key => (text.match(key) !== null));
+                if (key !== undefined)
+                    text = text.replace(key, i18nMap.get(key));
                 return text;
             };
         }
         else {
             this.textReplace = (message) => {
-                if (this.i18n.has(message))
-                    message = this.i18n.get(message);
+                if (i18nMap.has(message))
+                    message = i18nMap.get(message);
                 return message;
             };
         }
@@ -58,10 +51,14 @@ class ReplaceText {
                 });
             });
         });
-        W.addEventListener('load', () => {
-            bodyObserver.observe(document.body, { childList: true, subtree: true });
-            this.replaceNode(document.body);
-        });
+        let load = false;
+        document.addEventListener('readystatechange', () => {
+            if (!load) {
+                load = true;
+                bodyObserver.observe(document.body, { childList: true, subtree: true });
+                this.replaceNode(document.body);
+            }
+        }, { capture: true });
     }
     replaceAlert() {
         W.alert = (message) => this.alert(this.textReplace(message));
@@ -75,7 +72,7 @@ class ReplaceText {
             else if (textNode instanceof HTMLInputElement) {
                 if (textNode.type === 'button')
                     textNode.value = this.textReplace(textNode.value);
-                else if (textNode.type === 'text')
+                else if (textNode.type === 'text' || textNode.type === 'search')
                     textNode.placeholder = this.textReplace(textNode.placeholder);
             }
         });
