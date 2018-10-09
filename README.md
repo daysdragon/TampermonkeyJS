@@ -15,4 +15,4 @@
 4. [Bilibili直播绘板](https://github.com/lzghzr/TampermonkeyJS/raw/master/BiliDraw/BiliDraw.user.js) 画画真的太有趣了
 5. [度盘小工具](https://github.com/lzghzr/TampermonkeyJS/raw/master/FuckBaiduPan/FuckBaiduPan.user.js) 直接下载与自定义密码
 6. [steam物品价值](https://github.com/lzghzr/TampermonkeyJS/raw/master/SteamItemGoo/SteamItemGoo.user.js) 在市场物品详情中显示价值
-7. [I am groot!](https://github.com/lzghzr/TampermonkeyJS/raw/master/iamgroot/iamgroot.user.js) I am groot!
+7. [I am Groot!](https://github.com/lzghzr/TampermonkeyJS/raw/master/iamgroot/iamgroot.user.js) I am Groot!
