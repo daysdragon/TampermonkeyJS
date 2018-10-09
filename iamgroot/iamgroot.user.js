@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        I am groot!
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.1
+// @version     0.0.2
 // @author      lzghzr
 // @description I am groot!
 // @match       http://*/*
@@ -11,4 +11,4 @@
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
-new ReplaceText([[/./g, 'I am groot!']], 'match');
+new ReplaceText([[/.*/g, 'I am groot!']], 'match');
