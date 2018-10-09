@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        libReplaceText
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.5
+// @version     0.0.6
 // @author      lzghzr
 // @description 替换网页内文本, 达到本地化的目的
 // @license     MIT
@@ -9,7 +9,6 @@
 // @run-at      document-start
 // ==/UserScript==
 
-const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
 class ReplaceText {
   /**
    * Creates an instance of ReplaceText.
@@ -54,25 +53,26 @@ class ReplaceText {
     this.replaceAlert()
     this.replaceObserver()
   }
+  public W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   public done: Set<string> = new Set()
   /**
    * window.alert
    *
    * @memberof ReplaceText
    */
-  public alert = W.alert.bind(W)
+  public alert = this.W.alert.bind(this.W)
   /**
    * window.confirm
    *
    * @memberof ReplaceText
    */
-  public confirm = W.confirm.bind(W)
+  public confirm = this.W.confirm.bind(this.W)
   /**
    * window.prompt
    *
    * @memberof ReplaceText
    */
-  public prompt = W.prompt.bind(W)
+  public prompt = this.W.prompt.bind(this.W)
   public textReplace: (text: string) => string
   /**
    * 替换弹出框
@@ -80,9 +80,9 @@ class ReplaceText {
    * @memberof ReplaceText
    */
   public replaceAlert() {
-    W.alert = (message: string) => this.alert(this.textReplace(message))
-    W.confirm = (message: string) => this.confirm(this.textReplace(message))
-    W.prompt = (message: string, _default: string) => this.prompt(this.textReplace(message), _default)
+    this.W.alert = (message: string) => this.alert(this.textReplace(message))
+    this.W.confirm = (message: string) => this.confirm(this.textReplace(message))
+    this.W.prompt = (message: string, _default: string) => this.prompt(this.textReplace(message), _default)
   }
   /**
    * 替换节点上的所有文本节点
@@ -92,6 +92,8 @@ class ReplaceText {
    */
   public replaceNode(node: Node) {
     this.nodeForEach(node).forEach(textNode => {
+      // 排除特殊标签
+      if (textNode.parentNode instanceof HTMLScriptElement || textNode.parentNode instanceof HTMLStyleElement) return
       if (textNode instanceof Text) {
         const newText = this.textReplace(textNode.data)
         if (textNode.data !== newText) {
@@ -99,20 +101,18 @@ class ReplaceText {
           textNode.data = newText
         }
       }
-      else if (textNode instanceof HTMLInputElement) {
-        if (textNode.type === 'button') {
-          const newText = this.textReplace(textNode.value)
-          if (textNode.value !== newText) {
-            this.done.add(newText)
-            textNode.value = newText
-          }
+      else if (textNode instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(textNode.type)) {
+        const newText = this.textReplace(textNode.value)
+        if (textNode.value !== newText) {
+          this.done.add(newText)
+          textNode.value = newText
         }
-        else if (textNode.type === 'text' || textNode.type === 'search') {
-          const newText = this.textReplace(textNode.placeholder)
-          if (textNode.placeholder !== newText) {
-            this.done.add(newText)
-            textNode.placeholder = newText
-          }
+      }
+      else if (typeof (<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder === 'string') {
+        const newText = this.textReplace((<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder)
+        if ((<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder !== newText) {
+          this.done.add(newText);
+          (<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder = newText
         }
       }
     })
@@ -128,10 +128,8 @@ class ReplaceText {
       mutations.forEach(mutation => {
         if (mutation.type === 'attributes') {
           const t = mutation.target
-          if (t instanceof HTMLInputElement) {
-            if (t.type === 'button' && !this.done.has(t.value)) this.replaceNode(t)
-            else if (t.type === 'text' || t.type === 'search' && !this.done.has(t.placeholder)) this.replaceNode(t)
-          }
+          if (t instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(t.type) && !this.done.has(t.value)) this.replaceNode(t)
+          else if (typeof (<HTMLInputElement | HTMLTextAreaElement>t).placeholder === 'string' && !this.done.has((<HTMLInputElement | HTMLTextAreaElement>t).placeholder)) this.replaceNode(t)
         }
         else if (mutation.type === 'characterData') {
           const t = mutation.target
