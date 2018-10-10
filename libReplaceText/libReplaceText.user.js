@@ -101,14 +101,10 @@ class ReplaceText {
                 }
             });
         });
-        let load = false;
         document.addEventListener('readystatechange', () => {
-            if (!load) {
-                load = true;
-                bodyObserver.observe(document.body, { attributes: true, characterData: true, childList: true, subtree: true });
-                this.replaceNode(document.body);
-            }
-        }, { capture: true });
+            bodyObserver.observe(document.body, { attributes: true, characterData: true, childList: true, subtree: true });
+            this.replaceNode(document.body);
+        }, { capture: true, once: true });
     }
     nodeForEach(node) {
         const list = [];

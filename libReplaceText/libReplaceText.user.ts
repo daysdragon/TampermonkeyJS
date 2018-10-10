@@ -143,14 +143,10 @@ class ReplaceText {
       })
     })
     // 使用 document.onreadystatechange 可以更早的替换 body
-    let load = false
     document.addEventListener('readystatechange', () => {
-      if (!load) {
-        load = true
-        bodyObserver.observe(document.body, { attributes: true, characterData: true, childList: true, subtree: true })
-        this.replaceNode(document.body)
-      }
-    }, { capture: true })
+      bodyObserver.observe(document.body, { attributes: true, characterData: true, childList: true, subtree: true })
+      this.replaceNode(document.body)
+    }, { capture: true, once: true })
   }
   /**
    * 深度遍历节点, 返回文本节点
