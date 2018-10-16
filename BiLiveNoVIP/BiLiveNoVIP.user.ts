@@ -282,6 +282,7 @@ function AddCSS() {
 #gunBut:after {
   content: '滚';
   font-size: 13px;
+  vertical-align: middle;
 }
 #gunBut #gunMenu {
   animation: gunMenu .4s;
