@@ -146,7 +146,7 @@ class ReplaceText {
     const nodeList = self ? [node] : this.nodeForEach(node)
     nodeList.forEach(node => {
       // 排除特殊标签
-      if (node instanceof HTMLScriptElement || node instanceof HTMLStyleElement) return
+      if (node.parentElement instanceof HTMLScriptElement || node.parentElement instanceof HTMLStyleElement) return
       if (node instanceof HTMLElement && node.title !== '') list.title.add(node)
       else if (node instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(node.type) && node.value !== '')
         list.value.add(node)

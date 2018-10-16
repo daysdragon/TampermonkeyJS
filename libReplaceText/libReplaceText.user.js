@@ -90,7 +90,7 @@ class ReplaceText {
         };
         const nodeList = self ? [node] : this.nodeForEach(node);
         nodeList.forEach(node => {
-            if (node instanceof HTMLScriptElement || node instanceof HTMLStyleElement)
+            if (node.parentElement instanceof HTMLScriptElement || node.parentElement instanceof HTMLStyleElement)
                 return;
             if (node instanceof HTMLElement && node.title !== '')
                 list.title.add(node);
