@@ -16,3 +16,4 @@
 5. [度盘小工具](https://github.com/lzghzr/TampermonkeyJS/raw/master/FuckBaiduPan/FuckBaiduPan.user.js) 直接下载与自定义密码
 6. [steam物品价值](https://github.com/lzghzr/TampermonkeyJS/raw/master/SteamItemGoo/SteamItemGoo.user.js) 在市场物品详情中显示价值
 7. [I am Groot!](https://github.com/lzghzr/TampermonkeyJS/raw/master/iamgroot/iamgroot.user.js) I am Groot!
+8. [SEE 中文化脚本](https://github.com/lzghzr/TampermonkeyJS/raw/master/SEE_zh-Hans/SEE_zh-Hans.user.js) 需安装 [Steam Economy Enhancer](https://github.com/Nuklon/Steam-Economy-Enhancer/raw/master/code.user.js)
