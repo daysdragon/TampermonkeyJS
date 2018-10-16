@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name        libReplaceText
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.6
+// @version     0.0.7
 // @author      lzghzr
 // @description 替换网页内文本, 达到本地化的目的
 // @license     MIT
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
+/// <reference path="libReplaceText.d.ts" />
 
 class ReplaceText {
   /**
@@ -85,37 +86,25 @@ class ReplaceText {
     this.W.prompt = (message: string, _default: string) => this.prompt(this.textReplace(message), _default)
   }
   /**
-   * 替换节点上的所有文本节点
+   * 替换节点上的所有文本
    *
    * @param {Node} node
+   * @param {boolean} [self=false]
    * @memberof ReplaceText
    */
-  public replaceNode(node: Node) {
-    this.nodeForEach(node).forEach(textNode => {
-      // 排除特殊标签
-      if (textNode.parentElement instanceof HTMLScriptElement || textNode.parentElement instanceof HTMLStyleElement) return
-      if (textNode instanceof Text) {
-        const newText = this.textReplace(textNode.data)
-        if (textNode.data !== newText) {
+  public replaceNode(node: Node, self = false) {
+    const list = this.getReplaceList(node, self)
+    for (let index in list) {
+      // @ts-ignore it's too difficult
+      list[index].forEach(node => {
+        if (this.done.has(node[index])) return
+        const newText = this.textReplace(node[index])
+        if (node[index] !== newText) {
           this.done.add(newText)
-          textNode.data = newText
+          node[index] = newText
         }
-      }
-      else if (textNode instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(textNode.type)) {
-        const newText = this.textReplace(textNode.value)
-        if (textNode.value !== newText) {
-          this.done.add(newText)
-          textNode.value = newText
-        }
-      }
-      else if (typeof (<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder === 'string') {
-        const newText = this.textReplace((<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder)
-        if ((<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder !== newText) {
-          this.done.add(newText);
-          (<HTMLInputElement | HTMLTextAreaElement>textNode).placeholder = newText
-        }
-      }
-    })
+      })
+    }
   }
   /**
    * 替换动态内容
@@ -126,19 +115,10 @@ class ReplaceText {
     // 出于功能不需要太高实时性, 使用 MutationObserver 而不是 MutationEvents
     const bodyObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
-        if (mutation.type === 'attributes') {
-          const t = mutation.target
-          if (t instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(t.type) && !this.done.has(t.value)) this.replaceNode(t)
-          else if (typeof (<HTMLInputElement | HTMLTextAreaElement>t).placeholder === 'string' && !this.done.has((<HTMLInputElement | HTMLTextAreaElement>t).placeholder)) this.replaceNode(t)
-        }
-        else if (mutation.type === 'characterData') {
-          const t = mutation.target
-          if (t instanceof Text && !this.done.has(t.data)) this.replaceNode(t)
-        }
+        if (mutation.type === 'attributes' || mutation.type === 'characterData')
+          this.replaceNode(mutation.target, true)
         else if (mutation.type === 'childList') {
-          mutation.addedNodes.forEach(addedNode => {
-            this.replaceNode(addedNode)
-          })
+          mutation.addedNodes.forEach(addedNode => this.replaceNode(addedNode))
         }
       })
     })
@@ -149,7 +129,35 @@ class ReplaceText {
     }, { capture: true, once: true })
   }
   /**
-   * 深度遍历节点, 返回文本节点
+   * 深度遍历节点
+   *
+   * @param {Node} node
+   * @param {boolean} [self=false]
+   * @returns {replaceList}
+   * @memberof ReplaceText
+   */
+  public getReplaceList(node: Node, self = false): replaceList {
+    const list: replaceList = {
+      data: new Set<Text>(),
+      placeholder: new Set<HTMLInputElement | HTMLTextAreaElement>(),
+      title: new Set<HTMLElement>(),
+      value: new Set<HTMLInputElement>(),
+    }
+    const nodeList = self ? [node] : this.nodeForEach(node)
+    nodeList.forEach(node => {
+      // 排除特殊标签
+      if (node instanceof HTMLScriptElement || node instanceof HTMLStyleElement) return
+      if (node instanceof HTMLElement && node.title !== '') list.title.add(node)
+      else if (node instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(node.type) && node.value !== '')
+        list.value.add(node)
+      else if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement && node.placeholder !== '')
+        list.placeholder.add(node)
+      else if (node instanceof Text) list.data.add(node)
+    })
+    return list
+  }
+  /**
+   * 深度遍历节点, 返回所有节点
    *
    * @param {Node} node
    * @returns {Node[]}
@@ -157,13 +165,9 @@ class ReplaceText {
    */
   public nodeForEach(node: Node): Node[] {
     const list: Node[] = []
-    if (node.childNodes.length === 0) list.push(node)
-    else {
-      node.childNodes.forEach(child => {
-        if (child.childNodes.length === 0) list.push(child)
-        else list.push(...this.nodeForEach(child))
-      })
-    }
+    list.push(node)
+    if (node.hasChildNodes())
+      node.childNodes.forEach(child => list.push(...this.nodeForEach(child)))
     return list
   }
 }

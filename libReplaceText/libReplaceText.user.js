@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        libReplaceText
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.6
+// @version     0.0.7
 // @author      lzghzr
 // @description 替换网页内文本, 达到本地化的目的
 // @license     MIT
@@ -52,52 +52,27 @@ class ReplaceText {
         this.W.confirm = (message) => this.confirm(this.textReplace(message));
         this.W.prompt = (message, _default) => this.prompt(this.textReplace(message), _default);
     }
-    replaceNode(node) {
-        this.nodeForEach(node).forEach(textNode => {
-            if (textNode.parentElement instanceof HTMLScriptElement || textNode.parentElement instanceof HTMLStyleElement)
-                return;
-            if (textNode instanceof Text) {
-                const newText = this.textReplace(textNode.data);
-                if (textNode.data !== newText) {
+    replaceNode(node, self = false) {
+        const list = this.getReplaceList(node, self);
+        for (let index in list) {
+            list[index].forEach(node => {
+                if (this.done.has(node[index]))
+                    return;
+                const newText = this.textReplace(node[index]);
+                if (node[index] !== newText) {
                     this.done.add(newText);
-                    textNode.data = newText;
+                    node[index] = newText;
                 }
-            }
-            else if (textNode instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(textNode.type)) {
-                const newText = this.textReplace(textNode.value);
-                if (textNode.value !== newText) {
-                    this.done.add(newText);
-                    textNode.value = newText;
-                }
-            }
-            else if (typeof textNode.placeholder === 'string') {
-                const newText = this.textReplace(textNode.placeholder);
-                if (textNode.placeholder !== newText) {
-                    this.done.add(newText);
-                    textNode.placeholder = newText;
-                }
-            }
-        });
+            });
+        }
     }
     replaceObserver() {
         const bodyObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
-                if (mutation.type === 'attributes') {
-                    const t = mutation.target;
-                    if (t instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(t.type) && !this.done.has(t.value))
-                        this.replaceNode(t);
-                    else if (typeof t.placeholder === 'string' && !this.done.has(t.placeholder))
-                        this.replaceNode(t);
-                }
-                else if (mutation.type === 'characterData') {
-                    const t = mutation.target;
-                    if (t instanceof Text && !this.done.has(t.data))
-                        this.replaceNode(t);
-                }
+                if (mutation.type === 'attributes' || mutation.type === 'characterData')
+                    this.replaceNode(mutation.target, true);
                 else if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(addedNode => {
-                        this.replaceNode(addedNode);
-                    });
+                    mutation.addedNodes.forEach(addedNode => this.replaceNode(addedNode));
                 }
             });
         });
@@ -106,18 +81,33 @@ class ReplaceText {
             this.replaceNode(document.body);
         }, { capture: true, once: true });
     }
+    getReplaceList(node, self = false) {
+        const list = {
+            data: new Set(),
+            placeholder: new Set(),
+            title: new Set(),
+            value: new Set(),
+        };
+        const nodeList = self ? [node] : this.nodeForEach(node);
+        nodeList.forEach(node => {
+            if (node instanceof HTMLScriptElement || node instanceof HTMLStyleElement)
+                return;
+            if (node instanceof HTMLElement && node.title !== '')
+                list.title.add(node);
+            else if (node instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(node.type) && node.value !== '')
+                list.value.add(node);
+            else if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement && node.placeholder !== '')
+                list.placeholder.add(node);
+            else if (node instanceof Text)
+                list.data.add(node);
+        });
+        return list;
+    }
     nodeForEach(node) {
         const list = [];
-        if (node.childNodes.length === 0)
-            list.push(node);
-        else {
-            node.childNodes.forEach(child => {
-                if (child.childNodes.length === 0)
-                    list.push(child);
-                else
-                    list.push(...this.nodeForEach(child));
-            });
-        }
+        list.push(node);
+        if (node.hasChildNodes())
+            node.childNodes.forEach(child => list.push(...this.nodeForEach(child)));
         return list;
     }
 }
