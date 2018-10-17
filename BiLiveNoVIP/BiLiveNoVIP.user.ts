@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.7
+// @version     3.0.8
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?:\/\/live\.bilibili\.com\/\d/
+// @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
 // @license     MIT
 // @grant       GM_addStyle
 // @grant       GM_getValue
@@ -20,7 +20,7 @@ const defaultConfig: config = {
   version: 1528362160578,
   menu: {
     noKanBanMusume: {
-      name: '看&nbsp;&nbsp;板&nbsp;&nbsp;娘',
+      name: '看\u00a0\u00a0板\u00a0\u00a0娘',
       enable: false
     },
     noGuardIcon: {
