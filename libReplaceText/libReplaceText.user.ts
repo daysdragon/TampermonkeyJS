@@ -148,7 +148,7 @@ class ReplaceText {
       // 排除特殊标签
       if (node.parentElement instanceof HTMLScriptElement || node.parentElement instanceof HTMLStyleElement) return
       if (node instanceof HTMLElement && node.title !== '') list.title.add(node)
-      else if (node instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(node.type) && node.value !== '')
+      if (node instanceof HTMLInputElement && ['button', 'reset', 'submit'].includes(node.type) && node.value !== '')
         list.value.add(node)
       else if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement && node.placeholder !== '')
         list.placeholder.add(node)
