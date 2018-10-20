@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.8
+// @version     3.0.9
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -88,25 +88,6 @@ if (elmDivAside !== null) {
     });
     asideObserver.observe(elmDivAside, { childList: true, subtree: true });
 }
-const bodyObserver = new MutationObserver(() => {
-    const elmDivRand = document.querySelector('#rank-list-vm');
-    const elmDivGift = document.querySelector('#gift-control-vm');
-    const elmDivPlayer = document.querySelector('.player-section');
-    const elmDivChat = document.querySelector('.chat-history-panel');
-    if (document.body.classList.contains('player-full-win')) {
-        elmDivRand.style.cssText = 'display: none !important';
-        elmDivGift.style.cssText = 'display: none !important';
-        elmDivPlayer.style.cssText = 'height: 100% !important';
-        elmDivChat.style.cssText = 'height: calc(100% - 135px) !important';
-    }
-    else {
-        elmDivRand.style.cssText = '';
-        elmDivGift.style.cssText = '';
-        elmDivPlayer.style.cssText = '';
-        elmDivChat.style.cssText = '';
-    }
-});
-bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 function ChangeCSS() {
     let cssText = '';
     if (config.menu.noKanBanMusume.enable)
@@ -351,5 +332,12 @@ function AddCSS() {
     opacity: 1;
     transform: scale(1);
   }
+}
+/*隐藏网页全屏榜单*/
+.player-full-win .rank-list-section {
+  display: none!important;
+}
+.player-full-win .chat-history-panel {
+  height: calc(100% - 135px)!important;
 }`);
 }

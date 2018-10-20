@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.8
+// @version     3.0.9
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -94,26 +94,6 @@ if (elmDivAside !== null) {
   })
   asideObserver.observe(elmDivAside, { childList: true, subtree: true })
 }
-// 网页全屏
-const bodyObserver = new MutationObserver(() => {
-  const elmDivRand = <HTMLDivElement>document.querySelector('#rank-list-vm')
-  const elmDivGift = <HTMLDivElement>document.querySelector('#gift-control-vm')
-  const elmDivPlayer = <HTMLDivElement>document.querySelector('.player-section')
-  const elmDivChat = <HTMLDivElement>document.querySelector('.chat-history-panel')
-  if (document.body.classList.contains('player-full-win')) {
-    elmDivRand.style.cssText = 'display: none !important'
-    elmDivGift.style.cssText = 'display: none !important'
-    elmDivPlayer.style.cssText = 'height: 100% !important'
-    elmDivChat.style.cssText = 'height: calc(100% - 135px) !important'
-  }
-  else {
-    elmDivRand.style.cssText = ''
-    elmDivGift.style.cssText = ''
-    elmDivPlayer.style.cssText = ''
-    elmDivChat.style.cssText = ''
-  }
-})
-bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] })
 /**
  * 覆盖原有css
  * 
@@ -366,5 +346,12 @@ function AddCSS() {
     opacity: 1;
     transform: scale(1);
   }
+}
+/*隐藏网页全屏榜单*/
+.player-full-win .rank-list-section {
+  display: none!important;
+}
+.player-full-win .chat-history-panel {
+  height: calc(100% - 135px)!important;
 }`)
 }
