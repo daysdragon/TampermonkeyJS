@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.9
+// @version     3.0.10
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -17,7 +17,7 @@ import { GM_addStyle, GM_getValue, GM_setValue } from '../@types/tm_f'
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1528362160578,
+  version: 1540221005065,
   menu: {
     noKanBanMusume: {
       name: '看\u00a0\u00a0板\u00a0\u00a0娘',
@@ -54,6 +54,14 @@ const defaultConfig: config = {
     noGiftMsg: {
       name: '礼物信息',
       enable: false
+    },
+    noBBChat: {
+      name: '重复聊天',
+      enable: false
+    },
+    noBBDanmaku: {
+      name: '重复弹幕',
+      enable: false
     }
   }
 }
@@ -73,8 +81,46 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 else config = userConfig
 // css
 const elmStyleCSS = GM_addStyle('')
+// noBB
+let noBBChat = false
+let noBBDanmaku = false
 // 添加相关css
 AddCSS()
+// 重复聊天信息
+const chatMessage = new Set<string>()
+const chatObserver = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
+    mutation.addedNodes.forEach(addedNode => {
+      if (addedNode instanceof HTMLDivElement && addedNode.classList.contains('danmaku-item')) {
+        const chatNode = <HTMLSpanElement>addedNode.querySelector('.danmaku-content')
+        if (chatNode !== null) {
+          const chatText = chatNode.innerText
+          if (chatMessage.has(chatText)) addedNode.remove()
+          else chatMessage.add(chatText)
+        }
+      }
+    })
+  })
+})
+// 重复弹幕
+const danmakuMessage = new Set<string>()
+const danmakuObserver = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
+    mutation.addedNodes.forEach(addedNode => {
+      const danmakuNode = addedNode instanceof Text ? <HTMLDivElement>addedNode.parentElement : <HTMLDivElement>addedNode
+      const danmakuText = addedNode instanceof Text ? addedNode.data : (<HTMLDivElement>addedNode).innerText
+      if (danmakuNode.className === 'bilibili-danmaku') {
+        if (danmakuMessage.has(danmakuText)) danmakuNode.innerText = ''
+        else danmakuMessage.add(danmakuText)
+      }
+    })
+  })
+})
+// 定时清空, 虽说应该每条分开统计, 但是刷起屏来实在是太快了, 比较消耗资源
+setInterval(() => {
+  chatMessage.clear()
+  danmakuMessage.clear()
+}, 5 * 60 * 1000)
 ChangeCSS()
 // 监听相关DOM
 const elmDivAside = <HTMLDivElement>document.querySelector('.aside-area')
@@ -93,6 +139,48 @@ if (elmDivAside !== null) {
     })
   })
   asideObserver.observe(elmDivAside, { childList: true, subtree: true })
+}
+/**
+ * 启用聊天过滤
+ *
+ */
+function enableNOBBChat() {
+  if (noBBChat) return
+  const elmDivChatList = document.querySelector('#chat-history-list')
+  if (elmDivChatList !== null) {
+    noBBChat = true
+    chatObserver.observe(elmDivChatList, { childList: true })
+  }
+}
+/**
+ * 停用聊天过滤
+ *
+ */
+function disableNOBBChat() {
+  if (!noBBChat) return
+  noBBChat = false
+  chatObserver.disconnect()
+}
+/**
+ * 启用弹幕过滤
+ *
+ */
+function enableNOBBDanmaku() {
+  if (noBBDanmaku) return
+  const elmDivDanmaku = document.querySelector('.bilibili-live-player-video-danmaku')
+  if (elmDivDanmaku !== null) {
+    noBBDanmaku = true
+    danmakuObserver.observe(elmDivDanmaku, { childList: true, subtree: true })
+  }
+}
+/**
+ * 停用弹幕过滤
+ *
+ */
+function disableNOBBDanmaku() {
+  if (!noBBDanmaku) return
+  noBBDanmaku = false
+  danmakuObserver.disconnect()
 }
 /**
  * 覆盖原有css
@@ -178,6 +266,10 @@ function ChangeCSS() {
 .chat-history-list.with-penury-gift {
   height: 100% !important;
 }`
+  if (config.menu.noBBChat.enable) enableNOBBChat()
+  else disableNOBBChat()
+  if (config.menu.noBBDanmaku.enable) enableNOBBDanmaku()
+  else disableNOBBDanmaku()
   elmStyleCSS.innerHTML = cssText
 }
 /**
@@ -271,12 +363,12 @@ function AddCSS() {
   border-radius: 8px;
   box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);
   font-size: 12px;
-  height: 190px;
+  height: 234px;
   left: 0px;
   padding: 10px;
   position: absolute;
   text-align: center;
-  top: -220px;
+  top: -264px;
   transform-origin: 100px bottom 0px;
   width: 90px;
   z-index: 2;
@@ -349,9 +441,9 @@ function AddCSS() {
 }
 /*隐藏网页全屏榜单*/
 .player-full-win .rank-list-section {
-  display: none!important;
+  display: none !important;
 }
 .player-full-win .chat-history-panel {
-  height: calc(100% - 135px)!important;
+  height: calc(100% - 135px) !important;
 }`)
 }
