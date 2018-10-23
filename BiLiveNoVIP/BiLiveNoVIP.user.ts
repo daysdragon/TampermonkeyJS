@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.10
+// @version     3.0.11
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -17,7 +17,7 @@ import { GM_addStyle, GM_getValue, GM_setValue } from '../@types/tm_f'
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1540221005065,
+  version: 1540298642287,
   menu: {
     noKanBanMusume: {
       name: '看\u00a0\u00a0板\u00a0\u00a0娘',
@@ -56,11 +56,11 @@ const defaultConfig: config = {
       enable: false
     },
     noBBChat: {
-      name: '重复聊天',
+      name: '刷屏聊天',
       enable: false
     },
     noBBDanmaku: {
-      name: '重复弹幕',
+      name: '刷屏弹幕',
       enable: false
     }
   }
@@ -86,8 +86,8 @@ let noBBChat = false
 let noBBDanmaku = false
 // 添加相关css
 AddCSS()
-// 重复聊天信息
-const chatMessage = new Set<string>()
+// 刷屏聊天信息
+const chatMessage = new Map<string, number>()
 const chatObserver = new MutationObserver(mutations => {
   mutations.forEach(mutation => {
     mutation.addedNodes.forEach(addedNode => {
@@ -95,32 +95,39 @@ const chatObserver = new MutationObserver(mutations => {
         const chatNode = <HTMLSpanElement>addedNode.querySelector('.danmaku-content')
         if (chatNode !== null) {
           const chatText = chatNode.innerText
-          if (chatMessage.has(chatText)) addedNode.remove()
-          else chatMessage.add(chatText)
+          const dateNow = Date.now()
+          if (chatMessage.has(chatText) && dateNow - <number>chatMessage.get(chatText) < 5000) addedNode.remove()
+          chatMessage.set(chatText, dateNow)
         }
       }
     })
   })
 })
-// 重复弹幕
-const danmakuMessage = new Set<string>()
+// 刷屏弹幕
+const danmakuMessage = new Map<string, number>()
 const danmakuObserver = new MutationObserver(mutations => {
   mutations.forEach(mutation => {
     mutation.addedNodes.forEach(addedNode => {
       const danmakuNode = addedNode instanceof Text ? <HTMLDivElement>addedNode.parentElement : <HTMLDivElement>addedNode
-      const danmakuText = addedNode instanceof Text ? addedNode.data : (<HTMLDivElement>addedNode).innerText
       if (danmakuNode.className === 'bilibili-danmaku') {
-        if (danmakuMessage.has(danmakuText)) danmakuNode.innerText = ''
-        else danmakuMessage.add(danmakuText)
+        const danmakuText = danmakuNode.innerText
+        const dateNow = Date.now()
+        if (danmakuMessage.has(danmakuText) && dateNow - <number>danmakuMessage.get(danmakuText) < 5000) danmakuNode.innerText = ''
+        danmakuMessage.set(danmakuText, dateNow)
       }
     })
   })
 })
 // 定时清空, 虽说应该每条分开统计, 但是刷起屏来实在是太快了, 比较消耗资源
 setInterval(() => {
-  chatMessage.clear()
-  danmakuMessage.clear()
-}, 5 * 60 * 1000)
+  const dateNow = Date.now()
+  chatMessage.forEach((value, key) => {
+    if (dateNow - value > 60 * 1000) chatMessage.delete(key)
+  })
+  danmakuMessage.forEach((value, key) => {
+    if (dateNow - value > 60 * 1000) danmakuMessage.delete(key)
+  })
+}, 60 * 1000)
 ChangeCSS()
 // 监听相关DOM
 const elmDivAside = <HTMLDivElement>document.querySelector('.aside-area')
