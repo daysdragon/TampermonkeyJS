@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.25
+// @version     0.2.26
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -190,7 +190,7 @@ async function getPriceOverview(itemInfo: ItemInfo): Promise<'error' | ItemInfo>
       responseType: 'json'
     })
     if (itemordershistogram === undefined || itemordershistogram.response.status !== 200
-      || !itemordershistogram.body.success) return stop()
+      || itemordershistogram.body.success !== 1) return stop()
     itemInfo.lowestPrice = ' ' + itemordershistogram.body.sell_order_graph[0][0]
     return calculatePrice(itemInfo)
   }
