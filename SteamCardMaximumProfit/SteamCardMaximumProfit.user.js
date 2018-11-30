@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        steam卡牌利润最大化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     0.2.24
+// @version     0.2.25
 // @author      lzghzr
 // @description 按照美元区出价, 最大化steam卡牌卖出的利润
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -35,16 +35,13 @@ addUI();
 doLoop();
 const elmDivActiveInventoryPage = document.querySelector('#inventories');
 const observer = new MutationObserver(mutations => {
-    if (!location.hash.match(/^#753|^$/))
-        return;
     mutations.forEach(mutation => {
         const rt = mutation.target;
         if (rt.classList.contains('inventory_page')) {
             const itemHolders = rt.querySelectorAll('.itemHolder');
             itemHolders.forEach(itemHolder => {
                 const rgItem = itemHolder.rgItem;
-                if (rgItem !== undefined && !gDivItems.includes(rgItem.element)
-                    && rgItem.description.appid === 753 && rgItem.description.marketable === 1) {
+                if (rgItem !== undefined && !gDivItems.includes(rgItem.element) && rgItem.description.marketable === 1) {
                     gDivItems.push(rgItem.element);
                     const elmDiv = document.createElement('div');
                     elmDiv.classList.add('scmpItemCheckbox');
