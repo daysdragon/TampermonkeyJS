@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name        gb688下载
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     1.0.0
+// @version     1.0.1
 // @author      lzghzr
 // @description 下载gb688.cn上的国标文件
 // @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
 // @match       http://www.gb688.cn/bzgk/gb/newGbInfo*
+// @connect     c.gb688.cn
 // @license     MIT
 // @grant       GM_xmlhttpRequest
 // @run-at      document-end
