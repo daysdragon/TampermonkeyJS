@@ -312,13 +312,14 @@ function addCSS() {
 function XHR<T>(XHROptions: XHROptions): Promise<response<T> | undefined> {
   return new Promise(resolve => {
     const onerror = (error: any) => {
-      console.log(error)
+      console.error(error)
       resolve(undefined)
     }
     if (XHROptions.GM) {
       if (XHROptions.method === 'POST') {
         if (XHROptions.headers === undefined) XHROptions.headers = {}
-        XHROptions.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=utf-8'
+        if (XHROptions.headers['Content-Type'] === undefined)
+          XHROptions.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=utf-8'
       }
       XHROptions.timeout = 30 * 1000
       XHROptions.onload = res => resolve({ response: res, body: res.response })
@@ -329,7 +330,7 @@ function XHR<T>(XHROptions: XHROptions): Promise<response<T> | undefined> {
     else {
       const xhr = new XMLHttpRequest()
       xhr.open(XHROptions.method, XHROptions.url)
-      if (XHROptions.method === 'POST')
+      if (XHROptions.method === 'POST' && xhr.getResponseHeader('Content-Type') === null)
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8')
       if (XHROptions.cookie) xhr.withCredentials = true
       if (XHROptions.responseType !== undefined) xhr.responseType = XHROptions.responseType

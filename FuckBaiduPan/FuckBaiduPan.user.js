@@ -5,10 +5,8 @@
 // @author      lzghzr
 // @description FuckBaiduPan
 // @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
-// @match       http://pan.baidu.com/*
-// @match       https://pan.baidu.com/*
-// @match       http://yun.baidu.com/*
-// @match       https://yun.baidu.com/*
+// @match       *://pan.baidu.com/*
+// @match       *://yun.baidu.com/*
 // @license     MIT
 // @grant       none
 // @run-at      document-start

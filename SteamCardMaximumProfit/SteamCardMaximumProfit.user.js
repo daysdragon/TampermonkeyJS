@@ -14,14 +14,6 @@
 // @run-at      document-end
 // @noframes
 // ==/UserScript==
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
 let gInputUSDCNY;
 let gDivLastChecked;
@@ -52,11 +44,10 @@ const observer = new MutationObserver(mutations => {
     });
 });
 observer.observe(elmDivActiveInventoryPage, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
-function addUI() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const elmDivInventoryPageRight = document.querySelector('.inventory_page_right');
-        const elmDiv = document.createElement('div');
-        elmDiv.innerHTML = `
+async function addUI() {
+    const elmDivInventoryPageRight = document.querySelector('.inventory_page_right');
+    const elmDiv = document.createElement('div');
+    elmDiv.innerHTML = `
 <div class="scmpQuickSell">快速以此价格出售:
   <span class="btn_green_white_innerfade" id="scmpQuickSellItem">null</span>
   <span>
@@ -73,116 +64,113 @@ function addUI() {
   失败:
   <span id="scmpQuickError">0</span>
 </div>`;
-        elmDivInventoryPageRight.appendChild(elmDiv);
-        const elmSpanQuickSellItem = elmDiv.querySelector('#scmpQuickSellItem');
-        const elmSpanQuickAllItem = document.querySelector('#scmpQuickAllItem');
-        gInputAddCent = elmDiv.querySelector('#scmpAddCent');
-        gSpanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
-        gSpanQuickError = elmDiv.querySelector('#scmpQuickError');
-        document.addEventListener('click', (ev) => __awaiter(this, void 0, void 0, function* () {
-            const evt = ev.target;
-            if (evt.className === 'inventory_item_link') {
-                elmSpanQuickSellItem.innerText = 'null';
-                const rgItem = evt.parentNode.rgItem;
-                const itemInfo = new ItemInfo(rgItem);
-                const priceOverview = yield getPriceOverview(itemInfo);
-                if (priceOverview !== 'error')
-                    elmSpanQuickSellItem.innerText = priceOverview.formatPrice;
-            }
-            else if (evt.classList.contains('scmpItemCheckbox')) {
-                const rgItem = evt.parentNode.rgItem;
-                const select = evt.classList.contains('scmpItemSelect');
-                const changeClass = (elmDiv) => {
-                    const elmCheckbox = elmDiv.querySelector('.scmpItemCheckbox');
-                    if (elmDiv.parentNode.style.display !== 'none' && !elmCheckbox.classList.contains('scmpItemSuccess')) {
-                        elmCheckbox.classList.remove('scmpItemError');
-                        elmCheckbox.classList.toggle('scmpItemSelect', !select);
-                    }
-                };
-                if (gDivLastChecked !== undefined && ev.shiftKey) {
-                    const start = gDivItems.indexOf(gDivLastChecked);
-                    const end = gDivItems.indexOf(rgItem.element);
-                    const someDivItems = gDivItems.slice(Math.min(start, end), Math.max(start, end) + 1);
-                    for (const y of someDivItems)
-                        changeClass(y);
+    elmDivInventoryPageRight.appendChild(elmDiv);
+    const elmSpanQuickSellItem = elmDiv.querySelector('#scmpQuickSellItem');
+    const elmSpanQuickAllItem = document.querySelector('#scmpQuickAllItem');
+    gInputAddCent = elmDiv.querySelector('#scmpAddCent');
+    gSpanQuickSurplus = elmDiv.querySelector('#scmpQuickSurplus');
+    gSpanQuickError = elmDiv.querySelector('#scmpQuickError');
+    document.addEventListener('click', async (ev) => {
+        const evt = ev.target;
+        if (evt.className === 'inventory_item_link') {
+            elmSpanQuickSellItem.innerText = 'null';
+            const rgItem = evt.parentNode.rgItem;
+            const itemInfo = new ItemInfo(rgItem);
+            const priceOverview = await getPriceOverview(itemInfo);
+            if (priceOverview !== 'error')
+                elmSpanQuickSellItem.innerText = priceOverview.formatPrice;
+        }
+        else if (evt.classList.contains('scmpItemCheckbox')) {
+            const rgItem = evt.parentNode.rgItem;
+            const select = evt.classList.contains('scmpItemSelect');
+            const changeClass = (elmDiv) => {
+                const elmCheckbox = elmDiv.querySelector('.scmpItemCheckbox');
+                if (elmDiv.parentNode.style.display !== 'none' && !elmCheckbox.classList.contains('scmpItemSuccess')) {
+                    elmCheckbox.classList.remove('scmpItemError');
+                    elmCheckbox.classList.toggle('scmpItemSelect', !select);
                 }
-                else
-                    changeClass(rgItem.element);
-                gDivLastChecked = rgItem.element;
+            };
+            if (gDivLastChecked !== undefined && ev.shiftKey) {
+                const start = gDivItems.indexOf(gDivLastChecked);
+                const end = gDivItems.indexOf(rgItem.element);
+                const someDivItems = gDivItems.slice(Math.min(start, end), Math.max(start, end) + 1);
+                for (const y of someDivItems)
+                    changeClass(y);
             }
-        }));
-        elmSpanQuickSellItem.addEventListener('click', (ev) => {
-            const evt = ev.target;
-            const elmDivActiveInfo = document.querySelector('.activeInfo');
-            const rgItem = elmDivActiveInfo.rgItem;
-            const elmDivitemCheck = rgItem.element.querySelector('.scmpItemCheckbox');
-            if (!elmDivitemCheck.classList.contains('scmpItemSuccess') && evt.innerText !== 'null') {
-                const price = W.GetPriceValueAsInt(evt.innerText);
-                const itemInfo = new ItemInfo(rgItem, price);
-                quickSellItem(itemInfo);
-            }
-        });
-        elmSpanQuickAllItem.addEventListener('click', () => {
-            const elmDivItemInfos = document.querySelectorAll('.scmpItemSelect');
-            elmDivItemInfos.forEach(elmDivItemInfo => {
-                const rgItem = elmDivItemInfo.parentNode.rgItem;
-                const itemInfo = new ItemInfo(rgItem);
-                if (rgItem.description.marketable === 1)
-                    gQuickSells.push(itemInfo);
-            });
-        });
-        gInputAddCent.addEventListener('input', () => {
-            const activeInfo = document.querySelector('.activeInfo > .inventory_item_link');
-            activeInfo.click();
-        });
-        gInputUSDCNY = elmDiv.querySelector('#scmpExch');
-        const baiduExch = yield XHR({
-            GM: true,
-            method: 'GET',
-            url: `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=${Date.now()}&ie=utf8&oe=utf8&format=json&tn=baidu`,
-            responseType: 'json',
-        });
-        if (baiduExch !== undefined && baiduExch.response.status === 200)
-            gInputUSDCNY.value = baiduExch.body.data[0].number2;
+            else
+                changeClass(rgItem.element);
+            gDivLastChecked = rgItem.element;
+        }
     });
+    elmSpanQuickSellItem.addEventListener('click', (ev) => {
+        const evt = ev.target;
+        const elmDivActiveInfo = document.querySelector('.activeInfo');
+        const rgItem = elmDivActiveInfo.rgItem;
+        const elmDivitemCheck = rgItem.element.querySelector('.scmpItemCheckbox');
+        if (!elmDivitemCheck.classList.contains('scmpItemSuccess') && evt.innerText !== 'null') {
+            const price = W.GetPriceValueAsInt(evt.innerText);
+            const itemInfo = new ItemInfo(rgItem, price);
+            quickSellItem(itemInfo);
+        }
+    });
+    elmSpanQuickAllItem.addEventListener('click', () => {
+        const elmDivItemInfos = document.querySelectorAll('.scmpItemSelect');
+        elmDivItemInfos.forEach(elmDivItemInfo => {
+            const rgItem = elmDivItemInfo.parentNode.rgItem;
+            const itemInfo = new ItemInfo(rgItem);
+            if (rgItem.description.marketable === 1)
+                gQuickSells.push(itemInfo);
+        });
+    });
+    gInputAddCent.addEventListener('input', () => {
+        const activeInfo = document.querySelector('.activeInfo > .inventory_item_link');
+        activeInfo.click();
+    });
+    gInputUSDCNY = elmDiv.querySelector('#scmpExch');
+    const baiduExch = await XHR({
+        GM: true,
+        method: 'GET',
+        url: `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=1%E7%BE%8E%E5%85%83%E7%AD%89%E4%BA%8E%E5%A4%9A%E5%B0%91%E4%BA%BA%E6%B0%91%E5%B8%81&resource_id=6017&t=${Date.now()}&ie=utf8&oe=utf8&format=json&tn=baidu`,
+        responseType: 'json',
+    });
+    if (baiduExch !== undefined && baiduExch.response.status === 200)
+        gInputUSDCNY.value = baiduExch.body.data[0].number2;
 }
-function getPriceOverview(itemInfo) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const priceoverview = yield XHR({
-            method: 'GET',
-            url: `/market/priceoverview/?country=US&currency=1&appid=${itemInfo.rgItem.description.appid}\
+async function getPriceOverview(itemInfo) {
+    const priceoverview = await XHR({
+        method: 'GET',
+        url: `/market/priceoverview/?country=US&currency=1&appid=${itemInfo.rgItem.description.appid}\
 &market_hash_name=${encodeURIComponent(W.GetMarketHashName(itemInfo.rgItem.description))}`,
+        responseType: 'json'
+    });
+    const stop = () => itemInfo.status = 'error';
+    if (priceoverview !== undefined && priceoverview.response.status === 200
+        && priceoverview.body.success && priceoverview.body.lowest_price) {
+        itemInfo.lowestPrice = priceoverview.body.lowest_price.replace('$', '');
+        return calculatePrice(itemInfo);
+    }
+    else {
+        const marketListings = await XHR({
+            method: 'GET',
+            url: `/market/listings/${itemInfo.rgItem.description.appid}\
+/${encodeURIComponent(W.GetMarketHashName(itemInfo.rgItem.description))}`
+        });
+        if (marketListings === undefined || marketListings.response.status !== 200)
+            return stop();
+        const marketLoadOrderSpread = marketListings.body.match(/Market_LoadOrderSpread\( (\d+)/);
+        if (marketLoadOrderSpread === null)
+            return stop();
+        const itemordershistogram = await XHR({
+            method: 'GET',
+            url: `/market/itemordershistogram/?country=US&language=english&currency=1&item_nameid=${marketLoadOrderSpread[1]}&two_factor=0`,
             responseType: 'json'
         });
-        const stop = () => itemInfo.status = 'error';
-        if (priceoverview !== undefined && priceoverview.response.status === 200
-            && priceoverview.body.success && priceoverview.body.lowest_price) {
-            itemInfo.lowestPrice = priceoverview.body.lowest_price.replace('$', '');
-            return calculatePrice(itemInfo);
-        }
-        else {
-            const marketListings = yield XHR({
-                method: 'GET',
-                url: `/market/listings/${itemInfo.rgItem.description.appid}\
-/${encodeURIComponent(W.GetMarketHashName(itemInfo.rgItem.description))}`
-            });
-            if (marketListings === undefined || marketListings.response.status !== 200)
-                return stop();
-            const marketLoadOrderSpread = marketListings.body.match(/Market_LoadOrderSpread\( (\d+)/);
-            if (marketLoadOrderSpread === null)
-                return stop();
-            const itemordershistogram = yield XHR({
-                method: 'GET',
-                url: `/market/itemordershistogram/?country=US&language=english&currency=1&item_nameid=${marketLoadOrderSpread[1]}&two_factor=0`,
-                responseType: 'json'
-            });
-            if (itemordershistogram === undefined || itemordershistogram.response.status !== 200
-                || itemordershistogram.body.success !== 1)
-                return stop();
-            itemInfo.lowestPrice = ' ' + itemordershistogram.body.sell_order_graph[0][0];
-            return calculatePrice(itemInfo);
-        }
-    });
+        if (itemordershistogram === undefined || itemordershistogram.response.status !== 200
+            || itemordershistogram.body.success !== 1)
+            return stop();
+        itemInfo.lowestPrice = ' ' + itemordershistogram.body.sell_order_graph[0][0];
+        return calculatePrice(itemInfo);
+    }
 }
 function calculatePrice(itemInfo) {
     let price = W.GetPriceValueAsInt(itemInfo.lowestPrice);
@@ -195,43 +183,39 @@ function calculatePrice(itemInfo) {
     itemInfo.formatPrice = W.v_currencyformat(itemInfo.price, W.GetCurrencyCode(W.g_rgWalletInfo.wallet_currency));
     return itemInfo;
 }
-function quickSellItem(itemInfo) {
-    return __awaiter(this, void 0, void 0, function* () {
-        itemInfo.status = 'run';
-        const sellitem = yield XHR({
-            method: 'POST',
-            url: 'https://steamcommunity.com/market/sellitem/',
-            data: `sessionid=${W.g_sessionID}&appid=${itemInfo.rgItem.description.appid}\
+async function quickSellItem(itemInfo) {
+    itemInfo.status = 'run';
+    const sellitem = await XHR({
+        method: 'POST',
+        url: 'https://steamcommunity.com/market/sellitem/',
+        data: `sessionid=${W.g_sessionID}&appid=${itemInfo.rgItem.description.appid}\
 &contextid=${itemInfo.rgItem.contextid}&assetid=${itemInfo.rgItem.assetid}&amount=1&price=${itemInfo.price}`,
-            responseType: 'json',
-            cookie: true
-        });
-        if (sellitem === undefined || sellitem.response.status !== 200 || !sellitem.body.success)
-            itemInfo.status = 'error';
-        else
-            itemInfo.status = 'success';
+        responseType: 'json',
+        cookie: true
     });
+    if (sellitem === undefined || sellitem.response.status !== 200 || !sellitem.body.success)
+        itemInfo.status = 'error';
+    else
+        itemInfo.status = 'success';
 }
-function doLoop() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const itemInfo = gQuickSells.shift();
-        const loop = () => {
-            setTimeout(() => {
-                doLoop();
-            }, 500);
-        };
-        if (itemInfo !== undefined) {
-            const priceOverview = yield getPriceOverview(itemInfo);
-            if (priceOverview !== 'error') {
-                yield quickSellItem(priceOverview);
-                doLoop();
-            }
-            else
-                loop();
+async function doLoop() {
+    const itemInfo = gQuickSells.shift();
+    const loop = () => {
+        setTimeout(() => {
+            doLoop();
+        }, 500);
+    };
+    if (itemInfo !== undefined) {
+        const priceOverview = await getPriceOverview(itemInfo);
+        if (priceOverview !== 'error') {
+            await quickSellItem(priceOverview);
+            doLoop();
         }
         else
             loop();
-    });
+    }
+    else
+        loop();
 }
 function addCSS() {
     GM_addStyle(`
@@ -275,14 +259,15 @@ function addCSS() {
 function XHR(XHROptions) {
     return new Promise(resolve => {
         const onerror = (error) => {
-            console.log(error);
+            console.error(error);
             resolve(undefined);
         };
         if (XHROptions.GM) {
             if (XHROptions.method === 'POST') {
                 if (XHROptions.headers === undefined)
                     XHROptions.headers = {};
-                XHROptions.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=utf-8';
+                if (XHROptions.headers['Content-Type'] === undefined)
+                    XHROptions.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=utf-8';
             }
             XHROptions.timeout = 30 * 1000;
             XHROptions.onload = res => resolve({ response: res, body: res.response });
@@ -293,7 +278,7 @@ function XHR(XHROptions) {
         else {
             const xhr = new XMLHttpRequest();
             xhr.open(XHROptions.method, XHROptions.url);
-            if (XHROptions.method === 'POST')
+            if (XHROptions.method === 'POST' && xhr.getResponseHeader('Content-Type') === null)
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8');
             if (XHROptions.cookie)
                 xhr.withCredentials = true;

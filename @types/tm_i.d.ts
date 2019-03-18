@@ -138,7 +138,7 @@ interface GMOpenInTabRetuens {
 interface GMXMLHttpRequestOptions {
   /**
    * one of GET, HEAD, POST
-   * 
+   *
    * @type {('GET' | 'HEAD' | 'POST')}
    * @memberof GMXMLHttpRequestOptions
    */
@@ -153,10 +153,10 @@ interface GMXMLHttpRequestOptions {
   /**
    * ie. user-agent, referer, ... (some special headers are not supported by Safari and Android browsers)
    * 
-   * @type {{ [index: string]: string }}
+   * @type {{ [index: string]: string | number }}
    * @memberof GMXMLHttpRequestOptions
    */
-  headers?: { [index: string]: string }
+  headers?: { [index: string]: string | number }
   /**
    * some string to send via a POST request
    * 
