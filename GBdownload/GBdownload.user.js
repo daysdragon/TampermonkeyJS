@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        gb688下载
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     1.0.1
+// @version     1.0.2
 // @author      lzghzr
 // @description 下载gb688.cn上的国标文件
 // @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
@@ -30,15 +30,12 @@ GBdownload.onclick = async () => {
     if (GBname === null)
         throw '文件名获取失败';
     const { id, name } = GBname.groups;
-    const onlineURLs = [`http://c.gb688.cn/bzgk/gb/viewGb?type=online&hcno=${hcno}`];
-    for (let i = 1; i < 10; i++)
-        onlineURLs.push(`http://c.gb688.cn/bzgk/gb/viewGb?type=online&hcno=${hcno}.00${i}`);
     let pdf = '';
-    for (const url of onlineURLs) {
+    for (let i = 0; i < 10; i++) {
         const view = await XHR({
             GM: true,
             method: 'POST',
-            url: url,
+            url: `http://c.gb688.cn/bzgk/gb/viewGb?type=online&hcno=${hcno}${i === 0 ? '' : `.00${i}`}`,
             headers: {
                 'Accept': 'text/plain, */*; q=0.01',
                 'Accept-Encoding': 'gzip, deflate',
@@ -53,7 +50,7 @@ GBdownload.onclick = async () => {
         });
         if (view === undefined || view.response.status !== 200)
             throw '文件获取失败';
-        GBdownload.innerText = `下载中...`;
+        GBdownload.innerText = `下载中...${i * 10}%`;
         pdf += view.body || '';
     }
     GBdownload.innerText = '下载标准';
