@@ -1,18 +1,18 @@
 // ==UserScript==
 // @name        gb688下载
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     1.0.2
+// @version     1.0.3
 // @author      lzghzr
 // @description 下载gb688.cn上的国标文件
 // @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
-// @match       http://www.gb688.cn/bzgk/gb/newGbInfo*
+// @match       *://*.gb688.cn/bzgk/gb/newGbInfo*
 // @connect     c.gb688.cn
 // @license     MIT
 // @grant       GM_xmlhttpRequest
 // @run-at      document-end
 // ==/UserScript==
 const online = document.querySelector('button.btn.ck_btn.btn-sm.btn-primary');
-if (online === null)
+if (online === null || online.innerText !== '在线预览')
     throw '没有预览, 没有下载';
 const hcno = online.dataset.value;
 if (hcno === null)

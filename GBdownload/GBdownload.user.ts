@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name        gb688下载
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     1.0.2
+// @version     1.0.3
 // @author      lzghzr
 // @description 下载gb688.cn上的国标文件
 // @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
-// @match       http://www.gb688.cn/bzgk/gb/newGbInfo*
+// @match       *://*.gb688.cn/bzgk/gb/newGbInfo*
 // @connect     c.gb688.cn
 // @license     MIT
 // @grant       GM_xmlhttpRequest
@@ -15,7 +15,7 @@ import { GM_xmlhttpRequest } from '../@types/tm_f'
 
 // 获取预览按钮
 const online = document.querySelector('button.btn.ck_btn.btn-sm.btn-primary')
-if (online === null) throw '没有预览, 没有下载'
+if (online === null || (<HTMLElement>online).innerText !== '在线预览') throw '没有预览, 没有下载'
 // 读取hcno值
 const hcno = (<HTMLElement>online).dataset.value
 if (hcno === null) throw '未获取到hcno'
