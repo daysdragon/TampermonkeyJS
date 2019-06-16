@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.12
+// @version     3.0.13
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -265,9 +265,9 @@ function ChangeCSS() {
   display: none !important;
 }`
   if (config.menu.noGiftMsg.enable) cssText += `
+.announcement-wrapper,
 #gift-screen-animation-vm,
 .chat-history-list .gift-item,
-.bilibili-live-player-danmaku-gift,
 .chat-history-panel .penury-gift-msg,
 .haruna-sekai-de-ichiban-kawaii .super-gift-bubbles {
   display: none !important;
