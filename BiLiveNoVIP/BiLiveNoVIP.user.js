@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.13
+// @version     3.0.14
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -13,7 +13,7 @@
 // @run-at      document-end
 // ==/UserScript==
 const defaultConfig = {
-    version: 1540298642287,
+    version: 1567431567404,
     menu: {
         noKanBanMusume: {
             name: '看\u00a0\u00a0板\u00a0\u00a0娘',
@@ -49,6 +49,10 @@ const defaultConfig = {
         },
         noGiftMsg: {
             name: '礼物信息',
+            enable: false
+        },
+        noRaffle: {
+            name: '抽奖弹窗',
             enable: false
         },
         noBBChat: {
@@ -261,6 +265,12 @@ function ChangeCSS() {
 .chat-history-list.with-penury-gift {
   height: 100% !important;
 }`;
+    if (config.menu.noRaffle.enable)
+        cssText += `
+#player-effect-vm,
+#chat-draw-area-vm {
+  display: none !important;
+}`;
     if (config.menu.noBBChat.enable)
         enableNOBBChat();
     else
@@ -317,6 +327,9 @@ function AddUI() {
     }
 }
 function AddCSS() {
+    let height = 0;
+    for (const _i in defaultConfig.menu)
+        height++;
     GM_addStyle(`
 .gunHide {
   display: none;
@@ -350,12 +363,12 @@ function AddCSS() {
   border-radius: 8px;
   box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);
   font-size: 12px;
-  height: 234px;
+  height: ${height * 22 - 10}px;
   left: 0px;
   padding: 10px;
   position: absolute;
   text-align: center;
-  top: -264px;
+  top: -${height * 22 + 20}px;
   transform-origin: 100px bottom 0px;
   width: 90px;
   z-index: 2147483647;
