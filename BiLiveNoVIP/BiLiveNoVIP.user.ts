@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.14
+// @version     3.0.15
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -17,7 +17,7 @@ import { GM_addStyle, GM_getValue, GM_setValue } from '../@types/tm_f'
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1567431567404,
+  version: 1569077112475,
   menu: {
     noKanBanMusume: {
       name: '看\u00a0\u00a0板\u00a0\u00a0娘',
@@ -83,6 +83,9 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
   config = defaultConfig
 }
 else config = userConfig
+// 统计菜单数量
+let meunNum = 0
+for (const _i in defaultConfig.menu) meunNum++
 // css
 const elmStyleCSS = GM_addStyle('')
 // noBB
@@ -322,6 +325,8 @@ function AddUI() {
     const evt = <HTMLElement>ev.target
     if (elmDivGun.contains(evt)) {
       if (elmDivGun === evt) {
+        elmDivMenu.style.top = `${ev.clientY - meunNum * 22 - 30}px`
+        elmDivMenu.style.left = `${ev.clientX - 50}px`
         elmDivMenu.classList.toggle('gunHide')
         elmDivGun.classList.toggle('gunActive')
       }
@@ -348,8 +353,6 @@ function AddUI() {
  * 
  */
 function AddCSS() {
-  let height = 0
-  for (const _i in defaultConfig.menu) height++
   GM_addStyle(`
 .gunHide {
   display: none;
@@ -383,12 +386,12 @@ function AddCSS() {
   border-radius: 8px;
   box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);
   font-size: 12px;
-  height: ${height * 22 - 10}px;
+  height: ${meunNum * 22 - 10}px;
   left: 0px;
   padding: 10px;
-  position: absolute;
+  position: fixed;
   text-align: center;
-  top: -${height * 22 + 20}px;
+  top: -${meunNum * 22 + 20}px;
   transform-origin: 100px bottom 0px;
   width: 90px;
   z-index: 2147483647;
