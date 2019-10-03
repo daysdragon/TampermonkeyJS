@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.0.15
+// @version     3.1.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -17,54 +17,54 @@ import { GM_addStyle, GM_getValue, GM_setValue } from '../@types/tm_f'
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1569077112475,
+  version: 1570090806747,
   menu: {
     noKanBanMusume: {
-      name: '看\u00a0\u00a0板\u00a0\u00a0娘',
+      name: '屏蔽看板娘',
       enable: false
     },
     noGuardIcon: {
-      name: '舰队标识',
+      name: '屏蔽舰队标识',
       enable: false
     },
     noHDIcon: {
-      name: '活动标识',
+      name: '屏蔽活动标识',
       enable: false
     },
     noVIPIcon: {
-      name: '老爷标识',
+      name: '屏蔽老爷标识',
       enable: false
     },
     noMedalIcon: {
-      name: '粉丝勋章',
+      name: '屏蔽粉丝勋章',
       enable: false
     },
     noUserLevelIcon: {
-      name: '用户等级',
+      name: '屏蔽用户等级',
       enable: false
     },
     noLiveTitleIcon: {
-      name: '成就头衔',
+      name: '屏蔽成就头衔',
       enable: false
     },
     noSystemMsg: {
-      name: '系统公告',
+      name: '屏蔽系统公告',
       enable: false
     },
     noGiftMsg: {
-      name: '礼物信息',
+      name: '屏蔽礼物信息',
       enable: false
     },
     noRaffle: {
-      name: '抽奖弹窗',
+      name: '屏蔽抽奖弹窗',
       enable: false
     },
     noBBChat: {
-      name: '刷屏聊天',
+      name: '屏蔽刷屏聊天',
       enable: false
     },
     noBBDanmaku: {
-      name: '刷屏弹幕',
+      name: '屏蔽刷屏弹幕',
       enable: false
     }
   }
@@ -83,9 +83,6 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
   config = defaultConfig
 }
 else config = userConfig
-// 统计菜单数量
-let meunNum = 0
-for (const _i in defaultConfig.menu) meunNum++
 // css
 const elmStyleCSS = GM_addStyle('')
 // noBB
@@ -137,23 +134,23 @@ setInterval(() => {
 }, 60 * 1000)
 ChangeCSS()
 // 监听相关DOM
-const elmDivAside = <HTMLDivElement>document.querySelector('.aside-area')
-if (elmDivAside !== null) {
-  let done = false
-  const asideObserver = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-      mutation.addedNodes.forEach(addedNode => {
-        if (!done && addedNode instanceof HTMLLIElement && addedNode.parentElement !== null && addedNode.parentElement.className === 'tab-list') {
-          asideObserver.disconnect()
-          done = true;
-          (<HTMLLIElement>addedNode.parentElement.firstElementChild).click()
-          AddUI()
-        }
-      })
+let done = 0
+const bodyObserver = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
+    mutation.addedNodes.forEach(addedNode => {
+      if (done !== 1 && done !== 3 && addedNode instanceof HTMLLIElement && addedNode.innerText === '七日榜') {
+        done += 1
+        addedNode.click()
+      }
+      else if (done !== 2 && done !== 3 && addedNode instanceof HTMLDivElement && addedNode.classList.contains('block-effect-ctnr')) {
+        done += 2
+        AddUI(addedNode)
+      }
+      if (done === 3) bodyObserver.disconnect()
     })
   })
-  asideObserver.observe(elmDivAside, { childList: true, subtree: true })
-}
+})
+bodyObserver.observe(document.body, { childList: true, subtree: true })
 /**
  * 启用聊天过滤
  *
@@ -294,58 +291,53 @@ function ChangeCSS() {
   elmStyleCSS.innerHTML = cssText
 }
 /**
- *添加设置菜单
+ * 添加设置菜单
  *
+ * @param {HTMLDivElement} addedNode
  */
-function AddUI() {
-  const elmDivBtns = document.querySelector('.icon-left-part');
-  // 传说中的UI, 真的很丑
-  const elmDivGun = document.createElement('div')
-  const elmDivMenu = document.createElement('div')
-  let html = ''
-  elmDivGun.id = 'gunBut'
-  elmDivMenu.id = 'gunMenu'
-  elmDivMenu.className = 'gunHide'
-  // 循环插入内容
-  for (const x in config.menu) {
-    html += `
-<div>
-  <input type="checkbox" id="${x}" class="gunHide" />
-  <label for="${x}">
-    <span>${config.menu[x].name}</span>
-  </label>
-</div>`
+function AddUI(addedNode: HTMLDivElement) {
+  const elmUList = <HTMLUListElement>addedNode.firstElementChild
+  const listLength = elmUList.childElementCount
+  const itemHTML = <HTMLLIElement>(<HTMLLIElement>elmUList.firstElementChild).cloneNode(true)
+  const itemInput = <HTMLInputElement>itemHTML.querySelector('input')
+  const itemLabel = <HTMLLabelElement>itemHTML.querySelector('Label')
+  itemInput.id = itemInput.id.replace(/\d/, '')
+  itemLabel.htmlFor = itemLabel.htmlFor.replace(/\d/, '')
+
+  const selectedCheckBox = (spanClone: HTMLSpanElement) => {
+    spanClone.classList.remove('checkbox-default')
+    spanClone.classList.add('checkbox-selected')
   }
-  elmDivMenu.innerHTML = html
-  // 插入菜单按钮
-  elmDivGun.appendChild(elmDivMenu)
-  if (elmDivBtns !== null) elmDivBtns.appendChild(elmDivGun)
-  // 为了和b站更搭, 所以监听body的click
-  document.body.addEventListener('click', ev => {
-    const evt = <HTMLElement>ev.target
-    if (elmDivGun.contains(evt)) {
-      if (elmDivGun === evt) {
-        elmDivMenu.style.top = `${ev.clientY - meunNum * 22 - 30}px`
-        elmDivMenu.style.left = `${ev.clientX - 50}px`
-        elmDivMenu.classList.toggle('gunHide')
-        elmDivGun.classList.toggle('gunActive')
-      }
-    }
-    else {
-      elmDivMenu.classList.add('gunHide')
-      elmDivGun.classList.remove('gunActive')
-    }
-  })
-  // 循环设置监听插入的DOM
+  const defaultCheckBox = (spanClone: HTMLSpanElement) => {
+    spanClone.classList.remove('checkbox-selected')
+    spanClone.classList.add('checkbox-default')
+  }
+
+  // 循环插入内容
+  let i = listLength
   for (const x in config.menu) {
-    const checkbox = <HTMLInputElement>document.getElementById(x)
-    checkbox.checked = config.menu[x].enable
-    checkbox.addEventListener('change', (ev) => {
+    const itemHTMLClone = <HTMLLIElement>itemHTML.cloneNode(true)
+    const itemSpanClone = <HTMLSpanElement>itemHTMLClone.querySelector('span')
+    const itemInputClone = <HTMLInputElement>itemHTMLClone.querySelector('input')
+    const itemLabelClone = <HTMLLabelElement>itemHTMLClone.querySelector('label')
+    itemInputClone.id += i
+    itemLabelClone.htmlFor += i
+    i++
+    itemLabelClone.innerText = config.menu[x].name
+
+    itemInputClone.checked = config.menu[x].enable
+    if (itemInputClone.checked) selectedCheckBox(itemSpanClone)
+    else defaultCheckBox(itemSpanClone)
+    itemInputClone.addEventListener('change', (ev) => {
       const evt = <HTMLInputElement>ev.target
-      config.menu[evt.id].enable = evt.checked
+      if (evt.checked) selectedCheckBox(itemSpanClone)
+      else defaultCheckBox(itemSpanClone)
+      config.menu[x].enable = evt.checked
       GM_setValue('blnvConfig', JSON.stringify(config))
       ChangeCSS()
     })
+
+    elmUList.appendChild(itemHTMLClone)
   }
 }
 /**
@@ -354,113 +346,21 @@ function AddUI() {
  */
 function AddCSS() {
   GM_addStyle(`
-.gunHide {
-  display: none;
-}
-#gunBut {
+.gift-block {
   border: 2px solid #c8c8c8;
   border-radius: 50%;
-  color: #c8c8c8;
-  cursor: default;
   display: inline-block;
   height: 17px;
-  line-height: 15px;
-  margin: 0 5px;
   text-align: center;
   width: 17px;
 }
-#gunBut.gunActive,
-#gunBut:hover {
+.gift-block:hover {
   border-color: #23ade5;
-  color: #23ade5;
 }
-#gunBut:after {
-  content: '滚';
+.gift-block:before {
+  content: '滚' !important;
   font-size: 13px;
-  vertical-align: middle;
-}
-#gunBut #gunMenu {
-  animation: gunMenu .4s;
-  background-color: #fff;
-  border: 1px solid #e9eaec;
-  border-radius: 8px;
-  box-shadow: 0 6px 12px 0 rgba(106,115,133,.22);
-  font-size: 12px;
-  height: ${meunNum * 22 - 10}px;
-  left: 0px;
-  padding: 10px;
-  position: fixed;
-  text-align: center;
-  top: -${meunNum * 22 + 20}px;
-  transform-origin: 100px bottom 0px;
-  width: 90px;
-  z-index: 2147483647;
-}
-#gunBut #gunMenu:before {
-  background: #fff;
-  content: "";
-  height: 10px;
-  left: 86px;
-  position: absolute;
-  top: 204px;
-  transform: skew(30deg,30deg);
-  width: 15px;
-}
-#gunBut #gunMenu > div {
-	height: 22px;
-	position: relative;
-}
-#gunBut #gunMenu > div > label:after {
-	background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 3px 0 rgba(105,115,133,.2);
-  content: "";
-	cursor: pointer;
-	display: block;
-	height: 20px;
-	left: -8px;
-	position: absolute;
-	top: -3px;
-  transition: all .3s;
-  width: 20px;
-}
-#gunBut #gunMenu > div > label:before {
-	background: #e3ebec;
-  border-radius: 7px;
-  content: "";
-  cursor: pointer;
-  height: 14px;
-  left: 0;
-  position: absolute;
-  transition: all .3s;
-	width: 26px;
-}
-#gunBut #gunMenu > div > input[type=checkbox]:checked + label:after {
-	left: 14px;
-}
-#gunBut #gunMenu > div > input[type=checkbox]:checked + label:before {
-	background: #23ade5;
-}
-#gunBut > #gunMenu > div > label > span {
-  color: #646c7a;
-  cursor: pointer;
-  left: 40px;
-  position: absolute;
-  top: 1px;
-  user-select: none;
-}
-@keyframes gunMenu {
-  0% {
-    opacity: 0;
-    transform: scale(0);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  vertical-align: top;
 }
 /*隐藏网页全屏榜单*/
 .player-full-win .rank-list-section {
