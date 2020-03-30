@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        gb688下载
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     1.0.5
+// @version     1.0.6
 // @author      lzghzr
 // @description 下载gb688.cn上的国标文件
 // @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
@@ -15,9 +15,6 @@
 const online = document.querySelector('button.btn.ck_btn.btn-sm.btn-primary');
 if (online === null || online.innerText !== '在线预览')
     throw '没有预览, 没有下载';
-const hcno = online.dataset.value;
-if (hcno === null)
-    throw '未获取到hcno';
 const download = document.querySelector('button.btn.xz_btn.btn-sm.btn-warning');
 if (download !== null)
     download.remove();
@@ -26,12 +23,20 @@ GBdownload.style.cssText = 'margin-right:20px';
 GBdownload.className = 'btn xz_btn btn-sm btn-warning';
 GBdownload.innerText = '下载标准';
 online.insertAdjacentElement('afterend', GBdownload);
+const hcno = online.dataset.value;
+if (hcno === null) {
+    GBdownload.innerText = '未获取到hcno';
+    throw '未获取到hcno';
+}
 GBdownload.onclick = async () => {
-    const GBname = document.body.innerText.match(/标准号：(?<id>.*?)\n中文标准名称：(?<name>.*?)\s/);
-    if (GBname === null)
+    const GBname = document.body.innerText.match(/标准号：(?<id>.*?)\n中文标准名称：(?<name>.*?)\s\n/);
+    if (GBname === null) {
+        GBdownload.innerText = '文件名获取失败';
         throw '文件名获取失败';
+    }
     const { id, name } = GBname.groups;
     let pdf = '';
+    GBdownload.innerText = '下载中...0%';
     for (let i = 0; i < 10; i++) {
         const view = await XHR({
             GM: true,
@@ -49,8 +54,10 @@ GBdownload.onclick = async () => {
             cookie: true,
             responseType: 'text'
         });
-        if (view === undefined || view.response.status !== 200)
+        if (view === undefined || view.response.status !== 200) {
+            GBdownload.innerText = '文件获取失败';
             throw '文件获取失败';
+        }
         GBdownload.innerText = `下载中...${i * 10}%`;
         pdf += view.body || '';
     }
