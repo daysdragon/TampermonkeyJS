@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        libBilibiliToken
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.1
+// @version     0.0.2
 // @author      lzghzr
 // @description 哔哩哔哩cookie获取token
 // @match       *://*.bilibili.com/*
@@ -26,8 +26,8 @@ class BilibiliToken {
   protected _W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   protected static readonly __loginSecretKey: string = '59b43e04ad6965f34319062b478f83dd'
   public static readonly loginAppKey: string = '4409e2ce8ffd12b8'
-  protected static readonly __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
-  public static readonly appKey: string = '4409e2ce8ffd12b8'
+  protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
+  public static readonly appKey: string = '1d8b6e7d45233436'
   public static get biliLocalId(): string { return this.RandomID(20) }
   public biliLocalId = BilibiliToken.biliLocalId
   public static readonly build: string = '102401'

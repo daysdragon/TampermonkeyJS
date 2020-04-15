@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        libBilibiliToken
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.1
+// @version     0.0.2
 // @author      lzghzr
 // @description 哔哩哔哩cookie获取token
 // @match       *://*.bilibili.com/*
@@ -153,8 +153,8 @@ class BilibiliToken {
 }
 BilibiliToken.__loginSecretKey = '59b43e04ad6965f34319062b478f83dd';
 BilibiliToken.loginAppKey = '4409e2ce8ffd12b8';
-BilibiliToken.__secretKey = '59b43e04ad6965f34319062b478f83dd';
-BilibiliToken.appKey = '4409e2ce8ffd12b8';
+BilibiliToken.__secretKey = '560c52ccd288fed045859ed18bffd973';
+BilibiliToken.appKey = '1d8b6e7d45233436';
 BilibiliToken.build = '102401';
 BilibiliToken.channel = 'master';
 BilibiliToken.device = 'Sony';
