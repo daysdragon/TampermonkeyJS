@@ -1,7 +1,5 @@
-declare function md5(value: string): string
-interface XHRheaders {
-  [index: string]: string | number
-}
+declare function md5(string: string, key?: string, raw?: boolean): string
+type XHRheaders = Record<string, string>
 /**
  * 二维码
  *
