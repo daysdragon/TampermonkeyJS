@@ -76,22 +76,22 @@ class BilibiliToken {
 &device_id=${this.deviceId}&device_name=${BilibiliToken.deviceName}&device_platform=${BilibiliToken.devicePlatform}&fingerprint=${fingerprint}&guid=${buvid}\
 &local_fingerprint=${fingerprint}&local_id=${buvid}&mobi_app=${BilibiliToken.mobiApp}&networkstate=${BilibiliToken.networkstate}&platform=${BilibiliToken.platform}`;
     }
-    static signQuery(params, ts = true) {
+    static signQuery(params, ts = true, secretKey = this.__secretKey) {
         let paramsSort = params;
         if (ts)
             paramsSort = `${params}&ts=${this.TS}`;
         paramsSort = paramsSort.split('&').sort().join('&');
-        const paramsSecret = paramsSort + this.__secretKey;
+        const paramsSecret = paramsSort + secretKey;
         const paramsHash = md5(paramsSecret);
         return `${paramsSort}&sign=${paramsHash}`;
     }
     static signLoginQuery(params) {
         const paramsBase = params === undefined ? this.loginQuery : `${params}&${this.loginQuery}`;
-        return this.signQuery(paramsBase);
+        return this.signQuery(paramsBase, true, this.__loginSecretKey);
     }
     signLoginQuery(params) {
         const paramsBase = params === undefined ? this.loginQuery : `${params}&${this.loginQuery}`;
-        return BilibiliToken.signQuery(paramsBase);
+        return BilibiliToken.signQuery(paramsBase, true, BilibiliToken.__loginSecretKey);
     }
     async getAuthCode() {
         const authCode = await XHR({

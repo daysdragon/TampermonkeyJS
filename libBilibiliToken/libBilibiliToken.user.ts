@@ -166,14 +166,15 @@ class BilibiliToken {
    * @static
    * @param {string} params
    * @param {boolean} [ts=true]
+   * @param {string} [secretKey=this.__secretKey]
    * @returns {string}
    * @memberof BilibiliToken
    */
-  public static signQuery(params: string, ts = true): string {
+  public static signQuery(params: string, ts = true, secretKey = this.__secretKey): string {
     let paramsSort = params
     if (ts) paramsSort = `${params}&ts=${this.TS}`
     paramsSort = paramsSort.split('&').sort().join('&')
-    const paramsSecret = paramsSort + this.__secretKey
+    const paramsSecret = paramsSort + secretKey
     const paramsHash = md5(paramsSecret)
     return `${paramsSort}&sign=${paramsHash}`
   }
@@ -187,7 +188,7 @@ class BilibiliToken {
    */
   public static signLoginQuery(params?: string): string {
     const paramsBase = params === undefined ? this.loginQuery : `${params}&${this.loginQuery}`
-    return this.signQuery(paramsBase)
+    return this.signQuery(paramsBase, true, this.__loginSecretKey)
   }
   /**
    * 对登录参数加参后签名
@@ -198,7 +199,7 @@ class BilibiliToken {
    */
   public signLoginQuery(params?: string): string {
     const paramsBase = params === undefined ? this.loginQuery : `${params}&${this.loginQuery}`
-    return BilibiliToken.signQuery(paramsBase)
+    return BilibiliToken.signQuery(paramsBase, true, BilibiliToken.__loginSecretKey)
   }
   /**
    * 获取二维码
