@@ -282,15 +282,15 @@ class BilibiliToken {
  * 使用Promise封装xhr
  * 因为上下文问题, GM_xmlhttpRequest为单独一项
  * fetch和GM_xmlhttpRequest兼容过于复杂, 所以使用XMLHttpRequest
- * 
- * @template T 
- * @param {XHROptions} XHROptions 
- * @returns {(Promise<response<T> | undefined>)} 
+ *
+ * @template T
+ * @param {XHROptions} XHROptions
+ * @returns {(Promise<response<T> | undefined>)}
  */
 function XHR<T>(XHROptions: XHROptions): Promise<response<T> | undefined> {
   return new Promise(resolve => {
     const onerror = (error: any) => {
-      console.error(error)
+      console.error(GM_info.script.name, error)
       resolve(undefined)
     }
     if (XHROptions.GM) {

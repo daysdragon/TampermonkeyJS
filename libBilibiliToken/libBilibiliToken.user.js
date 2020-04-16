@@ -165,7 +165,7 @@ BilibiliToken.platform = 'android';
 function XHR(XHROptions) {
     return new Promise(resolve => {
         const onerror = (error) => {
-            console.error(error);
+            console.error(GM_info.script.name, error);
             resolve(undefined);
         };
         if (XHROptions.GM) {
