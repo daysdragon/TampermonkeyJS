@@ -5,6 +5,7 @@
 // @author      lzghzr
 // @description 哔哩哔哩cookie获取token
 // @match       *://*.bilibili.com/*
+// @connect     passport.bilibili.com
 // @license     MIT
 // @grant       GM_xmlhttpRequest
 // @run-at      document-start

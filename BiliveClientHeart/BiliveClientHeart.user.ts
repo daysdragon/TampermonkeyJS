@@ -5,6 +5,8 @@
 // @author      lzghzr
 // @description B站直播客户端心跳
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
+// @connect     passport.bilibili.com
+// @connect     api.live.bilibili.com
 // @require     https://github.com/lzghzr/TampermonkeyJS/raw/master/libBilibiliToken/libBilibiliToken.user.js?v=0.0.3
 // @license     MIT
 // @grant       GM_getValue
