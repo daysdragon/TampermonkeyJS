@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        BiliveClientHeart
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.1
+// @version     0.0.2
 // @author      lzghzr
 // @description B站直播客户端心跳
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
@@ -50,12 +50,12 @@
         responseType: 'json',
         headers: appToken.headers
     });
-    if (tokenData === undefined && await setToken() === undefined)
+    if (tokenData.access_token === undefined && await setToken() === undefined)
         return;
     else {
         const userInfo = await getInfo();
         if (userInfo === undefined)
-            return console.error(GM_info.script.name, '未获取到用户信息');
+            return console.error(GM_info.script.name, '获取用户信息错误');
         if (userInfo.body.code !== 0 && await setToken() === undefined)
             return;
         else if (userInfo.body.data.mid !== uid && await setToken() === undefined)

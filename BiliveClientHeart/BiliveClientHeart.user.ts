@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        BiliveClientHeart
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.1
+// @version     0.0.2
 // @author      lzghzr
 // @description B站直播客户端心跳
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
@@ -20,14 +20,17 @@ import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from '../@types/tm_f'
 
   ;
 (async () => {
+  // BilibiliLive写入较慢, 需要等一会儿
   await Sleep(5000)
   const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
 
   if (W.BilibiliLive === undefined) return console.error(GM_info.script.name, '未获取到uid')
   const uid: number = W.BilibiliLive.UID
   if (uid === 0) return console.error(GM_info.script.name, '未获取到uid')
+  // 利用libBilibiliToken实现一些客户端功能
   const appToken = new BilibiliToken()
   const baseQuery = `actionKey=appkey&appkey=${BilibiliToken.appKey}&build=5561000&channel=bili&device=android&mobi_app=android&platform=android&statistics=%7B%22appId%22%3A1%2C%22platform%22%3A3%2C%22version%22%3A%225.57.0%22%2C%22abtest%22%3A%22%22%7D`
+  // 可以直接保存json, 这里只是习惯
   let tokenData = <BiliveClientHeartConfig>JSON.parse(GM_getValue('userToken', '{}'))
   const setToken = async () => {
     const userToken = await appToken.getToken()
@@ -53,10 +56,10 @@ import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from '../@types/tm_f'
     responseType: 'json',
     headers: appToken.headers
   })
-  if (tokenData === undefined && await setToken() === undefined) return
+  if (tokenData.access_token === undefined && await setToken() === undefined) return
   else {
     const userInfo = await getInfo()
-    if (userInfo === undefined) return console.error(GM_info.script.name, '未获取到用户信息')
+    if (userInfo === undefined) return console.error(GM_info.script.name, '获取用户信息错误')
     if (userInfo.body.code !== 0 && await setToken() === undefined) return
     else if (userInfo.body.data.mid !== uid && await setToken() === undefined) return
   }
