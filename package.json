@@ -11,7 +11,7 @@
   "author": "lzghzr",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^3.3.3333"
+    "typescript": "^3.9.2"
   },
   "dependencies": {}
 }
