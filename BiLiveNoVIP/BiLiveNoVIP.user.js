@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.1.0
+// @version     3.1.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -13,7 +13,7 @@
 // @run-at      document-end
 // ==/UserScript==
 const defaultConfig = {
-    version: 1570090806747,
+    version: 1589722960239,
     menu: {
         noKanBanMusume: {
             name: '屏蔽看板娘',
@@ -149,7 +149,7 @@ bodyObserver.observe(document.body, { childList: true, subtree: true });
 function enableNOBBChat() {
     if (noBBChat)
         return;
-    const elmDivChatList = document.querySelector('#chat-history-list');
+    const elmDivChatList = document.querySelector('#chat-items');
     if (elmDivChatList !== null) {
         noBBChat = true;
         chatObserver.observe(elmDivChatList, { childList: true });
@@ -260,7 +260,8 @@ function ChangeCSS() {
 #gift-screen-animation-vm,
 .chat-history-list .gift-item,
 .chat-history-panel .penury-gift-msg,
-.haruna-sekai-de-ichiban-kawaii .super-gift-bubbles {
+.haruna-sekai-de-ichiban-kawaii .super-gift-bubbles,
+.bilibili-danmaku .bilibili-live-player-danmaku-gift {
   display: none !important;
 }
 .chat-history-list.with-penury-gift {

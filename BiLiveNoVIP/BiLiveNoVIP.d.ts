@@ -61,6 +61,9 @@ interface configMenu {
   noLiveTitleIcon: configMenuData
   noSystemMsg: configMenuData
   noGiftMsg: configMenuData
+  noRaffle: configMenuData
+  noBBChat: configMenuData
+  noBBDanmaku: configMenuData
   // fixTreasure: configMenuData
   // replaceDanmaku: configMenuData
   // popularWords: configMenuData
