@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.1.1
+// @version     3.1.2
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -13,7 +13,7 @@
 // @run-at      document-end
 // ==/UserScript==
 const defaultConfig = {
-    version: 1589722960239,
+    version: 1590680982049,
     menu: {
         noKanBanMusume: {
             name: '屏蔽看板娘',
@@ -21,10 +21,6 @@ const defaultConfig = {
         },
         noGuardIcon: {
             name: '屏蔽舰队标识',
-            enable: false
-        },
-        noHDIcon: {
-            name: '屏蔽活动标识',
             enable: false
         },
         noVIPIcon: {
@@ -180,88 +176,79 @@ function ChangeCSS() {
     let cssText = '';
     if (config.menu.noKanBanMusume.enable)
         cssText += `
-.haruna-sekai-de-ichiban-kawaii {
+#my-dear-haruna-vm {
   display: none !important;
 }`;
     if (config.menu.noGuardIcon.enable)
         cssText += `
-.chat-history-list .guard-buy,
-.chat-history-list .guard-icon,
-.chat-history-list .welcome-guard,
-.chat-history-list .danmaku-item.guard-level-1:after,
-.chat-history-list .danmaku-item.guard-level-2:after,
-.chat-history-list .danmaku-item.guard-level-1:before,
-.chat-history-list .danmaku-item.guard-level-2:before {
+.chat-item.guard-buy,
+.chat-item.welcome-guard,
+.chat-item .guard-icon,
+.chat-item.guard-level-1:after,
+.chat-item.guard-level-2:after,
+.chat-item.guard-level-1:before,
+.chat-item.guard-level-2:before {
   display: none !important;
 }
-.chat-history-list .danmaku-item.guard-danmaku .vip-icon {
+.chat-item.guard-danmaku .vip-icon {
+  margin-right: 4px !important;
+}
+.chat-item.guard-danmaku .admin-icon,
+.chat-item.guard-danmaku .anchor-icon,
+.chat-item.guard-danmaku .fans-medal-item-ctnr,
+.chat-item.guard-danmaku .guard-icon,
+.chat-item.guard-danmaku .title-label,
+.chat-item.guard-danmaku .user-level-icon,
+.chat-item.guard-danmaku .user-lpl-logo {
   margin-right: 5px !important;
 }
-.chat-history-list .danmaku-item.guard-danmaku .admin-icon,
-.chat-history-list .danmaku-item.guard-danmaku .title-label,
-.chat-history-list .danmaku-item.guard-danmaku .anchor-icon,
-.chat-history-list .danmaku-item.guard-danmaku .user-level-icon,
-.chat-history-list .danmaku-item.guard-danmaku .fans-medal-item-ctnr {
-  margin-right: 5px !important;
-}
-.chat-history-list .danmaku-item.guard-level-1,
-.chat-history-list .danmaku-item.guard-level-2 {
+.chat-item.guard-level-1,
+.chat-item.guard-level-2 {
   padding: 4px 5px !important;
   margin: 0 !important;
 }
-.chat-history-list .danmaku-item.guard-danmaku .user-name {
-  color: #23ade5 !important;
-}
-.chat-history-list .danmaku-item.guard-danmaku .danmaku-content {
-  color: #646c7a !important;
-}`;
-    if (config.menu.noHDIcon.enable)
-        cssText += `
-.chat-history-list a[href^="/hd/"],
-.monster-wrapper,
-#santa-hint-ctnr {
-  display: none !important;
-}
-.chat-history-list .chat-item.danmaku-item .user-name {
+.chat-item.guard-danmaku .user-name {
   color: #23ade5 !important;
 }`;
     if (config.menu.noVIPIcon.enable)
         cssText += `
 #activity-welcome-area-vm,
-.chat-history-list .vip-icon,
-.chat-history-list .welcome-msg {
+.chat-item .vip-icon,
+.chat-item.welcome-msg {
   display: none !important;
 }`;
     if (config.menu.noMedalIcon.enable)
         cssText += `
-.chat-history-list .fans-medal-item-ctnr {
+.chat-item .fans-medal-item-ctnr {
   display: none !important;
 }`;
     if (config.menu.noUserLevelIcon.enable)
         cssText += `
-.chat-history-list .user-level-icon {
+.chat-item .user-level-icon {
   display: none !important;
 }`;
     if (config.menu.noLiveTitleIcon.enable)
         cssText += `
-.chat-history-list .title-label {
+.chat-item .title-label {
   display: none !important;
 }`;
     if (config.menu.noSystemMsg.enable)
         cssText += `
-#pk-vm+div,
-.bilibili-live-player-video-gift,
-.chat-history-list .system-msg {
+.chat-item.misc-msg {
   display: none !important;
 }`;
     if (config.menu.noGiftMsg.enable)
         cssText += `
-.announcement-wrapper,
+#chat-gift-bubble-vm,
+#penury-gift-msg,
 #gift-screen-animation-vm,
-.chat-history-list .gift-item,
-.chat-history-panel .penury-gift-msg,
-.haruna-sekai-de-ichiban-kawaii .super-gift-bubbles,
-.bilibili-danmaku .bilibili-live-player-danmaku-gift {
+#my-dear-haruna-vm .super-gift-bubbles,
+.chat-item.gift-item,
+.chat-item.system-msg,
+
+.bilibili-live-player-video-operable-container>div:first-child>div:last-child,
+.bilibili-live-player-video-gift,
+.bilibili-live-player-danmaku-gift {
   display: none !important;
 }
 .chat-history-list.with-penury-gift {
