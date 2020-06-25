@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name        BilibiliAV
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.1
+// @version     0.0.2
 // @author      lzghzr
 // @match       https://www.bilibili.com/video/BV*
+// @match       https://www.bilibili.com/video/bv*
 // @description 将BV替换为AV
 // @license     MIT
 // @grant       none
@@ -33,9 +34,10 @@ function enc(x: string) {
   return r.join('')
 }
 
-const BVReg = location.pathname.match(/BV(\w{10,11})/)
+const BVReg = W.location.pathname.match(/(BV|bv)(\w{10,11})/)
 if (BVReg !== null) {
-  const BV = BVReg[1]
+  const V = BVReg[1]
+  const BV = BVReg[2]
   const AV = dec(BV).toString()
-  W.history.replaceState(null, '', W.location.href.replace('BV' + BV, 'av' + AV))
+  W.history.replaceState(null, '', W.location.href.replace(`${V}${BV}`, `${V === 'BV' ? 'AV' : 'av'}${AV}`))
 }
