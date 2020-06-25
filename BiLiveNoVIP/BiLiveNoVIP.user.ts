@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.2.0
+// @version     3.2.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -379,18 +379,21 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 else config = userConfig
 
   ; (async () => {
-    if (config.menu.noActivityPlat.enable) {
+    if (config.menu.noActivityPlat.enable && !document.head.innerHTML.includes('addWaifu')) {
       document.open()
       const roomPath = location.pathname.match(/\/(\d+)/)
       if (roomPath !== null) {
         const roomID = roomPath[1]
-        const room4 = await fetch('/4').then(res => res.text().catch(() => undefined)).catch(() => undefined)
-        const roomPlayInfo = await fetch(`//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id=${roomID}&play_url=1&mask=1&qn=0&platform=web&ptype=16`).then(res => res.text().catch(() => undefined)).catch(() => undefined)
+        const room4 = await fetch('/4', { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined)
+        const roomPlayInfo = await fetch(`//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id=${roomID}&play_url=1&mask=1&qn=0&platform=web&ptype=16`, { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined)
         if (room4 !== undefined && roomPlayInfo !== undefined) {
           document.write(room4.replace(/<script>window\.__NEPTUNE_IS_MY_WAIFU__=.*?<\/script>/, `<script>window.__NEPTUNE_IS_MY_WAIFU__={"roomInitRes":${roomPlayInfo}}</script>`))
           document.close()
+          new NoVIP().Start()
         }
       }
     }
-    new NoVIP().Start()
+    else document.addEventListener('readystatechange', () => {
+      if (document.readyState === 'interactive') new NoVIP().Start()
+    })
   })()
