@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.2.1
+// @version     3.2.2
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -361,13 +361,11 @@ else
             if (room4 !== undefined && roomPlayInfo !== undefined) {
                 document.write(room4.replace(/<script>window\.__NEPTUNE_IS_MY_WAIFU__=.*?<\/script>/, `<script>window.__NEPTUNE_IS_MY_WAIFU__={"roomInitRes":${roomPlayInfo}}</script>`));
                 document.close();
-                new NoVIP().Start();
             }
         }
     }
-    else
-        document.addEventListener('readystatechange', () => {
-            if (document.readyState === 'interactive')
-                new NoVIP().Start();
-        });
+    document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'interactive')
+            new NoVIP().Start();
+    });
 })();
