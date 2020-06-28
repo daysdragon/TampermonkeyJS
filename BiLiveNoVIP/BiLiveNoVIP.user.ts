@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.2.3
+// @version     3.2.4
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -143,82 +143,82 @@ class NoVIP {
     //css内容
     let cssText = ''
     if (config.menu.noKanBanMusume.enable) cssText += `
-  #my-dear-haruna-vm {
-    display: none !important;
-  }`
+#my-dear-haruna-vm {
+  display: none !important;
+}`
     if (config.menu.noGuardIcon.enable) cssText += `
-  .chat-item.guard-buy,
-  .chat-item.welcome-guard,
-  .chat-item .guard-icon,
-  .chat-item.guard-level-1:after,
-  .chat-item.guard-level-2:after,
-  .chat-item.guard-level-1:before,
-  .chat-item.guard-level-2:before {
-    display: none !important;
-  }
-  .chat-item.guard-danmaku .vip-icon {
-    margin-right: 4px !important;
-  }
-  .chat-item.guard-danmaku .admin-icon,
-  .chat-item.guard-danmaku .anchor-icon,
-  .chat-item.guard-danmaku .fans-medal-item-ctnr,
-  .chat-item.guard-danmaku .guard-icon,
-  .chat-item.guard-danmaku .title-label,
-  .chat-item.guard-danmaku .user-level-icon,
-  .chat-item.guard-danmaku .user-lpl-logo {
-    margin-right: 5px !important;
-  }
-  .chat-item.guard-level-1,
-  .chat-item.guard-level-2 {
-    padding: 4px 5px !important;
-    margin: 0 !important;
-  }
-  .chat-item.guard-danmaku .user-name {
-    color: #23ade5 !important;
-  }`
+.chat-item.guard-buy,
+.chat-item.welcome-guard,
+.chat-item .guard-icon,
+.chat-item.guard-level-1:after,
+.chat-item.guard-level-2:after,
+.chat-item.guard-level-1:before,
+.chat-item.guard-level-2:before {
+  display: none !important;
+}
+.chat-item.guard-danmaku .vip-icon {
+  margin-right: 4px !important;
+}
+.chat-item.guard-danmaku .admin-icon,
+.chat-item.guard-danmaku .anchor-icon,
+.chat-item.guard-danmaku .fans-medal-item-ctnr,
+.chat-item.guard-danmaku .guard-icon,
+.chat-item.guard-danmaku .title-label,
+.chat-item.guard-danmaku .user-level-icon,
+.chat-item.guard-danmaku .user-lpl-logo {
+  margin-right: 5px !important;
+}
+.chat-item.guard-level-1,
+.chat-item.guard-level-2 {
+  padding: 4px 5px !important;
+  margin: 0 !important;
+}
+.chat-item.guard-danmaku .user-name {
+  color: #23ade5 !important;
+}`
     if (config.menu.noVIPIcon.enable) cssText += `
-  #activity-welcome-area-vm,
-  .chat-item .vip-icon,
-  .chat-item.welcome-msg {
-    display: none !important;
-  }`
+#activity-welcome-area-vm,
+.chat-item .vip-icon,
+.chat-item.welcome-msg {
+  display: none !important;
+}`
     if (config.menu.noMedalIcon.enable) cssText += `
-  .chat-item .fans-medal-item-ctnr {
-    display: none !important;
-  }`
+.chat-item .fans-medal-item-ctnr {
+  display: none !important;
+}`
     if (config.menu.noUserLevelIcon.enable) cssText += `
-  .chat-item .user-level-icon {
-    display: none !important;
-  }`
+.chat-item .user-level-icon {
+  display: none !important;
+}`
     if (config.menu.noLiveTitleIcon.enable) cssText += `
-  .chat-item .title-label {
-    display: none !important;
-  }`
+.chat-item .title-label {
+  display: none !important;
+}`
     if (config.menu.noSystemMsg.enable) cssText += `
-  .chat-item.misc-msg {
-    display: none !important;
-  }`
+.chat-item.misc-msg {
+  display: none !important;
+}`
     if (config.menu.noGiftMsg.enable) cssText += `
-  #chat-gift-bubble-vm,
-  #penury-gift-msg,
-  #gift-screen-animation-vm,
-  #my-dear-haruna-vm .super-gift-bubbles,
-  .chat-item.gift-item,
-  .chat-item.system-msg,
-  
-  .bilibili-live-player-video-operable-container>div:first-child>div:last-child,
-  .bilibili-live-player-video-gift,
-  .bilibili-live-player-danmaku-gift {
-    display: none !important;
-  }
-  .chat-history-list.with-penury-gift {
-    height: 100% !important;
-  }`
+#chat-gift-bubble-vm,
+#penury-gift-msg,
+#gift-screen-animation-vm,
+#my-dear-haruna-vm .super-gift-bubbles,
+.chat-item.gift-item,
+.chat-item.system-msg,
+
+.bilibili-live-player-video-operable-container>div:first-child>div:last-child,
+.bilibili-live-player-video-gift,
+.bilibili-live-player-danmaku-gift {
+  display: none !important;
+}
+.chat-history-list.with-penury-gift {
+  height: 100% !important;
+}`
     if (config.menu.noRaffle.enable) cssText += `
-  #player-effect-vm,
-  #chat-draw-area-vm {
-    display: none !important;
-  }`
+#player-effect-vm,
+#chat-draw-area-vm {
+  display: none !important;
+}`
     if (config.menu.noBBChat.enable) this.enableNOBBChat()
     else this.disableNOBBChat()
     if (config.menu.noBBDanmaku.enable) this.enableNOBBDanmaku()
@@ -283,29 +283,29 @@ class NoVIP {
    */
   public AddCSS() {
     GM_addStyle(`
-  .gift-block {
-    border: 2px solid #c8c8c8;
-    border-radius: 50%;
-    display: inline-block;
-    height: 17px;
-    text-align: center;
-    width: 17px;
-  }
-  .gift-block:hover {
-    border-color: #23ade5;
-  }
-  .gift-block:before {
-    content: '滚' !important;
-    font-size: 13px;
-    vertical-align: top;
-  }
-  /*隐藏网页全屏榜单*/
-  .player-full-win .rank-list-section {
-    display: none !important;
-  }
-  .player-full-win .chat-history-panel {
-    height: calc(100% - 135px) !important;
-  }`)
+.gift-block {
+  border: 2px solid #c8c8c8;
+  border-radius: 50%;
+  display: inline-block;
+  height: 17px;
+  text-align: center;
+  width: 17px;
+}
+.gift-block:hover {
+  border-color: #23ade5;
+}
+.gift-block:before {
+  content: '滚' !important;
+  font-size: 13px;
+  vertical-align: top;
+}
+/*隐藏网页全屏榜单*/
+.player-full-win .rank-list-section {
+  display: none !important;
+}
+.player-full-win .chat-history-panel {
+  height: calc(100% - 135px) !important;
+}`)
   }
 }
 
@@ -382,7 +382,7 @@ else config = userConfig
     if (config.menu.noActivityPlat.enable && !document.head.innerHTML.includes('addWaifu')) {
       document.open()
       document.addEventListener('readystatechange', () => {
-        if (document.readyState === 'interactive') new NoVIP().Start()
+        if (document.readyState === 'complete') new NoVIP().Start()
       })
       const roomPath = location.pathname.match(/\/(\d+)/)
       if (roomPath !== null) {
@@ -396,6 +396,6 @@ else config = userConfig
       }
     }
     else document.addEventListener('readystatechange', () => {
-      if (document.readyState === 'interactive') new NoVIP().Start()
+      if (document.readyState === 'complete') new NoVIP().Start()
     })
   })()
