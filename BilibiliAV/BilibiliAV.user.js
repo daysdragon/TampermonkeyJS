@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        BilibiliAV
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.0.2
+// @version     0.0.3
 // @author      lzghzr
 // @match       https://www.bilibili.com/video/BV*
 // @match       https://www.bilibili.com/video/bv*
@@ -38,5 +38,5 @@ if (BVReg !== null) {
     const V = BVReg[1];
     const BV = BVReg[2];
     const AV = dec(BV).toString();
-    W.history.replaceState(null, '', W.location.href.replace(`${V}${BV}`, `${V === 'BV' ? 'AV' : 'av'}${AV}`));
+    W.history.replaceState(null, '', W.location.href.replace(`${V}${BV}`, `av${AV}`));
 }
