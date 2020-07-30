@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.2.4
+// @version     3.2.5
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -141,7 +141,10 @@ class NoVIP {
    */
   public ChangeCSS() {
     //css内容
-    let cssText = ''
+    let cssText = `
+.chat-item .user-name {
+  color: #23ade5 !important;
+}`
     if (config.menu.noKanBanMusume.enable) cssText += `
 #my-dear-haruna-vm {
   display: none !important;
@@ -173,8 +176,11 @@ class NoVIP {
   padding: 4px 5px !important;
   margin: 0 !important;
 }
-.chat-item.guard-danmaku .user-name {
-  color: #23ade5 !important;
+.chat-item.chat-colorful-bubble {
+  display: block !important;
+  margin: 0 !important;
+  border-radius: 0px !important;
+  background-color: rgba(248, 248, 248, 0) !important;
 }`
     if (config.menu.noVIPIcon.enable) cssText += `
 #activity-welcome-area-vm,
@@ -311,7 +317,7 @@ class NoVIP {
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1593108024672,
+  version: 1596108390153,
   menu: {
     noKanBanMusume: {
       name: '屏蔽看板娘',
