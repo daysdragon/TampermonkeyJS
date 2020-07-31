@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name        BiliveClientHeart
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.1.2
+// @version     0.1.3
 // @author      lzghzr
 // @description B站直播客户端心跳
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
 // @connect     passport.bilibili.com
 // @connect     api.live.bilibili.com
 // @connect     live-trace.bilibili.com
-// @require     https://github.com/lzghzr/TampermonkeyJS/raw/master/libBilibiliToken/libBilibiliToken.js?v=0.0.4
-// @require     https://github.com/lzghzr/TampermonkeyJS/raw/master/libWasmHash/libWasmHash.js?v=0.0.2
+// @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@55fdb489ce4d3f73c02a4ddec9a6979023b7479c/libBilibiliToken/libBilibiliToken.js
+// @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@55fdb489ce4d3f73c02a4ddec9a6979023b7479c/libWasmHash/libWasmHash.js
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
