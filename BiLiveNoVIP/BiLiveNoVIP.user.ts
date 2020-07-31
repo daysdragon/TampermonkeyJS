@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.2.5
+// @version     3.3.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
+// @require     https://github.com/lzghzr/TampermonkeyJS/raw/master/Ajax-hook/Ajax-hook.js?v=2.0.3
 // @license     MIT
 // @grant       GM_addStyle
 // @grant       GM_getValue
@@ -201,6 +202,7 @@ class NoVIP {
   display: none !important;
 }`
     if (config.menu.noSystemMsg.enable) cssText += `
+.chat-item.important-prompt-item,
 .chat-item.misc-msg {
   display: none !important;
 }`
@@ -317,7 +319,7 @@ class NoVIP {
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1596108390153,
+  version: 1596205883604,
   menu: {
     noKanBanMusume: {
       name: '屏蔽看板娘',
@@ -366,6 +368,10 @@ const defaultConfig: config = {
     noActivityPlat: {
       name: '屏蔽房间皮肤',
       enable: false
+    },
+    invisible: {
+      name: '隐身入场',
+      enable: false
     }
   }
 }
@@ -384,24 +390,41 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 }
 else config = userConfig
 
-  ; (async () => {
-    if (config.menu.noActivityPlat.enable && !document.head.innerHTML.includes('addWaifu')) {
-      document.open()
-      document.addEventListener('readystatechange', () => {
-        if (document.readyState === 'complete') new NoVIP().Start()
-      })
-      const roomPath = location.pathname.match(/\/(\d+)/)
-      if (roomPath !== null) {
-        const roomID = roomPath[1]
-        const room4 = await fetch('/4', { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined)
-        const roomPlayInfo = await fetch(`//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id=${roomID}&play_url=1&mask=1&qn=0&platform=web&ptype=16`, { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined)
-        if (room4 !== undefined && roomPlayInfo !== undefined) {
-          document.write(room4.replace(/<script>window\.__NEPTUNE_IS_MY_WAIFU__=.*?<\/script>/, `<script>window.__NEPTUNE_IS_MY_WAIFU__={"roomInitRes":${roomPlayInfo}}</script>`))
-          document.close()
-        }
+  ;
+(async () => {
+  // 隐身入场
+  if (config.menu.invisible.enable) {
+    ah.proxy({
+      onRequest: (config, handler) => {
+        if (config.url.startsWith('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser'))
+          config.url = '//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=7'
+        handler.next(config)
+      },
+      onResponse: (response, handler) => {
+        if (response.config.url.startsWith('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser'))
+          response.response = response.response.replace('"is_room_admin":false', '"is_room_admin":true')
+        handler.next(response)
       }
-    }
-    else document.addEventListener('readystatechange', () => {
+    })
+  }
+  // 屏蔽房间皮肤
+  if (config.menu.noActivityPlat.enable && !document.head.innerHTML.includes('addWaifu')) {
+    document.open()
+    document.addEventListener('readystatechange', () => {
       if (document.readyState === 'complete') new NoVIP().Start()
     })
-  })()
+    const roomPath = location.pathname.match(/\/(\d+)/)
+    if (roomPath !== null) {
+      const roomID = roomPath[1]
+      const room4 = await fetch('/4', { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined)
+      const roomPlayInfo = await fetch(`//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id=${roomID}&play_url=1&mask=1&qn=0&platform=web&ptype=16`, { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined)
+      if (room4 !== undefined && roomPlayInfo !== undefined) {
+        document.write(room4.replace(/<script>window\.__NEPTUNE_IS_MY_WAIFU__=.*?<\/script>/, `<script>window.__NEPTUNE_IS_MY_WAIFU__={"roomInitRes":${roomPlayInfo}}</script>`))
+        document.close()
+      }
+    }
+  }
+  else document.addEventListener('readystatechange', () => {
+    if (document.readyState === 'complete') new NoVIP().Start()
+  })
+})()

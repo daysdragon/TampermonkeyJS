@@ -1,49 +1,10 @@
-interface Window {
-  flash_popularWords(): string[]
-  player_fullwin(full: boolean): void
-  protocol: Protocol
-  ROOMID: number
-  MASTERID: number
-}
-interface Protocol {
-  DANMU_MSG(danmu: danmuObject): void
-  SPECIAL_GIFT(beat: SPECIAL_GIFT): void
-}
-// CommentCoreLibrary
-declare class CommentManager {
-  constructor(HTMLElement: HTMLElement)
-  width: number
-  height: number
-  options: CCLOptions
-  init(): void
-  start(): void
-  clear(): void
-  stop(): void
-  send(CommentObject: CommentObject): void
-}
-interface CommentObject {
-  mode: number
-  text: string
-  shadow?: boolean
-  color?: number
-  size?: number
-}
-interface CCLOptions {
-  global: {
-    scale: number
-    opacity: number
-    className: string
-  }
-  scroll: {
-    scale: number
-    opacity: number
-  }
-  limit: number
-}
-// player_object
-interface playerObject extends HTMLElement {
-  showComments(show: boolean): boolean
-  wrappedJSObject: playerObject
+declare class ah {
+  static proxy: ({ onRequest, onError, onResponse }: {
+    onRequest?: (config: XHROptions, handler: { next: (config: XHROptions) => void }) => void,
+    onError?: (err: Error, handler: { next: (err: Error) => void }) => void,
+    onResponse?: (response: { config: XHROptions, response: string }, handler: { next: ({ config, response }: { config: XHROptions, response: string }) => void }) => void
+  }) => XMLHttpRequest
+  static unProxy: () => void
 }
 // 设置信息
 interface config {
@@ -64,6 +25,7 @@ interface configMenu {
   noRaffle: configMenuData
   noBBChat: configMenuData
   noBBDanmaku: configMenuData
+  invisible: configMenuData
   // fixTreasure: configMenuData
   // replaceDanmaku: configMenuData
   // popularWords: configMenuData
