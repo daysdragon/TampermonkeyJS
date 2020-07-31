@@ -3,7 +3,8 @@
 // @namespace   https://github.com/wendux/Ajax-hook
 // @version     2.0.3
 // @author      wendux
-// @description Ajax-hook
+// @description Ajax-hook source code: https://github.com/wendux/Ajax-hook
+// @match       *://*/*
 // @run-at      document-start
 // ==/UserScript==
 
