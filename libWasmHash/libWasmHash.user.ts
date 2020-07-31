@@ -9,6 +9,7 @@
 // @grant       GM_getResourceURL
 // @run-at      document-start
 // ==/UserScript==
+/// <reference path="libWasmHash.d.ts" />
 import { GM_getResourceURL } from '../@types/tm_f'
 /**
  * 
@@ -96,4 +97,4 @@ class WasmHash {
   }
 }
 
-export default WasmHash 
+export default WasmHash
