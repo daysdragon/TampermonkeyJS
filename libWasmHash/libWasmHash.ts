@@ -4,6 +4,7 @@
 // @version     0.0.2
 // @author      lzghzr
 // @description WebAssembly实现的Hash
+// @match       *://*/*
 // @license     MIT
 // @run-at      document-start
 // ==/UserScript==
