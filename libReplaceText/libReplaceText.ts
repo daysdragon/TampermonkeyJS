@@ -4,6 +4,7 @@
 // @version     0.0.7
 // @author      lzghzr
 // @description 替换网页内文本, 达到本地化的目的
+// @match       *://*/*
 // @license     MIT
 // @grant       none
 // @run-at      document-start
