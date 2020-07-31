@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.3.0
+// @version     3.3.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
-// @require     https://github.com/lzghzr/TampermonkeyJS/raw/master/Ajax-hook/Ajax-hook.js?v=2.0.3
+// @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@ba7671a0d7d7d13253c293724cfea78a8dc1665c/Ajax-hook/Ajax-hook.js
 // @license     MIT
 // @grant       GM_addStyle
 // @grant       GM_getValue
