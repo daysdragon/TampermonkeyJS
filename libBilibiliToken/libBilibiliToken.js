@@ -1,4 +1,15 @@
-import { GM_xmlhttpRequest } from '../@types/tm_f';
+// ==UserScript==
+// @name        libBilibiliToken
+// @namespace   https://github.com/lzghzr/TampermonkeyJS
+// @version     0.0.4
+// @author      lzghzr
+// @description 哔哩哔哩cookie获取token
+// @match       *://*.bilibili.com/*
+// @connect     passport.bilibili.com
+// @license     MIT
+// @grant       GM_xmlhttpRequest
+// @run-at      document-start
+// ==/UserScript==
 class BilibiliToken {
     constructor() {
         this._W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
@@ -385,4 +396,3 @@ BilibiliToken.devicePlatform = 'Android10SonyJ9110';
 BilibiliToken.mobiApp = 'android_tv_yst';
 BilibiliToken.networkstate = 'wifi';
 BilibiliToken.platform = 'android';
-export default BilibiliToken;

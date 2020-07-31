@@ -1,3 +1,12 @@
+// ==UserScript==
+// @name        libWasmHash
+// @namespace   https://github.com/lzghzr/TampermonkeyJS
+// @version     0.0.2
+// @author      lzghzr
+// @description WebAssembly实现的Hash
+// @license     MIT
+// @run-at      document-start
+// ==/UserScript==
 class WasmHash {
     constructor() {
         this._WASM_VECTOR_LEN = 0;
@@ -76,4 +85,3 @@ class WasmHash {
         return ptr;
     }
 }
-export default WasmHash;
