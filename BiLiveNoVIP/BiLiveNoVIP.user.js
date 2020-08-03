@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.3.2
+// @version     3.3.3
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -115,6 +115,7 @@ class NoVIP {
         this.danmakuObserver.disconnect();
     }
     ChangeCSS() {
+        let height = 62;
         let cssText = `
 .chat-item .user-name {
   color: #23ade5 !important;
@@ -181,15 +182,24 @@ class NoVIP {
 .chat-item .title-label {
   display: none !important;
 }`;
-        if (config.menu.noSystemMsg.enable)
+        if (config.menu.noSystemMsg.enable) {
+            height -= 30;
             cssText += `
+.chat-history-list.with-brush-prompt {
+  height: 100% !important;
+}
 #brush-prompt,
 .chat-item.important-prompt-item,
 .chat-item.misc-msg {
   display: none !important;
 }`;
-        if (config.menu.noGiftMsg.enable)
+        }
+        if (config.menu.noGiftMsg.enable) {
+            height -= 32;
             cssText += `
+.chat-history-list.with-penury-gift {
+  height: 100% !important;
+}
 #chat-gift-bubble-vm,
 #penury-gift-msg,
 #gift-screen-animation-vm,
@@ -201,15 +211,17 @@ class NoVIP {
 .bilibili-live-player-video-gift,
 .bilibili-live-player-danmaku-gift {
   display: none !important;
-}
-.chat-history-list.with-penury-gift {
-  height: 100% !important;
 }`;
+        }
         if (config.menu.noRaffle.enable)
             cssText += `
 #player-effect-vm,
 #chat-draw-area-vm {
   display: none !important;
+}`;
+        cssText += `
+.chat-history-list.with-penury-gift.with-brush-prompt {
+  height: calc(100% - ${height}px) !important;
 }`;
         if (config.menu.noBBChat.enable)
             this.enableNOBBChat();
