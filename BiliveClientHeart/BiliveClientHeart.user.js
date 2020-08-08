@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        BiliveClientHeart
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.1.3
+// @version     0.1.4
 // @author      lzghzr
 // @description B站直播客户端心跳
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
@@ -9,7 +9,7 @@
 // @connect     api.live.bilibili.com
 // @connect     live-trace.bilibili.com
 // @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@55fdb489ce4d3f73c02a4ddec9a6979023b7479c/libBilibiliToken/libBilibiliToken.js
-// @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@55fdb489ce4d3f73c02a4ddec9a6979023b7479c/libWasmHash/libWasmHash.js
+// @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@fe2340677328762f9d6e9686603e9781d69cd3c9/libWasmHash/libWasmHash.js
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
@@ -61,7 +61,7 @@
             randomID += words[Math.floor(Math.random() * 16)];
         return randomID;
     };
-    const uuid = () => RandomHex(32).replace(/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/, '$1-$2-$3-$3-$5');
+    const uuid = () => RandomHex(32).replace(/(\w{8})(\w{4})\w(\w{3})\w(\w{3})(\w{12})/, `$1-$2-4$3-${'89ab'[Math.floor(Math.random() * 4)]}$4-$5`);
     const mobileHeartBeatJSON = {
         platform: 'android',
         uuid: uuid(),
