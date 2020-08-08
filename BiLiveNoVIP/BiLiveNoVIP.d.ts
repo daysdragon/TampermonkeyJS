@@ -2,7 +2,7 @@ declare class ah {
   static proxy: ({ onRequest, onError, onResponse }: {
     onRequest?: (config: XHROptions, handler: { next: (config: XHROptions) => void }) => void,
     onError?: (err: Error, handler: { next: (err: Error) => void }) => void,
-    onResponse?: (response: { config: XHROptions, response: string }, handler: { next: ({ config, response }: { config: XHROptions, response: string }) => void }) => void
+    onResponse?: (response: { config: XHROptions, headers: Headers, response: string, status: number, statusText: string }, handler: { next: ({ config, response }: { config: XHROptions, response: string }) => void }) => void
   }) => XMLHttpRequest
   static unProxy: () => void
 }
@@ -25,6 +25,7 @@ interface configMenu {
   noRaffle: configMenuData
   noBBChat: configMenuData
   noBBDanmaku: configMenuData
+  noRoundPlay: configMenuData
   invisible: configMenuData
   // fixTreasure: configMenuData
   // replaceDanmaku: configMenuData

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.3.3
+// @version     3.4.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -305,7 +305,7 @@ class NoVIP {
     }
 }
 const defaultConfig = {
-    version: 1596205883604,
+    version: 1596879572820,
     menu: {
         noKanBanMusume: {
             name: '屏蔽看板娘',
@@ -355,6 +355,10 @@ const defaultConfig = {
             name: '屏蔽房间皮肤',
             enable: false
         },
+        noRoundPlay: {
+            name: '屏蔽视频轮播',
+            enable: false
+        },
         invisible: {
             name: '隐身入场',
             enable: false
@@ -377,40 +381,35 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 else
     config = userConfig;
 (async () => {
-    if (config.menu.invisible.enable) {
+    if (config.menu.invisible.enable || config.menu.noRoundPlay.enable) {
+        if (config.menu.noRoundPlay.enable)
+            Reflect.defineProperty(unsafeWindow, '__NEPTUNE_IS_MY_WAIFU__', {});
         ah.proxy({
-            onRequest: (config, handler) => {
-                if (config.url.startsWith('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser'))
-                    config.url = '//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=7';
-                handler.next(config);
+            onRequest: (XHRconfig, handler) => {
+                if (config.menu.invisible.enable && XHRconfig.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser'))
+                    XHRconfig.url = '//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=7';
+                handler.next(XHRconfig);
             },
             onResponse: (response, handler) => {
-                if (response.config.url.startsWith('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser'))
+                if (config.menu.invisible.enable && response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser'))
                     response.response = response.response.replace('"is_room_admin":false', '"is_room_admin":true');
+                if (config.menu.noRoundPlay.enable) {
+                    if (response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo'))
+                        response.response = response.response.replace('"live_status":2', '"live_status":0');
+                    if (response.config.url.includes('//api.live.bilibili.com/live/getRoundPlayVideo'))
+                        response.status = 403;
+                }
                 handler.next(response);
             }
         });
     }
-    if (config.menu.noActivityPlat.enable && !document.head.innerHTML.includes('addWaifu')) {
-        document.open();
-        document.addEventListener('readystatechange', () => {
-            if (document.readyState === 'complete')
-                new NoVIP().Start();
-        });
-        const roomPath = location.pathname.match(/\/(\d+)/);
-        if (roomPath !== null) {
-            const roomID = roomPath[1];
-            const room4 = await fetch('/4', { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined);
-            const roomPlayInfo = await fetch(`//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id=${roomID}&play_url=1&mask=1&qn=0&platform=web&ptype=16`, { credentials: 'include' }).then(res => res.text().catch(() => undefined)).catch(() => undefined);
-            if (room4 !== undefined && roomPlayInfo !== undefined) {
-                document.write(room4.replace(/<script>window\.__NEPTUNE_IS_MY_WAIFU__=.*?<\/script>/, `<script>window.__NEPTUNE_IS_MY_WAIFU__={"roomInitRes":${roomPlayInfo}}</script>`));
-                document.close();
-            }
-        }
-    }
-    else
-        document.addEventListener('readystatechange', () => {
-            if (document.readyState === 'complete')
-                new NoVIP().Start();
-        });
+    if (config.menu.noActivityPlat.enable)
+        if (location.pathname.startsWith('/blanc'))
+            history.replaceState(null, '', location.href.replace(`${location.origin}/blanc`, location.origin));
+        else
+            location.href = location.href.replace(location.origin, `${location.origin}/blanc`);
+    document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'complete')
+            new NoVIP().Start();
+    });
 })();
