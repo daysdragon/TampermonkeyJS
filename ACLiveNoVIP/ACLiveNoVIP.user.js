@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name        acfun直播净化
-// @namespace   https://github.com/lzghzr/GreasemonkeyJS
+// @namespace   https://github.com/lzghzr/TampermonkeyJS
 // @version     0.0.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
-// @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
+// @supportURL  https://github.com/lzghzr/TampermonkeyJS/issues
 // @include     /^https?:\/\/live\.acfun\.cn\/live\/\d/
 // @license     MIT
 // @grant       GM_addStyle
