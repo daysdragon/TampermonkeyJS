@@ -13,25 +13,6 @@ interface config {
 }
 interface configMenu {
   [index: string]: configMenuData
-  noKanBanMusume: configMenuData
-  noGuardIcon: configMenuData
-  // noHDIcon: configMenuData
-  noVIPIcon: configMenuData
-  noMedalIcon: configMenuData
-  noUserLevelIcon: configMenuData
-  noLiveTitleIcon: configMenuData
-  noSystemMsg: configMenuData
-  noGiftMsg: configMenuData
-  noRaffle: configMenuData
-  noBBChat: configMenuData
-  noBBDanmaku: configMenuData
-  noRoundPlay: configMenuData
-  invisible: configMenuData
-  // fixTreasure: configMenuData
-  // replaceDanmaku: configMenuData
-  // popularWords: configMenuData
-  // beatStorm: configMenuData
-  // closeDanmaku: configMenuData
 }
 interface configMenuData {
   name: string

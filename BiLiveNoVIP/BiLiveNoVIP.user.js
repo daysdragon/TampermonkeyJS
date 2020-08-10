@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.4.0
+// @version     3.4.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -65,20 +65,16 @@ class NoVIP {
             });
         }, 60 * 1000);
         this.ChangeCSS();
-        let done = 0;
         const bodyObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(addedNode => {
-                    if (done !== 1 && done !== 3 && addedNode instanceof HTMLLIElement && addedNode.innerText === '七日榜') {
-                        done += 1;
+                    if (addedNode instanceof HTMLLIElement && addedNode.innerText === '七日榜')
                         addedNode.click();
+                    else if (addedNode instanceof HTMLDivElement && addedNode.classList.contains('dialog-ctnr')) {
+                        const blockEffectCtnr = addedNode.querySelector('.block-effect-ctnr');
+                        if (blockEffectCtnr !== null)
+                            this.AddUI(blockEffectCtnr);
                     }
-                    else if (done !== 2 && done !== 3 && addedNode instanceof HTMLDivElement && addedNode.classList.contains('block-effect-ctnr')) {
-                        done += 2;
-                        this.AddUI(addedNode);
-                    }
-                    if (done === 3)
-                        bodyObserver.disconnect();
                 });
             });
         });
@@ -264,7 +260,7 @@ class NoVIP {
                 selectedCheckBox(itemSpanClone);
             else
                 defaultCheckBox(itemSpanClone);
-            itemInputClone.addEventListener('change', (ev) => {
+            itemInputClone.addEventListener('change', ev => {
                 const evt = ev.target;
                 if (evt.checked)
                     selectedCheckBox(itemSpanClone);
