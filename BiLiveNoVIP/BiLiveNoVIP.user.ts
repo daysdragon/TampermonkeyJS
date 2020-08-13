@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.4.1
+// @version     3.4.2
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -22,6 +22,7 @@ class NoVIP {
   public elmStyleCSS!: HTMLStyleElement
   public chatObserver!: MutationObserver
   public danmakuObserver!: MutationObserver
+  public sleepTimer!: number
   public Start() {
     // css
     this.elmStyleCSS = GM_addStyle('')
@@ -230,6 +231,10 @@ class NoVIP {
 }`
     }
     if (config.menu.noRaffle.enable) cssText += `
+body[style*="overflow: hidden;"] {
+  overflow-y: auto !important;
+}
+.anchor-lottery-entry,
 #player-effect-vm,
 #chat-draw-area-vm {
   display: none !important;
@@ -251,6 +256,10 @@ class NoVIP {
    * @memberof NoVIP
    */
   public AddUI(addedNode: HTMLDivElement) {
+    let menuName = ''
+    for (const x in config.menu)
+      menuName += `\n${config.menu[x].name}`
+    if (addedNode.innerText.includes(menuName)) return
     const elmUList = <HTMLUListElement>addedNode.firstElementChild
     const listLength = elmUList.childElementCount
     const itemHTML = <HTMLLIElement>(<HTMLLIElement>elmUList.firstElementChild).cloneNode(true)
