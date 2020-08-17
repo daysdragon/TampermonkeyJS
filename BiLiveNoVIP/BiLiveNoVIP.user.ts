@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.4.2
+// @version     3.5.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -19,10 +19,11 @@ import { GM_addStyle, GM_getValue, GM_setValue } from '../@types/tm_f'
 class NoVIP {
   public noBBChat = false
   public noBBDanmaku = false
+  public noSleep = false
+  public sleepTimer = 0
   public elmStyleCSS!: HTMLStyleElement
   public chatObserver!: MutationObserver
   public danmakuObserver!: MutationObserver
-  public sleepTimer!: number
   public Start() {
     // css
     this.elmStyleCSS = GM_addStyle('')
@@ -130,6 +131,26 @@ class NoVIP {
     if (!this.noBBDanmaku) return
     this.noBBDanmaku = false
     this.danmakuObserver.disconnect()
+  }
+  /**
+   * 启用反挂机
+   *
+   * @memberof NoVIP
+   */
+  public enableNOSleep() {
+    if (this.noSleep) return
+    this.noSleep = true
+    this.sleepTimer = setInterval(() => document.dispatchEvent(new Event('visibilitychange')), 10 * 60 * 1000)
+  }
+  /**
+   * 停用反挂机
+   *
+   * @memberof NoVIP
+   */
+  public disableNOSleep() {
+    if (!this.noSleep) return
+    this.noSleep = false
+    clearInterval(this.sleepTimer)
   }
   /**
    * 覆盖原有css
@@ -247,6 +268,8 @@ body[style*="overflow: hidden;"] {
     else this.disableNOBBChat()
     if (config.menu.noBBDanmaku.enable) this.enableNOBBDanmaku()
     else this.disableNOBBDanmaku()
+    if (config.menu.noSleep.enable) this.enableNOSleep()
+    else this.disableNOSleep()
     this.elmStyleCSS.innerHTML = cssText
   }
   /**
@@ -339,7 +362,7 @@ body[style*="overflow: hidden;"] {
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1596879572820,
+  version: 1597672228545,
   menu: {
     noKanBanMusume: {
       name: '屏蔽看板娘',
@@ -391,6 +414,10 @@ const defaultConfig: config = {
     },
     noRoundPlay: {
       name: '屏蔽视频轮播',
+      enable: false
+    },
+    noSleep: {
+      name: '屏蔽挂机检测',
       enable: false
     },
     invisible: {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.4.2
+// @version     3.5.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -17,6 +17,8 @@ class NoVIP {
     constructor() {
         this.noBBChat = false;
         this.noBBDanmaku = false;
+        this.noSleep = false;
+        this.sleepTimer = 0;
     }
     Start() {
         this.elmStyleCSS = GM_addStyle('');
@@ -109,6 +111,18 @@ class NoVIP {
             return;
         this.noBBDanmaku = false;
         this.danmakuObserver.disconnect();
+    }
+    enableNOSleep() {
+        if (this.noSleep)
+            return;
+        this.noSleep = true;
+        this.sleepTimer = setInterval(() => document.dispatchEvent(new Event('visibilitychange')), 10 * 60 * 1000);
+    }
+    disableNOSleep() {
+        if (!this.noSleep)
+            return;
+        this.noSleep = false;
+        clearInterval(this.sleepTimer);
     }
     ChangeCSS() {
         let height = 62;
@@ -231,6 +245,10 @@ body[style*="overflow: hidden;"] {
             this.enableNOBBDanmaku();
         else
             this.disableNOBBDanmaku();
+        if (config.menu.noSleep.enable)
+            this.enableNOSleep();
+        else
+            this.disableNOSleep();
         this.elmStyleCSS.innerHTML = cssText;
     }
     AddUI(addedNode) {
@@ -310,7 +328,7 @@ body[style*="overflow: hidden;"] {
     }
 }
 const defaultConfig = {
-    version: 1596879572820,
+    version: 1597672228545,
     menu: {
         noKanBanMusume: {
             name: '屏蔽看板娘',
@@ -362,6 +380,10 @@ const defaultConfig = {
         },
         noRoundPlay: {
             name: '屏蔽视频轮播',
+            enable: false
+        },
+        noSleep: {
+            name: '屏蔽挂机检测',
             enable: false
         },
         invisible: {
