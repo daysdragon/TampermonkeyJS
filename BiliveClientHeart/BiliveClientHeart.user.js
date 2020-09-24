@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        BiliveClientHeart
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.1.4
+// @version     0.1.5
 // @author      lzghzr
 // @description B站直播客户端心跳
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
@@ -41,15 +41,6 @@
         anonymous: true,
         method: 'GET',
         url: `https://passport.bilibili.com/x/passport-login/oauth2/info?${appToken.signLoginQuery(`access_key=${tokenData.access_token}`)}`,
-        responseType: 'json',
-        headers: appToken.headers
-    });
-    const mobileOnline = () => XHR({
-        GM: true,
-        anonymous: true,
-        method: 'POST',
-        url: `https://api.live.bilibili.com/heartbeat/v1/OnLine/mobileOnline?${BilibiliToken.signQuery(`access_key=${tokenData.access_token}&${baseQuery}`)}`,
-        data: `room_id=${W.BilibiliLive.ROOMID}&scale=xxhdpi`,
         responseType: 'json',
         headers: appToken.headers
     });
@@ -160,8 +151,6 @@
             return;
     }
     console.log(GM_info.script.name, '开始客户端心跳');
-    mobileOnline();
-    setInterval(() => mobileOnline(), 5 * 60 * 1000);
     const giftNum = await getGiftNum();
     if (giftNum < 24) {
         const fansMedal = await getFansMedal();
