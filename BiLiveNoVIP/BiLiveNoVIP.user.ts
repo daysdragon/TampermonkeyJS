@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.0
+// @version     3.5.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -76,8 +76,7 @@ class NoVIP {
     const bodyObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
         mutation.addedNodes.forEach(addedNode => {
-          if (addedNode instanceof HTMLLIElement && addedNode.innerText === '七日榜') addedNode.click()
-          else if (addedNode instanceof HTMLDivElement && addedNode.classList.contains('dialog-ctnr')) {
+          if (addedNode instanceof HTMLDivElement && addedNode.classList.contains('dialog-ctnr')) {
             const blockEffectCtnr = addedNode.querySelector<HTMLDivElement>('.block-effect-ctnr')
             if (blockEffectCtnr !== null) this.AddUI(blockEffectCtnr)
           }
