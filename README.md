@@ -21,6 +21,8 @@
 11. [B站直播客户端心跳](https://github.com/lzghzr/TampermonkeyJS/raw/master/BiliveClientHeart/BiliveClientHeart.user.js) Web端模拟app心跳
 12. [acfun直播净化](https://github.com/lzghzr/TampermonkeyJS/raw/master/ACLiveNoVIP/ACLiveNoVIP.user.js) 屏蔽聊天室礼物以及关键字，净化聊天室环境
 
+## License
+
 所有脚本未特殊标注的均以MIT协议开源
 
 默认情况下.ts文件为源文件, .js文件为目标文件
