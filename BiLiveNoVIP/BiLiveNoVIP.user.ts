@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.1
+// @version     3.5.2
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -211,8 +211,8 @@ class NoVIP {
 .chat-item .fans-medal-item-ctnr {
   display: none !important;
 }`
-    if (config.menu.noUserLevelIcon.enable) cssText += `
-.chat-item .user-level-icon {
+    if (config.menu.noTopNotice.enable) cssText += `
+.chat-item.top3-notice {
   display: none !important;
 }`
     if (config.menu.noLiveTitleIcon.enable) cssText += `
@@ -361,7 +361,7 @@ body[style*="overflow: hidden;"] {
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1597672228545,
+  version: 1605179763609,
   menu: {
     noKanBanMusume: {
       name: '屏蔽看板娘',
@@ -379,8 +379,8 @@ const defaultConfig: config = {
       name: '屏蔽粉丝勋章',
       enable: false
     },
-    noUserLevelIcon: {
-      name: '屏蔽用户等级',
+    noTopNotice: {
+      name: '屏蔽高能公告',
       enable: false
     },
     noLiveTitleIcon: {
