@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        BiliveClientHeart
 // @namespace   https://github.com/lzghzr/TampermonkeyJS
-// @version     0.1.5
+// @version     0.1.6
 // @author      lzghzr
 // @description B站直播客户端心跳
 // @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
@@ -63,7 +63,7 @@
         area_id: '283',
         timestamp: '{timestamp}',
         secret_key: 'axoaadsffcazxksectbbb',
-        watch_time: '300',
+        watch_time: '60',
         up_id: '{target_id}',
         up_level: '40',
         jump_from: '30000',
@@ -156,15 +156,15 @@
         const fansMedal = await getFansMedal();
         if (fansMedal !== undefined) {
             const control = 24 - giftNum;
-            const loopNum = Math.ceil(control / fansMedal.length);
-            let count = 0;
+            const loopNum = Math.ceil(control / fansMedal.length) * 5;
             for (let i = 0; i < loopNum; i++) {
+                let count = 0;
                 for (const funsMedalData of fansMedal) {
                     if (count >= control)
                         break;
                     const postData = Object.assign({}, mobileHeartBeatJSON, {
                         room_id: funsMedalData.room_id.toString(),
-                        timestamp: (BilibiliToken.TS - 300).toString(),
+                        timestamp: (BilibiliToken.TS - 60).toString(),
                         up_id: funsMedalData.target_id.toString(),
                         up_session: `l:one:live:record:${funsMedalData.room_id}:${funsMedalData.last_wear_time}`,
                         client_ts: BilibiliToken.TS.toString()
@@ -172,10 +172,7 @@
                     await mobileHeartBeat(postData);
                     count++;
                 }
-                if (count >= control)
-                    break;
-                else
-                    await Sleep(300 * 1000);
+                await Sleep(60 * 1000);
             }
         }
     }
