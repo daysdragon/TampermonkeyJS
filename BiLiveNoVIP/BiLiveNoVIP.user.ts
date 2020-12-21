@@ -458,7 +458,7 @@ else config = userConfig
           response.response = response.response.replace('"is_room_admin":false', '"is_room_admin":true')
         // 屏蔽视频轮播
         if (config.menu.noRoundPlay.enable) {
-          if (response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo'))
+          if (response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo'))
             response.response = response.response.replace('"live_status":2', '"live_status":0')
           if (response.config.url.includes('//api.live.bilibili.com/live/getRoundPlayVideo'))
             response.status = 403
