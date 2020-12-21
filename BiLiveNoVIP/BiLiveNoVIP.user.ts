@@ -360,7 +360,7 @@ body[style*="overflow: hidden;"] {
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1605272532276,
+  version: 1605272532276, // TODO 修改配置版本号 我自己已在原有基础上+1用作测试
   menu: {
     noKanBanMusume: {
       name: '屏蔽看板娘',
