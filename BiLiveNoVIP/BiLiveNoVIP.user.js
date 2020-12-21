@@ -325,7 +325,7 @@ body[style*="overflow: hidden;"] {
     }
 }
 const defaultConfig = {
-    version: 1605272532275,
+    version: 1605272532276,
     menu: {
         noKanBanMusume: {
             name: '屏蔽看板娘',
@@ -372,6 +372,10 @@ const defaultConfig = {
             enable: false
         },
         noActivityPlat: {
+            name: '屏蔽活动皮肤',
+            enable: false
+        },
+        noRoomSkin: {
             name: '屏蔽房间皮肤',
             enable: false
         },
@@ -405,7 +409,7 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 else
     config = userConfig;
 (async () => {
-    if (config.menu.invisible.enable || config.menu.noRoundPlay.enable) {
+    if (config.menu.invisible.enable || config.menu.noRoundPlay.enable || config.menu.noRoomSkin.enable) {
         if (config.menu.noRoundPlay.enable)
             Reflect.defineProperty(unsafeWindow, '__NEPTUNE_IS_MY_WAIFU__', {});
         ah.proxy({
@@ -422,6 +426,12 @@ else
                         response.response = response.response.replace('"live_status":2', '"live_status":0');
                     if (response.config.url.includes('//api.live.bilibili.com/live/getRoundPlayVideo'))
                         response.status = 403;
+                }
+                if (config.menu.noRoomSkin.enable && response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom')) {
+                    const json = JSON.parse(response.response);
+                    json.data.skin_info = {
+                    };
+                    response.response = JSON.stringify(json);
                 }
                 handler.next(response);
             }

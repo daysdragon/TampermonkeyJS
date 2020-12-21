@@ -360,7 +360,7 @@ body[style*="overflow: hidden;"] {
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1605272532275,
+  version: 1605272532276, // TODO 修改配置版本号 我自己已在原有基础上+1用作测试
   menu: {
     noKanBanMusume: {
       name: '屏蔽看板娘',
@@ -407,6 +407,10 @@ const defaultConfig: config = {
       enable: false
     },
     noActivityPlat: {
+      name: '屏蔽活动皮肤',
+      enable: false
+    },
+    noRoomSkin: {
       name: '屏蔽房间皮肤',
       enable: false
     },
@@ -442,7 +446,7 @@ else config = userConfig
   ;
 (async () => {
   // 屏蔽视频轮播 & 隐身入场
-  if (config.menu.invisible.enable || config.menu.noRoundPlay.enable) {
+  if (config.menu.invisible.enable || config.menu.noRoundPlay.enable || config.menu.noRoomSkin.enable) {
     if (config.menu.noRoundPlay.enable)
       Reflect.defineProperty(unsafeWindow, '__NEPTUNE_IS_MY_WAIFU__', {})
     ah.proxy({
@@ -463,11 +467,16 @@ else config = userConfig
           if (response.config.url.includes('//api.live.bilibili.com/live/getRoundPlayVideo'))
             response.status = 403
         }
+        if (config.menu.noRoomSkin.enable && response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom')) {
+          const json = JSON.parse(response.response)
+          json.data.skin_info = undefined
+          response.response = JSON.stringify(json)
+        }
         handler.next(response)
       }
     })
   }
-  // 屏蔽房间皮肤
+  // 屏蔽活动皮肤
   // if (config.menu.noActivityPlat.enable && !document.head.innerHTML.includes('addWaifu')) {
   //   document.open()
   //   document.addEventListener('readystatechange', () => {
