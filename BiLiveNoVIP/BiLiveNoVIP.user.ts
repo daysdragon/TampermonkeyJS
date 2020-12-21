@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.5
+// @version     3.5.6
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -360,7 +360,7 @@ body[style*="overflow: hidden;"] {
 
 // 加载设置
 const defaultConfig: config = {
-  version: 1605272532276, // TODO 修改配置版本号 我自己已在原有基础上+1用作测试
+  version: 1608533993642,
   menu: {
     noKanBanMusume: {
       name: '屏蔽看板娘',

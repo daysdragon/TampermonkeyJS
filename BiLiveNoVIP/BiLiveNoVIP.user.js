@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.5
+// @version     3.5.6
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -325,7 +325,7 @@ body[style*="overflow: hidden;"] {
     }
 }
 const defaultConfig = {
-    version: 1605272532276,
+    version: 1608533993642,
     menu: {
         noKanBanMusume: {
             name: '屏蔽看板娘',
@@ -422,15 +422,14 @@ else
                 if (config.menu.invisible.enable && response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser'))
                     response.response = response.response.replace('"is_room_admin":false', '"is_room_admin":true');
                 if (config.menu.noRoundPlay.enable) {
-                    if (response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo'))
+                    if (response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo'))
                         response.response = response.response.replace('"live_status":2', '"live_status":0');
                     if (response.config.url.includes('//api.live.bilibili.com/live/getRoundPlayVideo'))
                         response.status = 403;
                 }
                 if (config.menu.noRoomSkin.enable && response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom')) {
                     const json = JSON.parse(response.response);
-                    json.data.skin_info = {
-                    };
+                    json.data.skin_info = undefined;
                     response.response = JSON.stringify(json);
                 }
                 handler.next(response);
