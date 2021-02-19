@@ -17,7 +17,7 @@
 7. [steam物品价值](https://github.com/lzghzr/TampermonkeyJS/raw/master/SteamItemGoo/SteamItemGoo.user.js) 在市场物品详情中显示价值
 8. [I am Groot!](https://github.com/lzghzr/TampermonkeyJS/raw/master/iamgroot/iamgroot.user.js) I am Groot!
 9. [SEE 中文化脚本](https://github.com/lzghzr/TampermonkeyJS/raw/master/SEE_zh-Hans/SEE_zh-Hans.user.js) 需安装 [Steam Economy Enhancer](https://github.com/Nuklon/Steam-Economy-Enhancer/raw/master/code.user.js)
-10. ~~[gb688下载](https://github.com/lzghzr/TampermonkeyJS/raw/master/GBdownload/GBdownload.user.js) 下载gb688.cn上的国标文件~~ 官方已支持下载, 好耶!
+10. ~~[gb688下载](https://github.com/lzghzr/TampermonkeyJS/raw/master/GBdownload/GBdownload.user.js) 下载gb688.cn上的国标文件~~ #27
 11. [B站直播客户端心跳](https://github.com/lzghzr/TampermonkeyJS/raw/master/BiliveClientHeart/BiliveClientHeart.user.js) Web端模拟app心跳
 12. [acfun直播净化](https://github.com/lzghzr/TampermonkeyJS/raw/master/ACLiveNoVIP/ACLiveNoVIP.user.js) 屏蔽聊天室礼物以及关键字，净化聊天室环境
 
