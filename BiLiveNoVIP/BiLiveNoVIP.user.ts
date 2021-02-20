@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.7
+// @version     3.5.8
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -139,7 +139,12 @@ class NoVIP {
   public enableNOSleep() {
     if (this.noSleep) return
     this.noSleep = true
-    this.sleepTimer = setInterval(() => document.dispatchEvent(new Event('visibilitychange')), 10 * 60 * 1000)
+    // const borderWidth = Math.ceil((window.outerWidth - window.innerWidth) / 2)
+    // const cx = Math.floor(Math.random() * (window.innerWidth + 1))
+    // const cy = Math.floor(Math.random() * (window.innerHeight + 1))
+    // const sx = window.screenX + cx + borderWidth
+    // const sy = window.screenY + cy + window.outerHeight - window.innerHeight - borderWidth
+    this.sleepTimer = setInterval(() => document.dispatchEvent(new MouseEvent('mousemove')), 10 * 60 * 1000)
   }
   /**
    * 停用反挂机
