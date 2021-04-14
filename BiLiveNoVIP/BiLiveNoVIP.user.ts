@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.8
+// @version     3.5.9
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -250,6 +250,7 @@ class NoVIP {
 .chat-item.gift-item,
 .chat-item.system-msg,
 
+.web-player-inject-wrap>div:first-child>div:last-child,
 .bilibili-live-player-video-operable-container>div:first-child>div:last-child,
 .bilibili-live-player-video-gift,
 .bilibili-live-player-danmaku-gift {
