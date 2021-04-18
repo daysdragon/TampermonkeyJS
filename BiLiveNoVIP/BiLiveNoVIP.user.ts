@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.9
+// @version     3.5.10
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -115,7 +115,7 @@ class NoVIP {
    */
   public enableNOBBDanmaku() {
     if (this.noBBDanmaku) return
-    const elmDivDanmaku = document.querySelector('.bilibili-live-player-video-danmaku')
+    const elmDivDanmaku = document.querySelector('#live-player')
     if (elmDivDanmaku !== null) {
       this.noBBDanmaku = true
       this.danmakuObserver.observe(elmDivDanmaku, { childList: true, subtree: true })
