@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.5.10
+// @version     3.6.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
-// @include     /^https?:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
+// @include     /^https:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
+// @include     /^https:\/\/www\.bilibili\.com\/blackboard\/live\//
 // @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@ba7671a0d7d7d13253c293724cfea78a8dc1665c/Ajax-hook/Ajax-hook.js
 // @license     MIT
 // @grant       GM_addStyle
@@ -449,8 +450,7 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 }
 else config = userConfig
 
-  ;
-(async () => {
+if (location.hostname === 'live.bilibili.com') {
   // 屏蔽视频轮播 & 隐身入场
   if (config.menu.invisible.enable || config.menu.noRoundPlay.enable || config.menu.noRoomSkin.enable) {
     if (config.menu.noRoundPlay.enable)
@@ -473,6 +473,7 @@ else config = userConfig
           if (response.config.url.includes('//api.live.bilibili.com/live/getRoundPlayVideo'))
             response.status = 403
         }
+        // 屏蔽房间皮肤
         if (config.menu.noRoomSkin.enable && response.config.url.includes('//api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom')) {
           const json = JSON.parse(response.response)
           json.data.skin_info = undefined
@@ -494,12 +495,22 @@ else config = userConfig
   //     document.close()
   //   }
   // }
-  if (config.menu.noActivityPlat.enable)
-    if (location.pathname.startsWith('/blanc'))
-      history.replaceState(null, '', location.href.replace(`${location.origin}/blanc`, location.origin))
-    else
-      location.href = location.href.replace(location.origin, `${location.origin}/blanc`)
+  if (config.menu.noActivityPlat.enable) {
+    if (self === top) {
+      if (location.pathname.startsWith('/blanc'))
+        history.replaceState(null, '', location.href.replace(`${location.origin}/blanc`, location.origin))
+      else
+        location.href = location.href.replace(location.origin, `${location.origin}/blanc`)
+    }
+    else top.postMessage(location.origin + location.pathname, 'https://www.bilibili.com')
+  }
   document.addEventListener('readystatechange', () => {
     if (document.readyState === 'complete') new NoVIP().Start()
   })
-})()
+}
+else if (location.hostname === 'www.bilibili.com') {
+  if (config.menu.noActivityPlat.enable)
+    unsafeWindow.addEventListener("message", msg => {
+      if ((<string>msg.data).startsWith('https://live.bilibili.com/blanc/')) location.href = msg.data
+    })
+}

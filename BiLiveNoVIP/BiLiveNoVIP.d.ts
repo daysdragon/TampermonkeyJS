@@ -5,6 +5,10 @@ declare class ah {
     onResponse?: (response: { config: XHROptions, headers: Headers, response: string, status: number, statusText: string }, handler: { next: ({ config, response }: { config: XHROptions, response: string }) => void }) => void
   }) => XMLHttpRequest
   static unProxy: () => void
+  static hook: ({ open }: {
+    open: (args: [string, string, boolean], xhr: XMLHttpRequest) => boolean
+  }) => void
+  static unHook: () => void
 }
 // 设置信息
 interface config {
