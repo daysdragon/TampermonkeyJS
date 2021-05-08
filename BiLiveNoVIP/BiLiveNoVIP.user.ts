@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.6.0
+// @version     3.6.1
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
@@ -482,6 +482,24 @@ if (location.hostname === 'live.bilibili.com') {
         handler.next(response)
       }
     })
+    // 屏蔽视频轮播
+    if (config.menu.noRoundPlay.enable) {
+      const _fetch = unsafeWindow.fetch
+      unsafeWindow.fetch = new Proxy(_fetch, {
+        apply: async function (target, _this, args: [RequestInfo, RequestInit | undefined]) {
+          if (typeof args[0] === 'string' && args[0].includes('//api.live.bilibili.com/live/getRoundPlayVideo')) {
+            // 为了兼容其他脚本
+            const response = await target(...args)
+            return new Response(response.body, {
+              status: 403,
+              statusText: 'Forbidden',
+              headers: response.headers
+            })
+          }
+          return Reflect.apply(target, _this, args)
+        }
+      })
+    }
   }
   // 屏蔽活动皮肤
   // if (config.menu.noActivityPlat.enable && !document.head.innerHTML.includes('addWaifu')) {
