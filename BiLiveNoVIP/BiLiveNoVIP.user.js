@@ -6,7 +6,8 @@
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
 // @include     /^https:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
-// @include     /^https:\/\/www\.bilibili\.com\/blackboard\/live\//
+// @match       https://live.bilibili.com/blackboard/activity-*
+// @match       https://www.bilibili.com/blackboard/live/*
 // @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@ba7671a0d7d7d13253c293724cfea78a8dc1665c/Ajax-hook/Ajax-hook.js
 // @license     MIT
 // @grant       GM_addStyle
@@ -410,7 +411,7 @@ if (userConfig.version === undefined || userConfig.version < defaultConfig.versi
 }
 else
     config = userConfig;
-if (location.hostname === 'live.bilibili.com') {
+if (location.href.match(/^https:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/)) {
     if (config.menu.invisible.enable || config.menu.noRoundPlay.enable || config.menu.noRoomSkin.enable) {
         if (config.menu.noRoundPlay.enable)
             Reflect.defineProperty(unsafeWindow, '__NEPTUNE_IS_MY_WAIFU__', {});
@@ -461,18 +462,20 @@ if (location.hostname === 'live.bilibili.com') {
             else
                 location.href = location.href.replace(location.origin, `${location.origin}/blanc`);
         }
-        else
+        else {
+            top.postMessage(location.origin + location.pathname, 'https://live.bilibili.com');
             top.postMessage(location.origin + location.pathname, 'https://www.bilibili.com');
+        }
     }
     document.addEventListener('readystatechange', () => {
         if (document.readyState === 'complete')
             new NoVIP().Start();
     });
 }
-else if (location.hostname === 'www.bilibili.com') {
+else if (location.href.startsWith('https://live.bilibili.com/blackboard/activity-') || location.href.startsWith('https://www.bilibili.com/blackboard/live/')) {
     if (config.menu.noActivityPlat.enable)
         unsafeWindow.addEventListener("message", msg => {
-            if (msg.data.startsWith('https://live.bilibili.com/blanc/'))
+            if (msg.origin === 'https://live.bilibili.com' && msg.data.startsWith('https://live.bilibili.com/blanc/'))
                 location.href = msg.data;
         });
 }

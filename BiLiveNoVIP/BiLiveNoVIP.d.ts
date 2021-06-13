@@ -6,7 +6,8 @@ declare class ah {
   }) => XMLHttpRequest
   static unProxy: () => void
   static hook: ({ open }: {
-    open: (args: [string, string, boolean], xhr: XMLHttpRequest) => boolean
+    open?: (args: [string, string, boolean], xhr: XMLHttpRequest) => boolean,
+    send?: (args: [string], xhr: XMLHttpRequest) => boolean,
   }) => void
   static unHook: () => void
 }
