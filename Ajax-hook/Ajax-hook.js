@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Ajax-hook
 // @namespace   https://github.com/wendux/Ajax-hook
-// @version     2.0.3
+// @version     2.0.3.1
 // @author      wendux
 // @description Ajax-hook source code: https://github.com/wendux/Ajax-hook
 // @match       *://*/*
@@ -236,7 +236,7 @@ const ah = (W => {
 
         function handleResponse(xhr, xhrProxy) {
             var handler = new ResponseHandler(xhr);
-            if (!onResponse) return handler.resolve();
+            // if (!onResponse) return handler.resolve();
             var ret = {
                 response: xhrProxy.response,
                 status: xhrProxy.status,
@@ -249,6 +249,7 @@ const ah = (W => {
                     return ob;
                 }, {})
             };
+            if (!onResponse) return handler.resolve(ret);
             onResponse(ret, handler);
         }
 
