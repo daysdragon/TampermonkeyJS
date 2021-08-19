@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name        bilibili直播净化
 // @namespace   https://github.com/lzghzr/GreasemonkeyJS
-// @version     3.6.1
+// @version     3.7.0
 // @author      lzghzr
 // @description 屏蔽聊天室礼物以及关键字, 净化聊天室环境
 // @supportURL  https://github.com/lzghzr/GreasemonkeyJS/issues
 // @include     /^https:\/\/live\.bilibili\.com\/(?:blanc\/)?\d/
 // @match       https://live.bilibili.com/blackboard/activity-*
 // @match       https://www.bilibili.com/blackboard/live/*
-// @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@ba7671a0d7d7d13253c293724cfea78a8dc1665c/Ajax-hook/Ajax-hook.js
+// @require     https://cdn.jsdelivr.net/gh/lzghzr/TampermonkeyJS@25127e6f47da91603645f9ec3a7da65ecb1180cf/Ajax-hook/Ajax-hook.js
 // @license     MIT
 // @grant       GM_addStyle
 // @grant       GM_getValue
@@ -16,12 +16,13 @@
 // @run-at      document-start
 // ==/UserScript==
 class NoVIP {
-    constructor() {
-        this.noBBChat = false;
-        this.noBBDanmaku = false;
-        this.noSleep = false;
-        this.sleepTimer = 0;
-    }
+    noBBChat = false;
+    noBBDanmaku = false;
+    noSleep = false;
+    sleepTimer = 0;
+    elmStyleCSS;
+    chatObserver;
+    danmakuObserver;
     Start() {
         this.elmStyleCSS = GM_addStyle('');
         this.AddCSS();
@@ -47,7 +48,7 @@ class NoVIP {
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(addedNode => {
                     const danmakuNode = addedNode instanceof Text ? addedNode.parentElement : addedNode;
-                    if (danmakuNode.className === 'bilibili-danmaku') {
+                    if (danmakuNode?.className === 'bilibili-danmaku') {
                         const danmakuText = danmakuNode.innerText;
                         const dateNow = Date.now();
                         if (danmakuMessage.has(danmakuText) && dateNow - danmakuMessage.get(danmakuText) < 5000)
@@ -130,87 +131,24 @@ class NoVIP {
 .chat-item .user-name {
   color: #23ade5 !important;
 }`;
-        if (config.menu.noKanBanMusume.enable)
-            cssText += `
-#my-dear-haruna-vm {
-  display: none !important;
-}`;
-        if (config.menu.noGuardIcon.enable)
-            cssText += `
-#welcome-area-bottom-vm,
-.chat-item.guard-buy,
-.chat-item.welcome-guard,
-.chat-item .guard-icon,
-.chat-item.guard-level-1:after,
-.chat-item.guard-level-2:after,
-.chat-item.guard-level-1:before,
-.chat-item.guard-level-2:before {
-  display: none !important;
-}
-.chat-item.guard-danmaku .vip-icon {
-  margin-right: 4px !important;
-}
-.chat-item.guard-danmaku .admin-icon,
-.chat-item.guard-danmaku .anchor-icon,
-.chat-item.guard-danmaku .fans-medal-item-ctnr,
-.chat-item.guard-danmaku .guard-icon,
-.chat-item.guard-danmaku .title-label,
-.chat-item.guard-danmaku .user-level-icon,
-.chat-item.guard-danmaku .user-lpl-logo {
-  margin-right: 5px !important;
-}
-.chat-item.guard-level-1,
-.chat-item.guard-level-2 {
-  padding: 4px 5px !important;
-  margin: 0 !important;
-}
-.chat-item.chat-colorful-bubble {
-  display: block !important;
-  margin: 0 !important;
-  border-radius: 0px !important;
-  background-color: rgba(248, 248, 248, 0) !important;
-}`;
-        if (config.menu.noVIPIcon.enable)
-            cssText += `
-#activity-welcome-area-vm,
-.chat-item .vip-icon,
-.chat-item.welcome-msg {
-  display: none !important;
-}`;
-        if (config.menu.noMedalIcon.enable)
-            cssText += `
-.chat-item .fans-medal-item-ctnr {
-  display: none !important;
-}`;
-        if (config.menu.noTopNotice.enable)
-            cssText += `
-.chat-item.top3-notice,
-.chat-item .rank-icon {
-  display: none !important;
-}`;
-        if (config.menu.noLiveTitleIcon.enable)
-            cssText += `
-.chat-item .title-label {
-  display: none !important;
-}`;
-        if (config.menu.noSystemMsg.enable) {
-            height -= 30;
-            cssText += `
-.chat-history-list.with-brush-prompt {
-  height: 100% !important;
-}
-#brush-prompt,
-.chat-item.important-prompt-item,
-.chat-item.misc-msg {
-  display: none !important;
-}`;
-        }
         if (config.menu.noGiftMsg.enable) {
             height -= 32;
             cssText += `
 .chat-history-list.with-penury-gift {
   height: 100% !important;
 }
+/* 热门流量推荐 */
+.chat-item.hot-rank-msg,
+/* VIP标识 */
+#activity-welcome-area-vm,
+.chat-item .vip-icon,
+.chat-item.welcome-msg,
+/* 高能标识 */
+.chat-item.top3-notice,
+.chat-item .rank-icon,
+/* 分享直播间 */
+.chat-item.important-prompt-item,
+
 #chat-gift-bubble-vm,
 #penury-gift-msg,
 #gift-screen-animation-vm,
@@ -225,6 +163,138 @@ class NoVIP {
   display: none !important;
 }`;
         }
+        if (config.menu.noSystemMsg.enable) {
+            height -= 30;
+            cssText += `
+.chat-history-list.with-brush-prompt {
+  height: 100% !important;
+}
+#brush-prompt,
+.chat-item.misc-msg {
+  display: none !important;
+}`;
+        }
+        if (config.menu.noSuperChat.enable)
+            cssText += `
+.chat-item.superChat-card-detail {
+  margin-left: unset !important;
+  margin-right: unset !important;
+  min-height: unset !important;
+}
+.chat-item .card-item-middle-top {
+  background-color: unset !important;
+  background-image: unset !important;
+  border: unset !important;
+  display: inline !important;
+  padding: unset !important;
+}
+.chat-item .card-item-middle-top-right {
+  display: unset !important;
+}
+.chat-item .superChat-base {
+  display: unset !important;
+  height: unset !important;
+  line-height: unset !important;
+  vertical-align: unset !important;
+  width: unset !important;
+}
+.chat-item .superChat-base .fans-medal-item-ctnr {
+  margin-right: 4px !important;
+}
+.chat-item .name {
+  color: #23ade5 !important;
+  display: unset !important;
+  font-size: unset !important;
+  font-weight: unset !important;
+  height: unset !important;
+  line-height: 20px !important;
+  margin-left: unset !important;
+  opacity: unset !important;
+  overflow: unset !important;
+  text-overflow: unset !important;
+  vertical-align: unset !important;
+  white-space: unset !important;
+  width: unset !important;
+}
+.chat-item .card-item-middle-bottom {
+  background-color: unset !important;
+  display: unset !important;
+  padding: unset !important;
+}
+.chat-item .input-contain {
+  display: unset !important;
+}
+.chat-item .text {
+  color: #646c7a !important;
+}
+/* SuperChat 提示条 */
+#chat-msg-bubble-vm,
+/* SuperChat 保留条 */
+#pay-note-panel-vm,
+
+.chat-item .bottom-background,
+.chat-item .card-item-top-right,
+#chat-control-panel-vm .super-chat {
+  display: none !important;
+}`;
+        if (config.menu.noEmoticons.enable)
+            cssText += `
+.bilibili-danmaku > img,
+#chat-control-panel-vm .emoticons-panel,
+.chat-item[data-type="1"] {
+  display: none !important;
+}`;
+        if (config.menu.noKanBanMusume.enable)
+            cssText += `
+#my-dear-haruna-vm {
+  display: none !important;
+}`;
+        if (config.menu.noGuardIcon.enable)
+            cssText += `
+.chat-item.guard-danmaku .vip-icon {
+  margin-right: 4px !important;
+}
+.chat-item.guard-danmaku .admin-icon,
+.chat-item.guard-danmaku .anchor-icon,
+.chat-item.guard-danmaku .fans-medal-item-ctnr,
+.chat-item.guard-danmaku .guard-icon,
+.chat-item.guard-danmaku .title-label,
+.chat-item.guard-danmaku .user-level-icon,
+.chat-item.guard-danmaku .user-lpl-logo {
+  margin-right: 5px !important;
+}
+.chat-item.guard-level-1,
+.chat-item.guard-level-2 {
+  margin: 0 !important;
+  padding: 4px 5px !important;
+}
+.chat-item.chat-colorful-bubble {
+  background-color: rgba(248, 248, 248, 0) !important;
+  border-radius: 0px !important;
+  display: block !important;
+  margin: 0 !important;
+}
+#welcome-area-bottom-vm,
+.chat-item.common-danmuku-msg,
+.chat-item.guard-buy,
+.chat-item.welcome-guard,
+.chat-item .guard-icon,
+.chat-item.guard-level-1:after,
+.chat-item.guard-level-2:after,
+.chat-item.guard-level-1:before,
+.chat-item.guard-level-2:before {
+  display: none !important;
+}`;
+        if (config.menu.noMedalIcon.enable)
+            cssText += `
+.chat-item .fans-medal-item-ctnr {
+  display: none !important;
+}`;
+        if (config.menu.noLiveTitleIcon.enable)
+            cssText += `
+.chat-item .title-label {
+  display: none !important;
+}`;
         if (config.menu.noRaffle.enable)
             cssText += `
 body[style*="overflow: hidden;"] {
@@ -255,18 +325,23 @@ body[style*="overflow: hidden;"] {
         this.elmStyleCSS.innerHTML = cssText;
     }
     AddUI(addedNode) {
-        let menuName = '';
-        for (const x in config.menu)
-            menuName += `\n${config.menu[x].name}`;
-        if (addedNode.innerText.includes(menuName))
-            return;
         const elmUList = addedNode.firstElementChild;
         const listLength = elmUList.childElementCount;
-        const itemHTML = elmUList.firstElementChild.cloneNode(true);
-        const itemInput = itemHTML.querySelector('input');
-        const itemLabel = itemHTML.querySelector('Label');
-        itemInput.id = itemInput.id.replace(/\d/, '');
-        itemLabel.htmlFor = itemLabel.htmlFor.replace(/\d/, '');
+        if (listLength > 10)
+            return;
+        const changeListener = (itemHTML, x) => {
+            const itemSpan = itemHTML.querySelector('span');
+            const itemInput = itemHTML.querySelector('input');
+            itemInput.checked = config.menu[x].enable;
+            itemInput.checked ? selectedCheckBox(itemSpan) : defaultCheckBox(itemSpan);
+            itemInput.addEventListener('change', ev => {
+                const evt = ev.target;
+                evt.checked ? selectedCheckBox(itemSpan) : defaultCheckBox(itemSpan);
+                config.menu[x].enable = evt.checked;
+                GM_setValue('blnvConfig', JSON.stringify(config));
+                this.ChangeCSS();
+            });
+        };
         const selectedCheckBox = (spanClone) => {
             spanClone.classList.remove('checkbox-default');
             spanClone.classList.add('checkbox-selected');
@@ -275,32 +350,37 @@ body[style*="overflow: hidden;"] {
             spanClone.classList.remove('checkbox-selected');
             spanClone.classList.add('checkbox-default');
         };
+        const theSameName = (listNodes, x) => {
+            for (const clild of listNodes)
+                if (clild.innerText === config.menu[x].name)
+                    return clild;
+        };
+        const itemHTML = elmUList.firstElementChild.cloneNode(true);
+        const itemInput = itemHTML.querySelector('input');
+        const itemLabel = itemHTML.querySelector('label');
+        itemInput.id = itemInput.id.replace(/\d/, '');
+        itemLabel.htmlFor = itemLabel.htmlFor.replace(/\d/, '');
         let i = listLength;
+        const listNodes = elmUList.childNodes;
         for (const x in config.menu) {
-            const itemHTMLClone = itemHTML.cloneNode(true);
-            const itemSpanClone = itemHTMLClone.querySelector('span');
-            const itemInputClone = itemHTMLClone.querySelector('input');
-            const itemLabelClone = itemHTMLClone.querySelector('label');
-            itemInputClone.id += i;
-            itemLabelClone.htmlFor += i;
-            i++;
-            itemLabelClone.innerText = config.menu[x].name;
-            itemInputClone.checked = config.menu[x].enable;
-            if (itemInputClone.checked)
-                selectedCheckBox(itemSpanClone);
-            else
-                defaultCheckBox(itemSpanClone);
-            itemInputClone.addEventListener('change', ev => {
-                const evt = ev.target;
-                if (evt.checked)
-                    selectedCheckBox(itemSpanClone);
-                else
-                    defaultCheckBox(itemSpanClone);
-                config.menu[x].enable = evt.checked;
-                GM_setValue('blnvConfig', JSON.stringify(config));
-                this.ChangeCSS();
-            });
-            elmUList.appendChild(itemHTMLClone);
+            const clild = theSameName(listNodes, x);
+            if (clild === undefined) {
+                const itemHTMLClone = itemHTML.cloneNode(true);
+                const itemInputClone = itemHTMLClone.querySelector('input');
+                const itemLabelClone = itemHTMLClone.querySelector('label');
+                itemInputClone.id += i;
+                itemLabelClone.htmlFor += i;
+                i++;
+                itemLabelClone.innerText = config.menu[x].name;
+                changeListener(itemHTMLClone, x);
+                elmUList.appendChild(itemHTMLClone);
+            }
+            else {
+                const itemHTMLClone = clild.cloneNode(true);
+                changeListener(itemHTMLClone, x);
+                clild.remove();
+                elmUList.appendChild(itemHTMLClone);
+            }
         }
     }
     AddCSS() {
@@ -328,8 +408,24 @@ body[style*="overflow: hidden;"] {
     }
 }
 const defaultConfig = {
-    version: 1608533993642,
+    version: 1629375942428,
     menu: {
+        noGiftMsg: {
+            name: '屏蔽全部礼物及广播',
+            enable: false
+        },
+        noSystemMsg: {
+            name: '屏蔽进场信息',
+            enable: false
+        },
+        noSuperChat: {
+            name: '屏蔽醒目留言',
+            enable: false
+        },
+        noEmoticons: {
+            name: '屏蔽表情特效',
+            enable: false
+        },
         noKanBanMusume: {
             name: '屏蔽看板娘',
             enable: false
@@ -338,28 +434,12 @@ const defaultConfig = {
             name: '屏蔽舰队标识',
             enable: false
         },
-        noVIPIcon: {
-            name: '屏蔽老爷标识',
-            enable: false
-        },
         noMedalIcon: {
             name: '屏蔽粉丝勋章',
             enable: false
         },
-        noTopNotice: {
-            name: '屏蔽高能标识',
-            enable: false
-        },
         noLiveTitleIcon: {
             name: '屏蔽成就头衔',
-            enable: false
-        },
-        noSystemMsg: {
-            name: '屏蔽系统公告',
-            enable: false
-        },
-        noGiftMsg: {
-            name: '屏蔽礼物信息',
             enable: false
         },
         noRaffle: {
